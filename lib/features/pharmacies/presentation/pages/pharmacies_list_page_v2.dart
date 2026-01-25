@@ -430,7 +430,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(16),
-      itemCount: pharmacies.length + (state.hasMore && _tabController.index == 0 ? 1 : 0),
+      itemCount: pharmacies.length + (!state.hasReachedMax && _tabController.index == 0 ? 1 : 0),
       itemBuilder: (context, index) {
         if (index >= pharmacies.length) {
           return const Center(
