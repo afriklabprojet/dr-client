@@ -17,6 +17,7 @@ import 'features/pharmacies/presentation/pages/pharmacy_details_page.dart';
 import 'features/pharmacies/presentation/pages/on_duty_pharmacies_map_page.dart';
 import 'features/pharmacies/presentation/providers/pharmacies_state.dart';
 import 'features/prescriptions/presentation/pages/prescription_upload_page.dart';
+import 'features/prescriptions/presentation/pages/prescriptions_list_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -498,12 +499,12 @@ class _HomePageState extends ConsumerState<HomePage> {
         _QuickActionCard(
           icon: Icons.upload_file_outlined,
           title: 'Ordonnance',
-          subtitle: 'Envoyer une photo',
+          subtitle: 'Mes ordonnances',
           color: const Color(0xFF9C27B0),
           isDark: isDark,
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PrescriptionUploadPage()),
+              MaterialPageRoute(builder: (_) => const PrescriptionsListPage()),
             );
           },
         ),
