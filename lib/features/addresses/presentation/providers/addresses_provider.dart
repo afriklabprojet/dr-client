@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../config/providers.dart';
-import '../../../../core/errors/failures.dart';
 import '../../data/datasources/address_remote_datasource.dart';
 import '../../data/repositories/address_repository_impl.dart';
 import '../../domain/entities/address_entity.dart';

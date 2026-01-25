@@ -26,6 +26,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
   
   Position? _currentPosition;
   String _searchQuery = '';
+  // ignore: unused_field
   bool _isSearching = false;
 
   @override

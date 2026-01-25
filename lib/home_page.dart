@@ -379,6 +379,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildSearchBar(BuildContext context, bool isDark) {
     return GestureDetector(
       onTap: () {
