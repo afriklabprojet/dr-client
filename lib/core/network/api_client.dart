@@ -174,6 +174,26 @@ class ApiClient {
         );
       }
       
+      if (statusCode == 403) {
+        final serverMessage = data is Map ? data['message'] : null;
+        final errorCode = data is Map ? data['error_code'] : null;
+        
+        // Messages spécifiques selon le code d'erreur
+        String message;
+        if (errorCode == 'PHONE_NOT_VERIFIED') {
+          message = 'Veuillez d\'abord vérifier votre numéro de téléphone.';
+        } else if (serverMessage != null && serverMessage.contains('Rôle requis')) {
+          message = 'Ce compte n\'a pas accès à cette application. Veuillez utiliser le bon compte.';
+        } else {
+          message = serverMessage ?? 'Accès non autorisé';
+        }
+        
+        return ServerException(
+          message: message,
+          statusCode: statusCode,
+        );
+      }
+      
       if (statusCode == 404) {
         final serverMessage = data is Map ? data['message'] : null;
         return ServerException(
@@ -216,6 +236,17 @@ class ApiClient {
     } else if (statusCode == 401) {
       print('🔐 [API ERROR 401] Non authentifié');
       print('   URL: $path');
+    } else if (statusCode == 403) {
+      final errorCode = error.response?.data?['error_code'];
+      print('🚫 [API ERROR 403] Accès interdit');
+      print('   URL: $path');
+      print('   Message: ${error.response?.data?['message'] ?? 'Non disponible'}');
+      if (errorCode != null) print('   Code erreur: $errorCode');
+      if (errorCode == 'PHONE_NOT_VERIFIED') {
+        print('   💡 Conseil: Le numéro de téléphone doit être vérifié');
+      } else if (error.response?.data?['message']?.contains('Rôle requis') == true) {
+        print('   💡 Conseil: Ce compte n\'a pas le bon rôle pour cette application');
+      }
     } else if (statusCode == 500) {
       print('🔥 [API ERROR 500] Erreur serveur interne');
       print('   URL: $path');
