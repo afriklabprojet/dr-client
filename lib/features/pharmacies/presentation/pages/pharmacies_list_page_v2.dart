@@ -224,12 +224,40 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
 
   Widget _buildSliverAppBar(PharmaciesState state) {
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: 180,
       floating: false,
       pinned: true,
       backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
       flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        titlePadding: const EdgeInsets.only(bottom: 60),
+        title: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Trouvez votre pharmacie',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _currentPosition != null
+                  ? '📍 Localisation activée'
+                  : '📍 Activez la localisation',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
         background: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -239,37 +267,6 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
                 AppColors.primary,
                 AppColors.primary.withOpacity(0.8),
               ],
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  const Text(
-                    'Trouvez votre pharmacie',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _currentPosition != null
-                        ? '📍 Localisation activée'
-                        : '📍 Activez la localisation',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
             ),
           ),
         ),
