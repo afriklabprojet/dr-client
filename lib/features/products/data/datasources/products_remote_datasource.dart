@@ -64,7 +64,9 @@ class ProductsRemoteDataSourceImpl implements ProductsRemoteDataSource {
   Future<ProductModel> getProductDetails(int id) async {
     final response = await apiClient.get(ApiConstants.productDetails(id));
 
-    return ProductModel.fromJson(response.data['data']);
+    // L'API retourne { data: { product: {...} } }
+    final productJson = response.data['data']['product'] ?? response.data['data'];
+    return ProductModel.fromJson(productJson);
   }
 
   @override
