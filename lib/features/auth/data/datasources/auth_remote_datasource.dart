@@ -33,7 +33,8 @@ abstract class AuthRemoteDataSource {
   });
 
   /// Resend OTP code
-  Future<void> resendOtp({
+  /// Returns a map with 'message' and 'channel' keys
+  Future<Map<String, dynamic>> resendOtp({
     required String identifier,
   });
 }
@@ -140,14 +141,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> resendOtp({
+  Future<Map<String, dynamic>> resendOtp({
     required String identifier,
   }) async {
-    await apiClient.post(
+    final response = await apiClient.post(
       ApiConstants.resendOtp,
       data: {
         'identifier': identifier,
       },
     );
+    
+    return {
+      'message': response.data['message'] ?? 'Code envoyé',
+      'channel': response.data['channel'] ?? 'sms',
+    };
   }
 }

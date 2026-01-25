@@ -184,13 +184,32 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
               ),
             );
           },
-          (_) {
+          (data) {
             setState(() => _isLoading = false);
             _startResendTimer();
+            
+            // Show message from server (includes fallback info)
+            final message = data['message'] ?? 'Nouveau code envoyé';
+            final channel = data['channel'] ?? 'sms';
+            
+            // Different color/icon based on channel
+            final isEmailFallback = channel == 'sms_fallback_email';
+            
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Nouveau code envoyé'),
-                backgroundColor: Colors.green,
+              SnackBar(
+                content: Row(
+                  children: [
+                    Icon(
+                      isEmailFallback ? Icons.email : Icons.sms,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(message)),
+                  ],
+                ),
+                backgroundColor: isEmailFallback ? Colors.orange : Colors.green,
+                duration: Duration(seconds: isEmailFallback ? 5 : 3),
               ),
             );
           },

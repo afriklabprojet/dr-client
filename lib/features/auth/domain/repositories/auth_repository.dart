@@ -44,7 +44,8 @@ abstract class AuthRepository {
   });
 
   /// Resend OTP code
-  Future<Either<Failure, void>> resendOtp({
+  /// Returns a map with 'message' and 'channel' keys
+  Future<Either<Failure, Map<String, dynamic>>> resendOtp({
     required String identifier,
   });
 }

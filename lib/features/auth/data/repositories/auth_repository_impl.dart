@@ -265,12 +265,12 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> resendOtp({
+  Future<Either<Failure, Map<String, dynamic>>> resendOtp({
     required String identifier,
   }) async {
     try {
-      await remoteDataSource.resendOtp(identifier: identifier);
-      return const Right(null);
+      final result = await remoteDataSource.resendOtp(identifier: identifier);
+      return Right(result);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on NetworkException catch (e) {
