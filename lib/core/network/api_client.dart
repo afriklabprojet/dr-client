@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../constants/api_constants.dart';
 import '../errors/exceptions.dart';
 
@@ -227,37 +228,37 @@ class ApiClient {
     final method = error.requestOptions.method;
     final statusCode = error.response?.statusCode;
     
-    print('═══════════════════════════════════════════════════════════');
+    debugPrint('═══════════════════════════════════════════════════════════');
     if (statusCode == 404) {
-      print('❌ [API ERROR 404] Endpoint non trouvé');
-      print('   URL complète: $baseUrl$path');
-      print('   Méthode: $method');
-      print('   Message serveur: ${error.response?.data?['message'] ?? 'Non disponible'}');
+      debugPrint('❌ [API ERROR 404] Endpoint non trouvé');
+      debugPrint('   URL complète: $baseUrl$path');
+      debugPrint('   Méthode: $method');
+      debugPrint('   Message serveur: ${error.response?.data?['message'] ?? 'Non disponible'}');
     } else if (statusCode == 401) {
-      print('🔐 [API ERROR 401] Non authentifié');
-      print('   URL: $path');
+      debugPrint('🔐 [API ERROR 401] Non authentifié');
+      debugPrint('   URL: $path');
     } else if (statusCode == 403) {
       final errorCode = error.response?.data?['error_code'];
-      print('🚫 [API ERROR 403] Accès interdit');
-      print('   URL: $path');
-      print('   Message: ${error.response?.data?['message'] ?? 'Non disponible'}');
-      if (errorCode != null) print('   Code erreur: $errorCode');
+      debugPrint('🚫 [API ERROR 403] Accès interdit');
+      debugPrint('   URL: $path');
+      debugPrint('   Message: ${error.response?.data?['message'] ?? 'Non disponible'}');
+      if (errorCode != null) debugPrint('   Code erreur: $errorCode');
       if (errorCode == 'PHONE_NOT_VERIFIED') {
-        print('   💡 Conseil: Le numéro de téléphone doit être vérifié');
+        debugPrint('   💡 Conseil: Le numéro de téléphone doit être vérifié');
       } else if (error.response?.data?['message']?.contains('Rôle requis') == true) {
-        print('   💡 Conseil: Ce compte n\'a pas le bon rôle pour cette application');
+        debugPrint('   💡 Conseil: Ce compte n\'a pas le bon rôle pour cette application');
       }
     } else if (statusCode == 500) {
-      print('🔥 [API ERROR 500] Erreur serveur interne');
-      print('   URL: $path');
+      debugPrint('🔥 [API ERROR 500] Erreur serveur interne');
+      debugPrint('   URL: $path');
     } else if (error.type == DioExceptionType.connectionError) {
-      print('🌐 [API ERROR] Impossible de se connecter');
-      print('   URL tentée: $baseUrl');
-      print('   Conseil: Vérifiez que le serveur Laravel est démarré');
+      debugPrint('🌐 [API ERROR] Impossible de se connecter');
+      debugPrint('   URL tentée: $baseUrl');
+      debugPrint('   Conseil: Vérifiez que le serveur Laravel est démarré');
     } else {
-      print('⚠️ [API ERROR] Code: $statusCode');
-      print('   URL: $path');
+      debugPrint('⚠️ [API ERROR] Code: $statusCode');
+      debugPrint('   URL: $path');
     }
-    print('═══════════════════════════════════════════════════════════');
+    debugPrint('═══════════════════════════════════════════════════════════');
   }
 }

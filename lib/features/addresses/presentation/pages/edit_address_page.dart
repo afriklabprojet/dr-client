@@ -79,7 +79,7 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
             labelsAsync.when(
               data: (labels) => _buildLabelSelector(labels),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => _buildLabelSelector(
+              error: (error, stackTrace) => _buildLabelSelector(
                 ['Maison', 'Bureau', 'Famille', 'Autre'],
               ),
             ),
@@ -180,7 +180,9 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
               ),
               value: _isDefault,
               onChanged: (value) => setState(() => _isDefault = value),
-              activeColor: AppColors.primary,
+              activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
+              thumbColor: WidgetStateProperty.resolveWith((states) =>
+                states.contains(WidgetState.selected) ? AppColors.primary : null),
               contentPadding: EdgeInsets.zero,
             ),
             const SizedBox(height: 32),

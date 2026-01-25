@@ -97,7 +97,7 @@ class _PharmacyDetailsPageState extends ConsumerState<PharmacyDetailsPage> {
       case 'holiday':
         return 'Garde Férié';
       default:
-        return 'Garde ${type}';
+        return 'Garde $type';
     }
   }
 
@@ -266,7 +266,7 @@ class _PharmacyDetailsPageState extends ConsumerState<PharmacyDetailsPage> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.orange.withOpacity(0.4),
+                              color: Colors.orange.withValues(alpha: 0.4),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),

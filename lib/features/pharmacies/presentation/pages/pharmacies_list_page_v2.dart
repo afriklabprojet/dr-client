@@ -26,8 +26,6 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
   
   Position? _currentPosition;
   String _searchQuery = '';
-  // ignore: unused_field
-  bool _isSearching = false;
 
   @override
   void initState() {
@@ -91,7 +89,9 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
       }
 
       if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) return;
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
 
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
@@ -252,7 +252,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
                   ? '📍 Localisation activée'
                   : '📍 Activez la localisation',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 11,
               ),
               textAlign: TextAlign.center,
@@ -266,7 +266,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
               end: Alignment.bottomRight,
               colors: [
                 AppColors.primary,
-                AppColors.primary.withOpacity(0.8),
+                AppColors.primary.withValues(alpha: 0.8),
               ],
             ),
           ),
@@ -373,7 +373,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -395,7 +395,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: color.withOpacity(0.8),
+                    color: color.withValues(alpha: 0.8),
                     fontSize: 10,
                   ),
                 ),
@@ -511,7 +511,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -547,7 +547,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
                           colors: pharmacy.isOnDuty
                               ? [Colors.orange.shade400, Colors.orange.shade600]
                               : pharmacy.isOpen
-                                  ? [AppColors.success.withOpacity(0.8), AppColors.success]
+                                  ? [AppColors.success.withValues(alpha: 0.8), AppColors.success]
                                   : [Colors.grey.shade400, Colors.grey.shade600],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -651,8 +651,8 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
                                 ),
                                 decoration: BoxDecoration(
                                   color: pharmacy.isOpen
-                                      ? AppColors.success.withOpacity(0.1)
-                                      : Colors.red.withOpacity(0.1),
+                                      ? AppColors.success.withValues(alpha: 0.1)
+                                      : Colors.red.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
@@ -692,7 +692,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.withOpacity(0.1),
+                                    color: Colors.blue.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Row(
@@ -788,7 +788,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
     final isDisabled = onTap == null;
     
     return Material(
-      color: isDisabled ? Colors.grey[200] : color.withOpacity(0.1),
+      color: isDisabled ? Colors.grey[200] : color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: onTap,

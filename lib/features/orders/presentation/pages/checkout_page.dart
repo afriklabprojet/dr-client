@@ -270,7 +270,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.grey.shade50,
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.grey.shade300,

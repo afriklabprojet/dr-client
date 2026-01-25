@@ -386,7 +386,6 @@ class _PharmaciesListPageState extends ConsumerState<PharmaciesListPage> {
         sourceList = state.onDutyPharmacies;
         break;
       case PharmacyListMode.all:
-      default:
         sourceList = state.pharmacies;
         break;
     }

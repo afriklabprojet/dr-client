@@ -469,7 +469,7 @@ class _OnDutyPharmaciesMapPageState
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -518,7 +518,7 @@ class _OnDutyPharmaciesMapPageState
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -530,7 +530,7 @@ class _OnDutyPharmaciesMapPageState
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: const Color(0xFFFF5722).withOpacity(0.1),
+                color: const Color(0xFFFF5722).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -571,10 +571,10 @@ class _OnDutyPharmaciesMapPageState
                       ),
                     ),
                   ),
-                  if (pharmacy.address != null) ...[
+                  if (pharmacy.address.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      pharmacy.address!,
+                      pharmacy.address,
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 13,
@@ -655,7 +655,7 @@ class _OnDutyPharmaciesMapPageState
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF5722).withOpacity(0.1),
+                  color: const Color(0xFFFF5722).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -693,7 +693,7 @@ class _OnDutyPharmaciesMapPageState
                         ),
                       ),
                     ),
-                    if (pharmacy.address != null) ...[
+                    if (pharmacy.address.isNotEmpty) ...[
                       const SizedBox(height: 6),
                       Row(
                         children: [
@@ -705,7 +705,7 @@ class _OnDutyPharmaciesMapPageState
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              pharmacy.address!,
+                              pharmacy.address,
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 13,

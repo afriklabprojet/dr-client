@@ -264,7 +264,7 @@ class _PharmaciesMapPageState extends State<PharmaciesMapPage> {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    pharmacy.address ?? 'Adresse non disponible',
+                    pharmacy.address.isNotEmpty ? pharmacy.address : 'Adresse non disponible',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

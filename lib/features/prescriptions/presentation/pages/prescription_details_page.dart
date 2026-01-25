@@ -166,7 +166,7 @@ class _PrescriptionDetailsPageState extends ConsumerState<PrescriptionDetailsPag
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
           Icon(icon, color: color, size: 32),

@@ -100,7 +100,7 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
                   const SizedBox(height: 8),
                   Text(
                     'Gérez vos prescriptions médicales',
-                    style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14),
                   ),
                   const SizedBox(height: 16),
                   _buildStatsRow(state),
@@ -144,7 +144,7 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(count.toString(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary)),
@@ -172,7 +172,7 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
   Widget _buildStatChip(IconData icon, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -239,7 +239,7 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Material(
           color: Colors.transparent,
@@ -254,7 +254,7 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
                     children: [
                       Container(
                         width: 48, height: 48,
-                        decoration: BoxDecoration(color: config['color'].withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                        decoration: BoxDecoration(color: config['color'].withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                         child: Icon(config['icon'], color: config['color'], size: 24),
                       ),
                       const SizedBox(width: 12),
@@ -270,7 +270,7 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(color: config['color'].withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                        decoration: BoxDecoration(color: config['color'].withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
                         child: Text(config['label'], style: TextStyle(color: config['color'], fontWeight: FontWeight.w600, fontSize: 12)),
                       ),
                     ],
@@ -384,8 +384,8 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
-            child: Icon(config['icon'] as IconData, size: 64, color: AppColors.primary.withOpacity(0.5)),
+            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(config['icon'] as IconData, size: 64, color: AppColors.primary.withValues(alpha: 0.5)),
           ),
           const SizedBox(height: 24),
           Text(config['title'] as String, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),

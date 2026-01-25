@@ -23,7 +23,7 @@ class PharmacyCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -49,7 +49,7 @@ class PharmacyCard extends StatelessWidget {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.08),
+                        color: AppColors.primary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
@@ -291,7 +291,7 @@ class PharmacyCard extends StatelessWidget {
       case 'holiday':
         return 'Garde Férié';
       default:
-        return 'Garde ${type}';
+        return 'Garde $type';
     }
   }
 

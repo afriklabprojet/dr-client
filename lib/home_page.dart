@@ -592,7 +592,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: promo.gradientColors[0].withOpacity(0.3),
+              color: promo.gradientColors[0].withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -607,7 +607,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 width: 150,
                 height: 150,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -619,7 +619,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -639,7 +639,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -672,7 +672,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Icon(
@@ -718,7 +718,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
+                    color: Colors.amber.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -829,7 +829,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             width: 180,
             margin: const EdgeInsets.only(right: 16),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[200],
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[200],
               borderRadius: BorderRadius.circular(20),
             ),
           );
@@ -842,7 +842,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Container(
       height: 150,
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
         borderRadius: BorderRadius.circular(20),
       ),
       child: Center(
@@ -902,7 +902,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: gradientColors[0].withOpacity(0.3),
+              color: gradientColors[0].withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -918,7 +918,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -930,7 +930,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -956,8 +956,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                               ),
                               decoration: BoxDecoration(
                                 color: pharmacy.isOpen
-                                    ? Colors.greenAccent.withOpacity(0.3)
-                                    : Colors.redAccent.withOpacity(0.3),
+                                    ? Colors.greenAccent.withValues(alpha: 0.3)
+                                    : Colors.redAccent.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
@@ -993,7 +993,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   vertical: 5,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withOpacity(0.3),
+                                  color: Colors.amber.withValues(alpha: 0.3),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Row(
@@ -1061,7 +1061,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Icon(
