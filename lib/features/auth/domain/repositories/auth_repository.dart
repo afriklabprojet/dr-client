@@ -36,4 +36,15 @@ abstract class AuthRepository {
     required String currentPassword,
     required String newPassword,
   });
+
+  /// Verify OTP code for phone verification
+  Future<Either<Failure, AuthResponseEntity>> verifyOtp({
+    required String identifier,
+    required String otp,
+  });
+
+  /// Resend OTP code
+  Future<Either<Failure, void>> resendOtp({
+    required String identifier,
+  });
 }

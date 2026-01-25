@@ -25,6 +25,17 @@ abstract class AuthRemoteDataSource {
     required String currentPassword,
     required String newPassword,
   });
+
+  /// Verify OTP code for phone verification
+  Future<AuthResponseModel> verifyOtp({
+    required String identifier,
+    required String otp,
+  });
+
+  /// Resend OTP code
+  Future<void> resendOtp({
+    required String identifier,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -108,6 +119,34 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'current_password': currentPassword,
         'new_password': newPassword,
         'new_password_confirmation': newPassword,
+      },
+    );
+  }
+
+  @override
+  Future<AuthResponseModel> verifyOtp({
+    required String identifier,
+    required String otp,
+  }) async {
+    final response = await apiClient.post(
+      ApiConstants.verifyOtp,
+      data: {
+        'identifier': identifier,
+        'otp': otp,
+      },
+    );
+
+    return AuthResponseModel.fromJson(response.data);
+  }
+
+  @override
+  Future<void> resendOtp({
+    required String identifier,
+  }) async {
+    await apiClient.post(
+      ApiConstants.resendOtp,
+      data: {
+        'identifier': identifier,
       },
     );
   }

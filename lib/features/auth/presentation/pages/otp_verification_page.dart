@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../config/providers.dart';
 import '../../../../home_page.dart';
 
 class OtpVerificationPage extends ConsumerStatefulWidget {
@@ -24,6 +25,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   final List<FocusNode> _focusNodes = [];
   
   bool _isLoading = false;
+  String? _errorMessage;
   int _resendTimer = 30;
   Timer? _timer;
   
@@ -90,6 +92,11 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   }
 
   void _onOtpChanged(String value, int index) {
+    // Clear any previous error when user types
+    if (_errorMessage != null) {
+      setState(() => _errorMessage = null);
+    }
+    
     if (value.length == 1 && index < _otpLength - 1) {
       _focusNodes[index + 1].requestFocus();
     }
@@ -106,35 +113,99 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   Future<void> _verifyOtp() async {
     final otp = _controllers.map((c) => c.text).join();
     if (otp.length != _otpLength) return;
+    
+    // Prevent multiple simultaneous calls
+    if (_isLoading) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
-    // Simulate API verification
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      // Navigate to Home or Success
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomePage()),
-        (route) => false,
+    try {
+      final authRepository = ref.read(authRepositoryProvider);
+      final result = await authRepository.verifyOtp(
+        identifier: widget.phoneNumber,
+        otp: otp,
       );
+
+      if (mounted) {
+        result.fold(
+          (failure) {
+            setState(() {
+              _isLoading = false;
+              _errorMessage = failure.message;
+            });
+            // Clear OTP fields on error
+            for (var controller in _controllers) {
+              controller.clear();
+            }
+            _focusNodes[0].requestFocus();
+          },
+          (authResponse) {
+            setState(() => _isLoading = false);
+            // Navigate to Home on success
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const HomePage()),
+              (route) => false,
+            );
+          },
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Erreur de connexion. Veuillez réessayer.';
+        });
+      }
     }
   }
 
   Future<void> _resendCode() async {
-    if (_resendTimer > 0) return;
+    if (_resendTimer > 0 || _isLoading) return;
     
-    // Simulate resend API
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (mounted) {
-      setState(() => _isLoading = false);
-      _startResendTimer();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nouveau code envoyé')),
+
+    try {
+      final authRepository = ref.read(authRepositoryProvider);
+      final result = await authRepository.resendOtp(
+        identifier: widget.phoneNumber,
       );
+      
+      if (mounted) {
+        result.fold(
+          (failure) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(failure.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          },
+          (_) {
+            setState(() => _isLoading = false);
+            _startResendTimer();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Nouveau code envoyé'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          },
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'envoi du code'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -308,6 +379,44 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                                 (index) => _buildOtpDigit(index, isDark),
                               ),
                             ),
+                            
+                            // Error message
+                            if (_errorMessage != null) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.red.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.error_outline,
+                                      color: Colors.red,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            
                             const SizedBox(height: 32),
                             
                             // Verify Button

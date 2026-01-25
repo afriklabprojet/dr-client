@@ -141,7 +141,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ),
       );
       if (mounted) {
-        Navigator.of(context).push(
+        // Utiliser pushReplacement pour éviter les retours et les rebuilds
+        Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) => OtpVerificationPage(
               phoneNumber: '+225${_phoneController.text.trim()}',

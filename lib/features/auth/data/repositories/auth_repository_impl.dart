@@ -226,4 +226,57 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, AuthResponseEntity>> verifyOtp({
+    required String identifier,
+    required String otp,
+  }) async {
+    try {
+      final result = await remoteDataSource.verifyOtp(
+        identifier: identifier,
+        otp: otp,
+      );
+
+      // Update cached token and user
+      await localDataSource.cacheToken(result.token);
+      await localDataSource.cacheUser(result.user);
+
+      // Configure ApiClient with the new token
+      apiClient.setToken(result.token);
+
+      return Right(result.toEntity());
+    } on ValidationException catch (e) {
+      String errorMessage = 'Code OTP invalide';
+      if (e.errors.isNotEmpty) {
+        final firstKey = e.errors.keys.first;
+        if (e.errors[firstKey]!.isNotEmpty) {
+          errorMessage = e.errors[firstKey]!.first;
+        }
+      }
+      return Left(ValidationFailure(message: errorMessage, errors: e.errors));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resendOtp({
+    required String identifier,
+  }) async {
+    try {
+      await remoteDataSource.resendOtp(identifier: identifier);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
 }
