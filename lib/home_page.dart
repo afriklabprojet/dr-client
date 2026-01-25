@@ -12,7 +12,7 @@ import 'features/orders/presentation/providers/cart_provider.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
 import 'features/notifications/presentation/pages/notifications_page.dart';
 import 'features/notifications/presentation/providers/notifications_provider.dart';
-import 'features/pharmacies/presentation/pages/pharmacies_list_page.dart';
+import 'features/pharmacies/presentation/pages/pharmacies_list_page_v2.dart';
 import 'features/pharmacies/presentation/pages/pharmacy_details_page.dart';
 import 'features/pharmacies/presentation/pages/on_duty_pharmacies_map_page.dart';
 import 'features/pharmacies/presentation/providers/pharmacies_state.dart';
@@ -491,7 +491,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           isDark: isDark,
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PharmaciesListPage()),
+              MaterialPageRoute(builder: (_) => const PharmaciesListPageV2()),
             );
           },
         ),
@@ -739,7 +739,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PharmaciesListPage()),
+                  MaterialPageRoute(builder: (_) => const PharmaciesListPageV2()),
                 );
               },
               child: Row(
