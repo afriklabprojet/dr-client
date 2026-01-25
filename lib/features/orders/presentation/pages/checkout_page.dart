@@ -1,0 +1,663 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../addresses/domain/entities/address_entity.dart';
+import '../../../addresses/presentation/providers/addresses_provider.dart';
+import '../../../addresses/presentation/widgets/address_selector.dart';
+import '../providers/cart_provider.dart';
+import '../../domain/entities/order_item_entity.dart';
+import '../../domain/entities/delivery_address_entity.dart';
+import '../providers/orders_state.dart';
+import '../providers/orders_provider.dart';
+import 'orders_list_page.dart';
+
+class CheckoutPage extends ConsumerStatefulWidget {
+  const CheckoutPage({super.key});
+
+  @override
+  ConsumerState<CheckoutPage> createState() => _CheckoutPageState();
+}
+
+class _CheckoutPageState extends ConsumerState<CheckoutPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _addressController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _notesController = TextEditingController();
+
+  String _paymentMode = 'platform'; // platform or on_delivery
+  bool _useManualAddress = false; // Toggle pour adresse manuelle
+  AddressEntity? _selectedSavedAddress;
+
+  @override
+  void initState() {
+    super.initState();
+    // Charger les adresses et pré-sélectionner la défaut
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAndSelectDefaultAddress();
+    });
+  }
+
+  Future<void> _loadAndSelectDefaultAddress() async {
+    await ref.read(addressesProvider.notifier).loadAddresses();
+    final state = ref.read(addressesProvider);
+    if (state.defaultAddress != null) {
+      setState(() {
+        _selectedSavedAddress = state.defaultAddress;
+        _useManualAddress = false;
+      });
+    } else if (state.addresses.isEmpty) {
+      setState(() => _useManualAddress = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _addressController.dispose();
+    _cityController.dispose();
+    _phoneController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cartState = ref.watch(cartProvider);
+    final ordersState = ref.watch(ordersProvider);
+
+    final currencyFormat = NumberFormat.currency(
+      locale: 'fr_CI',
+      symbol: 'F CFA',
+      decimalDigits: 0,
+    );
+
+    if (cartState.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pop();
+      });
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Validation de la commande'),
+        backgroundColor: AppColors.primary,
+      ),
+      body: ordersState.status == OrdersStatus.loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Order Summary
+                    _buildOrderSummary(cartState, currencyFormat),
+                    const SizedBox(height: 24),
+
+                    // Delivery Address Section
+                    _buildDeliveryAddressSection(),
+                    const SizedBox(height: 24),
+
+                    // Payment Mode
+                    _buildSectionTitle('Mode de paiement'),
+                    const SizedBox(height: 12),
+                    _buildPaymentMode(),
+                    const SizedBox(height: 24),
+
+                    // Notes
+                    _buildSectionTitle('Notes (optionnel)'),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _notesController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        hintText: 'Instructions spéciales pour la livraison...',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Total and Submit
+                    _buildCheckoutButton(cartState, currencyFormat),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+
+  Widget _buildOrderSummary(dynamic cartState, NumberFormat currencyFormat) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Résumé de la commande',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const Divider(height: 24),
+            ...cartState.items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${item.product.name} x${item.quantity}',
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                    Text(
+                      currencyFormat.format(item.totalPrice),
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Divider(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Sous-total'),
+                Text(currencyFormat.format(cartState.subtotal)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Frais de livraison'),
+                Text(currencyFormat.format(cartState.deliveryFee)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Total',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  currencyFormat.format(cartState.total),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    );
+  }
+
+  /// Nouvelle section pour les adresses avec option saved/manuel
+  Widget _buildDeliveryAddressSection() {
+    final addressesState = ref.watch(addressesProvider);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Toggle entre adresse sauvegardée et manuelle
+        if (addressesState.addresses.isNotEmpty) ...[
+          Row(
+            children: [
+              Expanded(
+                child: _buildAddressTypeButton(
+                  icon: Icons.bookmark,
+                  label: 'Adresse enregistrée',
+                  isSelected: !_useManualAddress,
+                  onTap: () => setState(() => _useManualAddress = false),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildAddressTypeButton(
+                  icon: Icons.edit_location_alt,
+                  label: 'Nouvelle adresse',
+                  isSelected: _useManualAddress,
+                  onTap: () => setState(() => _useManualAddress = true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+        
+        // Afficher le sélecteur ou le formulaire
+        if (_useManualAddress || addressesState.addresses.isEmpty)
+          _buildDeliveryForm()
+        else
+          AddressSelector(
+            initialAddress: _selectedSavedAddress,
+            onAddressSelected: (address) {
+              setState(() {
+                _selectedSavedAddress = address;
+              });
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAddressTypeButton({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeliveryForm() {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _addressController,
+          decoration: const InputDecoration(
+            labelText: 'Adresse complète *',
+            hintText: 'Ex: 123 Rue des Jardins, Cocody',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.location_on),
+          ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Veuillez entrer votre adresse';
+            }
+            if (value.trim().length < 10) {
+              return 'Adresse trop courte';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _cityController,
+          decoration: const InputDecoration(
+            labelText: 'Ville *',
+            hintText: 'Ex: Abidjan',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.location_city),
+          ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Veuillez entrer la ville';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          decoration: const InputDecoration(
+            labelText: 'Téléphone *',
+            hintText: '+225 07 00 00 00 00',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.phone),
+          ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Veuillez entrer votre numéro';
+            }
+            if (value.trim().length < 8) {
+              return 'Numéro invalide';
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentMode() {
+    return RadioGroup<String>(
+      groupValue: _paymentMode,
+      onChanged: (value) => setState(() => _paymentMode = value!),
+      child: Column(
+        children: [
+          RadioListTile<String>(
+            value: 'platform',
+            title: const Text('Paiement en ligne'),
+            subtitle: const Text('Payez maintenant par mobile money'),
+            secondary: const Icon(Icons.payment, color: AppColors.primary),
+          ),
+          RadioListTile<String>(
+            value: 'on_delivery',
+            title: const Text('Paiement à la livraison'),
+            subtitle: const Text('Payez en espèces lors de la réception'),
+            secondary: const Icon(
+              Icons.local_shipping,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCheckoutButton(dynamic cartState, NumberFormat currencyFormat) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () => _submitOrder(),
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: AppColors.primary,
+        ),
+        child: Text(
+          'Confirmer la commande - ${currencyFormat.format(cartState.total)}',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitOrder() async {
+    // Validation de l'adresse
+    if (!_useManualAddress && _selectedSavedAddress == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez sélectionner une adresse de livraison'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_useManualAddress && !_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final cartState = ref.read(cartProvider);
+
+    // Convert cart items to order items
+    final orderItems = cartState.items.map((item) {
+      return OrderItemEntity(
+        name: item.product.name,
+        quantity: item.quantity,
+        unitPrice: item.product.price,
+        totalPrice: item.totalPrice,
+      );
+    }).toList();
+
+    // Create delivery address based on selection
+    final DeliveryAddressEntity deliveryAddress;
+    
+    if (_useManualAddress) {
+      deliveryAddress = DeliveryAddressEntity(
+        address: _addressController.text.trim(),
+        city: _cityController.text.trim(),
+        phone: _phoneController.text.trim(),
+      );
+    } else {
+      // Utiliser l'adresse sauvegardée
+      deliveryAddress = DeliveryAddressEntity(
+        address: _selectedSavedAddress!.fullAddress,
+        city: _selectedSavedAddress!.city,
+        phone: _selectedSavedAddress!.phone,
+        latitude: _selectedSavedAddress!.latitude,
+        longitude: _selectedSavedAddress!.longitude,
+      );
+    }
+
+    // Create order
+    await ref
+        .read(ordersProvider.notifier)
+        .createOrder(
+          pharmacyId: cartState.selectedPharmacyId!,
+          items: orderItems,
+          deliveryAddress: deliveryAddress,
+          paymentMode: _paymentMode,
+          customerNotes: _notesController.text.trim().isEmpty
+              ? null
+              : _notesController.text.trim(),
+        );
+
+    final ordersState = ref.read(ordersProvider);
+
+    if (ordersState.status == OrdersStatus.loaded &&
+        ordersState.createdOrder != null) {
+      // Clear cart
+      await ref.read(cartProvider.notifier).clearCart();
+
+      // Show success and navigate
+      if (mounted) {
+        if (_paymentMode == 'platform') {
+          await _processPayment(ordersState.createdOrder!.id);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Commande créée avec succès!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const OrdersListPage()),
+            (route) => route.isFirst,
+          );
+        }
+      }
+    } else if (ordersState.status == OrdersStatus.error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ordersState.errorMessage ?? 'Erreur lors de la création',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _processPayment(int orderId) async {
+    // Show provider selection
+    if (!mounted) return;
+
+    final provider = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => SimpleDialog(
+        title: const Text('Choisir le moyen de paiement'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, 'cinetpay'),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12.0),
+              child: Row(
+                children: [
+                  Icon(Icons.payment, color: Colors.orange, size: 28),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CinetPay',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          'Orange Money, MTN, Moov, Visa',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const Divider(),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, 'jeko'),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12.0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.account_balance_wallet,
+                    color: Colors.blue,
+                    size: 28,
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Jèko',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          'Paiement agrégé',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (provider == null) {
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const OrdersListPage()),
+          (route) => route.isFirst,
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Initialisation du paiement...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Call initiatePayment
+    final result = await ref
+        .read(ordersProvider.notifier)
+        .initiatePayment(orderId: orderId, provider: provider);
+
+    if (!mounted) return;
+
+    // Hide loading
+    Navigator.pop(context);
+
+    if (result != null && result.containsKey('payment_url')) {
+      final url = Uri.parse(result['payment_url']);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Impossible d\'ouvrir le lien de paiement'),
+          ),
+        );
+      }
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erreur lors de l\'initialisation du paiement'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+
+    if (!mounted) return;
+
+    // Always navigate to orders list at the end
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const OrdersListPage()),
+      (route) => route.isFirst,
+    );
+  }
+}
