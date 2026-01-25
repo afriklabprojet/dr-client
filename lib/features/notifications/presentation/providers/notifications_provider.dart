@@ -1,33 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
-import '../../../../core/constants/api_constants.dart';
+import '../../../../config/providers.dart';
 import 'notifications_notifier.dart';
 import 'notifications_state.dart';
 import '../../data/datasources/notifications_remote_datasource.dart';
 
-// Dio provider for notifications (with auth token)
-final notificationsDioProvider = Provider<Dio>((ref) {
-  final dio = Dio(
-    BaseOptions(
-      baseUrl: ApiConstants.baseUrl,
-      connectTimeout: ApiConstants.connectionTimeout,
-      receiveTimeout: ApiConstants.receiveTimeout,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    ),
-  );
-
-  // Note: Auth token should be added via interceptor when available
-  return dio;
-});
-
-// Notifications remote data source provider
+// Notifications remote data source provider (uses ApiClient with auth token)
 final notificationsRemoteDataSourceProvider =
     Provider<NotificationsRemoteDataSource>((ref) {
-      final dio = ref.watch(notificationsDioProvider);
-      return NotificationsRemoteDataSourceImpl(dio);
+      final apiClient = ref.watch(apiClientProvider);
+      return NotificationsRemoteDataSourceImpl(apiClient);
     });
 
 // Notifications provider

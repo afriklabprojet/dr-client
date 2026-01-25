@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import '../../../../core/network/api_client.dart';
 import '../models/notification_model.dart';
 
 abstract class NotificationsRemoteDataSource {
@@ -13,13 +13,13 @@ abstract class NotificationsRemoteDataSource {
 
 class NotificationsRemoteDataSourceImpl
     implements NotificationsRemoteDataSource {
-  final Dio dio;
+  final ApiClient apiClient;
 
-  NotificationsRemoteDataSourceImpl(this.dio);
+  NotificationsRemoteDataSourceImpl(this.apiClient);
 
   @override
   Future<List<NotificationModel>> getNotifications() async {
-    final response = await dio.get('/notifications');
+    final response = await apiClient.get('/notifications');
     final data = response.data['data'];
     final notifications = (data['notifications'] as List)
         .map((json) => NotificationModel.fromJson(json))
@@ -29,7 +29,7 @@ class NotificationsRemoteDataSourceImpl
 
   @override
   Future<List<NotificationModel>> getUnreadNotifications() async {
-    final response = await dio.get('/notifications/unread');
+    final response = await apiClient.get('/notifications/unread');
     final notifications = (response.data['data'] as List)
         .map((json) => NotificationModel.fromJson(json))
         .toList();
@@ -38,26 +38,26 @@ class NotificationsRemoteDataSourceImpl
 
   @override
   Future<void> markAsRead(String notificationId) async {
-    await dio.post('/notifications/$notificationId/read');
+    await apiClient.post('/notifications/$notificationId/read');
   }
 
   @override
   Future<void> markAllAsRead() async {
-    await dio.post('/notifications/read-all');
+    await apiClient.post('/notifications/read-all');
   }
 
   @override
   Future<void> deleteNotification(String notificationId) async {
-    await dio.delete('/notifications/$notificationId');
+    await apiClient.delete('/notifications/$notificationId');
   }
 
   @override
   Future<void> updateFcmToken(String fcmToken) async {
-    await dio.post('/notifications/fcm-token', data: {'fcm_token': fcmToken});
+    await apiClient.post('/notifications/fcm-token', data: {'fcm_token': fcmToken});
   }
 
   @override
   Future<void> removeFcmToken() async {
-    await dio.delete('/notifications/fcm-token');
+    await apiClient.delete('/notifications/fcm-token');
   }
 }
