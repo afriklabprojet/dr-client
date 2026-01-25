@@ -245,7 +245,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   const Text(
@@ -255,6 +255,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -265,6 +266,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
                       color: Colors.white.withOpacity(0.9),
                       fontSize: 14,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
