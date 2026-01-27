@@ -99,11 +99,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # Environment files
+  # Environment file - copier .env.example vers .env et modifier selon votre environnement
   assets:
-    - .env
-    - .env.dev
-    - .env.prod
+    - assets/env/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

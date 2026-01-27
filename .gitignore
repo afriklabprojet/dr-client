@@ -44,8 +44,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Environment files (keep .env.example for reference)
-.env
-.env.dev
-.env.prod
-.env.local
+# Environment files locaux (les fichiers assets/env/ sont commités)
+# Ne pas commiter les fichiers .env à la racine
+/.env
+/.env.dev
+/.env.prod
+/.env.local
