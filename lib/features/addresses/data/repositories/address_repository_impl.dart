@@ -3,7 +3,6 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/address_entity.dart';
 import '../../domain/repositories/address_repository.dart';
-import '../../presentation/providers/addresses_provider.dart';
 import '../datasources/address_remote_datasource.dart';
 
 /// Implémentation du repository des adresses

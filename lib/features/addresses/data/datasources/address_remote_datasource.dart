@@ -1,4 +1,5 @@
 import '../../../../core/network/api_client.dart';
+import '../../domain/repositories/address_repository.dart';
 import '../models/address_model.dart';
 
 /// Data source pour les adresses via l'API
@@ -92,8 +93,6 @@ class AddressRemoteDataSource {
   }
 
   /// Définir une adresse comme défaut
-import '../../presentation/providers/addresses_provider.dart';
-
   Future<AddressModel> setDefaultAddress(int id) async {
     final response = await _apiClient.post('/customer/addresses/$id/default');
     return AddressModel.fromJson(response.data['data']);

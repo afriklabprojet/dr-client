@@ -263,19 +263,6 @@ final addressesProvider =
   return AddressesNotifier(repository);
 });
 
-/// Données pour le formulaire d'adresse (labels + téléphone par défaut)
-class AddressFormData {
-  final List<String> labels;
-  final String? defaultPhone;
-  final String? userName;
-
-  AddressFormData({
-    required this.labels,
-    this.defaultPhone,
-    this.userName,
-  });
-}
-
 /// Provider pour les données du formulaire d'adresse
 final addressFormDataProvider = FutureProvider<AddressFormData>((ref) async {
   final repository = ref.watch(addressRepositoryProvider);

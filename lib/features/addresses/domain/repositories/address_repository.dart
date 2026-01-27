@@ -2,6 +2,19 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/address_entity.dart';
 
+/// Données de formulaire pour les adresses (labels et infos pré-remplies)
+class AddressFormData {
+  final List<String> labels;
+  final String? defaultPhone;
+  final String? userName;
+
+  AddressFormData({
+    required this.labels,
+    this.defaultPhone,
+    this.userName,
+  });
+}
+
 /// Repository abstrait pour la gestion des adresses
 abstract class AddressRepository {
   /// Obtenir toutes les adresses du client
@@ -45,7 +58,6 @@ abstract class AddressRepository {
 
   /// Définir une adresse comme adresse par défaut
   Future<Either<Failure, AddressEntity>> setDefaultAddress(int id);
-import '../../presentation/providers/addresses_provider.dart';
 
   /// Obtenir les labels disponibles avec données de pré-remplissage
   Future<Either<Failure, AddressFormData>> getLabels();
