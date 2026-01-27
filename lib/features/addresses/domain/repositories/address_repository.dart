@@ -45,7 +45,8 @@ abstract class AddressRepository {
 
   /// Définir une adresse comme adresse par défaut
   Future<Either<Failure, AddressEntity>> setDefaultAddress(int id);
+import '../../presentation/providers/addresses_provider.dart';
 
-  /// Obtenir les labels disponibles
-  Future<Either<Failure, List<String>>> getLabels();
+  /// Obtenir les labels disponibles avec données de pré-remplissage
+  Future<Either<Failure, AddressFormData>> getLabels();
 }

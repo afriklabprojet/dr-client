@@ -26,6 +26,47 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   bool _obscureConfirmPassword = true;
   bool _isChangingPassword = false;
 
+  // Helper method for theme-aware input decoration
+  InputDecoration _buildInputDecoration({
+    required String labelText,
+    required IconData prefixIcon,
+    Widget? suffixIcon,
+    required bool isDark,
+  }) {
+    return InputDecoration(
+      labelText: labelText,
+      labelStyle: TextStyle(
+        color: isDark ? Colors.grey[400] : Colors.grey[600],
+      ),
+      prefixIcon: Icon(
+        prefixIcon,
+        color: isDark ? Colors.grey[400] : Colors.grey[600],
+      ),
+      suffixIcon: suffixIcon,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: AppColors.primary,
+          width: 2,
+        ),
+      ),
+      filled: true,
+      fillColor: isDark ? const Color(0xFF2A2A3E) : Colors.grey.shade50,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -108,8 +149,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   Widget build(BuildContext context) {
     final profileState = ref.watch(profileProvider);
     final isUpdating = profileState.isUpdating;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
 
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
       appBar: AppBar(
         title: const Text('Modifier le profil'),
         backgroundColor: AppColors.primary,
@@ -236,23 +280,24 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               const SizedBox(height: 32),
 
               // Personal Information Section
-              const Text(
+              Text(
                 'Informations personnelles',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
               ),
               const SizedBox(height: 16),
 
               // Name Field
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(
+                style: TextStyle(color: textColor),
+                decoration: _buildInputDecoration(
                   labelText: 'Nom complet',
-                  prefixIcon: const Icon(Icons.person),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
+                  prefixIcon: Icons.person,
+                  isDark: isDark,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -267,14 +312,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
+                style: TextStyle(color: textColor),
+                decoration: _buildInputDecoration(
                   labelText: 'Email',
-                  prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
+                  prefixIcon: Icons.email,
+                  isDark: isDark,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -295,14 +337,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
+                style: TextStyle(color: textColor),
+                decoration: _buildInputDecoration(
                   labelText: 'Téléphone (optionnel)',
-                  prefixIcon: const Icon(Icons.phone),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
+                  prefixIcon: Icons.phone,
+                  isDark: isDark,
                 ),
                 validator: (value) {
                   if (value != null && value.trim().isNotEmpty) {
@@ -319,9 +358,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               // Password Change Section
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Changer le mot de passe',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                   const Spacer(),
                   Switch(
@@ -348,14 +391,17 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 TextFormField(
                   controller: _currentPasswordController,
                   obscureText: _obscureCurrentPassword,
-                  decoration: InputDecoration(
+                  style: TextStyle(color: textColor),
+                  decoration: _buildInputDecoration(
                     labelText: 'Mot de passe actuel',
-                    prefixIcon: const Icon(Icons.lock_outline),
+                    prefixIcon: Icons.lock_outline,
+                    isDark: isDark,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscureCurrentPassword
                             ? Icons.visibility_off
                             : Icons.visibility,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                       onPressed: () {
                         setState(() {
@@ -363,11 +409,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         });
                       },
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
                   ),
                   validator: (value) {
                     if (_isChangingPassword) {
@@ -384,14 +425,17 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 TextFormField(
                   controller: _newPasswordController,
                   obscureText: _obscureNewPassword,
-                  decoration: InputDecoration(
+                  style: TextStyle(color: textColor),
+                  decoration: _buildInputDecoration(
                     labelText: 'Nouveau mot de passe',
-                    prefixIcon: const Icon(Icons.lock),
+                    prefixIcon: Icons.lock,
+                    isDark: isDark,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscureNewPassword
                             ? Icons.visibility_off
                             : Icons.visibility,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                       onPressed: () {
                         setState(() {
@@ -399,11 +443,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         });
                       },
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
                   ),
                   validator: (value) {
                     if (_isChangingPassword) {
@@ -423,14 +462,17 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
-                  decoration: InputDecoration(
+                  style: TextStyle(color: textColor),
+                  decoration: _buildInputDecoration(
                     labelText: 'Confirmer le mot de passe',
-                    prefixIcon: const Icon(Icons.lock),
+                    prefixIcon: Icons.lock,
+                    isDark: isDark,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscureConfirmPassword
                             ? Icons.visibility_off
                             : Icons.visibility,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                       onPressed: () {
                         setState(() {
@@ -438,11 +480,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         });
                       },
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
                   ),
                   validator: (value) {
                     if (_isChangingPassword) {

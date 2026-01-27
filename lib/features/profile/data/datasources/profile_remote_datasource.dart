@@ -24,7 +24,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<ProfileModel> updateProfile(Map<String, dynamic> profileData) async {
-    final response = await apiClient.put(
+    final response = await apiClient.post(
       ApiConstants.updateProfile,
       data: profileData,
     );

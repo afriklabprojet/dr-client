@@ -3,6 +3,7 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/address_entity.dart';
 import '../../domain/repositories/address_repository.dart';
+import '../../presentation/providers/addresses_provider.dart';
 import '../datasources/address_remote_datasource.dart';
 
 /// Implémentation du repository des adresses
@@ -152,10 +153,10 @@ class AddressRepositoryImpl implements AddressRepository {
   }
 
   @override
-  Future<Either<Failure, List<String>>> getLabels() async {
+  Future<Either<Failure, AddressFormData>> getLabels() async {
     try {
-      final labels = await _remoteDataSource.getLabels();
-      return Right(labels);
+      final formData = await _remoteDataSource.getLabels();
+      return Right(formData);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on UnauthorizedException catch (e) {

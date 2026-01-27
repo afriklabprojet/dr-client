@@ -92,15 +92,35 @@ class AddressRemoteDataSource {
   }
 
   /// Définir une adresse comme défaut
+import '../../presentation/providers/addresses_provider.dart';
+
   Future<AddressModel> setDefaultAddress(int id) async {
     final response = await _apiClient.post('/customer/addresses/$id/default');
     return AddressModel.fromJson(response.data['data']);
   }
 
-  /// Obtenir les labels disponibles
-  Future<List<String>> getLabels() async {
+  /// Obtenir les labels disponibles avec données de pré-remplissage
+  Future<AddressFormData> getLabels() async {
     final response = await _apiClient.get('/customer/addresses/labels');
-    final List<dynamic> data = response.data['data'] ?? [];
-    return data.map((e) => e.toString()).toList();
+    final data = response.data['data'];
+    
+    // Gérer le nouveau format (objet avec labels, default_phone, user_name)
+    if (data is Map<String, dynamic>) {
+      final labelsList = data['labels'] as List<dynamic>? ?? [];
+      return AddressFormData(
+        labels: labelsList.map((e) => e.toString()).toList(),
+        defaultPhone: data['default_phone'] as String?,
+        userName: data['user_name'] as String?,
+      );
+    }
+    
+    // Fallback pour l'ancien format (liste simple)
+    if (data is List) {
+      return AddressFormData(
+        labels: data.map((e) => e.toString()).toList(),
+      );
+    }
+    
+    return AddressFormData(labels: ['Maison', 'Bureau', 'Famille', 'Autre']);
   }
 }

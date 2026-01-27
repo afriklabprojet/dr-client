@@ -151,18 +151,21 @@ class NotificationSettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final prefs = ref.watch(notificationPreferencesProvider);
     final notifier = ref.read(notificationPreferencesProvider.notifier);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD),
+      backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFF8F9FD),
       appBar: AppBar(
-        title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -172,13 +175,13 @@ class NotificationSettingsPage extends ConsumerWidget {
                 ),
               ],
             ),
-            child: const Icon(Icons.arrow_back, color: Colors.black87, size: 20),
+            child: Icon(Icons.arrow_back, color: textColor, size: 20),
           ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.black87),
+            icon: Icon(Icons.more_vert, color: textColor),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             onSelected: (value) {
               if (value == 'enable_all') {
@@ -239,10 +242,10 @@ class NotificationSettingsPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const Center(
+            Center(
               child: Text(
                 'Préférences de notification',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor),
               ),
             ),
             const SizedBox(height: 8),
@@ -250,29 +253,32 @@ class NotificationSettingsPage extends ConsumerWidget {
               child: Text(
                 'Personnalisez les notifications que vous\nsouhaitez recevoir',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                style: TextStyle(color: subtitleColor, fontSize: 14),
               ),
             ),
             const SizedBox(height: 32),
 
             // Push Notifications Master Switch
             _buildMasterSwitch(
+              context: context,
               icon: Icons.notifications_active,
               title: 'Notifications push',
               subtitle: 'Activer/désactiver toutes les notifications push',
               value: prefs.pushEnabled,
               onChanged: notifier.togglePushEnabled,
+              isDark: isDark,
             ),
             const SizedBox(height: 24),
 
             // Category Notifications
-            const Text(
+            Text(
               'Types de notifications',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
             ),
             const SizedBox(height: 16),
 
             _buildNotificationCard(
+              isDark: isDark,
               children: [
                 _buildNotificationTile(
                   icon: Icons.shopping_bag,
@@ -282,8 +288,9 @@ class NotificationSettingsPage extends ConsumerWidget {
                   value: prefs.orderUpdates,
                   onChanged: prefs.pushEnabled ? notifier.toggleOrderUpdates : null,
                   enabled: prefs.pushEnabled,
+                  isDark: isDark,
                 ),
-                const Divider(height: 1),
+                Divider(height: 1, color: isDark ? Colors.grey[700] : null),
                 _buildNotificationTile(
                   icon: Icons.local_shipping,
                   iconColor: Colors.orange,
@@ -292,8 +299,9 @@ class NotificationSettingsPage extends ConsumerWidget {
                   value: prefs.deliveryAlerts,
                   onChanged: prefs.pushEnabled ? notifier.toggleDeliveryAlerts : null,
                   enabled: prefs.pushEnabled,
+                  isDark: isDark,
                 ),
-                const Divider(height: 1),
+                Divider(height: 1, color: isDark ? Colors.grey[700] : null),
                 _buildNotificationTile(
                   icon: Icons.local_offer,
                   iconColor: Colors.purple,
@@ -302,8 +310,9 @@ class NotificationSettingsPage extends ConsumerWidget {
                   value: prefs.promotions,
                   onChanged: prefs.pushEnabled ? notifier.togglePromotions : null,
                   enabled: prefs.pushEnabled,
+                  isDark: isDark,
                 ),
-                const Divider(height: 1),
+                Divider(height: 1, color: isDark ? Colors.grey[700] : null),
                 _buildNotificationTile(
                   icon: Icons.new_releases,
                   iconColor: Colors.teal,
@@ -312,19 +321,21 @@ class NotificationSettingsPage extends ConsumerWidget {
                   value: prefs.newProducts,
                   onChanged: prefs.pushEnabled ? notifier.toggleNewProducts : null,
                   enabled: prefs.pushEnabled,
+                  isDark: isDark,
                 ),
               ],
             ),
             const SizedBox(height: 24),
 
             // Sound & Vibration
-            const Text(
+            Text(
               'Son & Vibration',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
             ),
             const SizedBox(height: 16),
 
             _buildNotificationCard(
+              isDark: isDark,
               children: [
                 _buildNotificationTile(
                   icon: Icons.volume_up,
@@ -334,8 +345,9 @@ class NotificationSettingsPage extends ConsumerWidget {
                   value: prefs.soundEnabled,
                   onChanged: prefs.pushEnabled ? notifier.toggleSoundEnabled : null,
                   enabled: prefs.pushEnabled,
+                  isDark: isDark,
                 ),
-                const Divider(height: 1),
+                Divider(height: 1, color: isDark ? Colors.grey[700] : null),
                 _buildNotificationTile(
                   icon: Icons.vibration,
                   iconColor: Colors.amber,
@@ -344,6 +356,7 @@ class NotificationSettingsPage extends ConsumerWidget {
                   value: prefs.vibrationEnabled,
                   onChanged: prefs.pushEnabled ? notifier.toggleVibrationEnabled : null,
                   enabled: prefs.pushEnabled,
+                  isDark: isDark,
                 ),
               ],
             ),
@@ -353,14 +366,14 @@ class NotificationSettingsPage extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: isDark ? Colors.blue.shade900.withValues(alpha: 0.3) : Colors.blue.shade50,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade100),
+                border: Border.all(color: isDark ? Colors.blue.shade700 : Colors.blue.shade100),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, color: Colors.blue.shade600, size: 20),
+                  Icon(Icons.info_outline, color: isDark ? Colors.blue.shade300 : Colors.blue.shade600, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -370,14 +383,14 @@ class NotificationSettingsPage extends ConsumerWidget {
                           'Bon à savoir',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade800,
+                            color: isDark ? Colors.blue.shade300 : Colors.blue.shade800,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Les notifications de commande et de livraison sont importantes pour suivre vos achats en temps réel.',
                           style: TextStyle(
-                            color: Colors.blue.shade700,
+                            color: isDark ? Colors.blue.shade200 : Colors.blue.shade700,
                             fontSize: 12,
                             height: 1.4,
                           ),
@@ -396,19 +409,28 @@ class NotificationSettingsPage extends ConsumerWidget {
   }
 
   Widget _buildMasterSwitch({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
     required bool value,
     required Function(bool) onChanged,
+    required bool isDark,
   }) {
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: value ? AppColors.primary.withValues(alpha: 0.1) : Colors.grey.shade100,
+        color: value 
+            ? AppColors.primary.withValues(alpha: 0.1) 
+            : (isDark ? Colors.grey.shade800 : Colors.grey.shade100),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: value ? AppColors.primary.withValues(alpha: 0.3) : Colors.grey.shade200,
+          color: value 
+              ? AppColors.primary.withValues(alpha: 0.3) 
+              : (isDark ? Colors.grey.shade700 : Colors.grey.shade200),
         ),
       ),
       child: Row(
@@ -428,16 +450,17 @@ class NotificationSettingsPage extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Colors.grey.shade600,
+                    color: subtitleColor,
                     fontSize: 12,
                   ),
                 ),
@@ -456,10 +479,10 @@ class NotificationSettingsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildNotificationCard({required List<Widget> children}) {
+  Widget _buildNotificationCard({required List<Widget> children, required bool isDark}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF2A2A3E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -481,7 +504,11 @@ class NotificationSettingsPage extends ConsumerWidget {
     required bool value,
     required Function(bool)? onChanged,
     required bool enabled,
+    required bool isDark,
   }) {
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    
     return Opacity(
       opacity: enabled ? 1.0 : 0.5,
       child: Padding(
@@ -503,16 +530,17 @@ class NotificationSettingsPage extends ConsumerWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
+                      color: textColor,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.grey.shade500,
+                      color: subtitleColor,
                       fontSize: 12,
                     ),
                   ),

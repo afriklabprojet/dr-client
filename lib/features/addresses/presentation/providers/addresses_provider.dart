@@ -263,14 +263,35 @@ final addressesProvider =
   return AddressesNotifier(repository);
 });
 
-/// Provider pour les labels disponibles
-final addressLabelsProvider = FutureProvider<List<String>>((ref) async {
+/// Données pour le formulaire d'adresse (labels + téléphone par défaut)
+class AddressFormData {
+  final List<String> labels;
+  final String? defaultPhone;
+  final String? userName;
+
+  AddressFormData({
+    required this.labels,
+    this.defaultPhone,
+    this.userName,
+  });
+}
+
+/// Provider pour les données du formulaire d'adresse
+final addressFormDataProvider = FutureProvider<AddressFormData>((ref) async {
   final repository = ref.watch(addressRepositoryProvider);
   final result = await repository.getLabels();
   return result.fold(
-    (failure) => ['Maison', 'Bureau', 'Famille', 'Autre'],
-    (labels) => labels,
+    (failure) => AddressFormData(
+      labels: ['Maison', 'Bureau', 'Famille', 'Autre'],
+    ),
+    (data) => data,
   );
+});
+
+/// Provider pour les labels disponibles (rétrocompatibilité)
+final addressLabelsProvider = FutureProvider<List<String>>((ref) async {
+  final formData = await ref.watch(addressFormDataProvider.future);
+  return formData.labels;
 });
 
 /// Provider pour l'adresse par défaut

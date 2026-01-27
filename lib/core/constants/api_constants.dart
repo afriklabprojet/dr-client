@@ -71,7 +71,7 @@ class ApiConstants {
   static const String logout = '/auth/logout';
   static const String profile = '/auth/me';
   static const String me = '/auth/me';
-  static const String updateProfile = '/auth/profile';
+  static const String updateProfile = '/auth/me/update';
   static const String uploadAvatar = '/auth/avatar';
   static const String deleteAvatar = '/auth/avatar';
   static const String updatePassword = '/auth/password';
@@ -83,15 +83,15 @@ class ApiConstants {
   // ENDPOINTS - Products
   // ============================================================
   static const String products = '/products';
-  static String productDetails(int id) => '/products/\$id';
+  static String productDetails(int id) => '/products/$id';
   static const String searchProducts = '/products';
 
   // ============================================================
   // ENDPOINTS - Orders
   // ============================================================
   static const String orders = '/customer/orders';
-  static String orderDetails(int id) => '/customer/orders/\$id';
-  static String cancelOrder(int id) => '/customer/orders/\$id/cancel';
+  static String orderDetails(int id) => '/customer/orders/$id';
+  static String cancelOrder(int id) => '/customer/orders/$id/cancel';
 
   // ============================================================
   // ENDPOINTS - Pharmacies
@@ -100,7 +100,7 @@ class ApiConstants {
   static const String featuredPharmacies = '/customer/pharmacies/featured';
   static const String nearbyPharmacies = '/customer/pharmacies/nearby';
   static const String onDutyPharmacies = '/customer/pharmacies/on-duty';
-  static String pharmacyDetails(int id) => '/customer/pharmacies/\$id';
+  static String pharmacyDetails(int id) => '/customer/pharmacies/$id';
 
   // ============================================================
   // ENDPOINTS - Payment

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/addresses_provider.dart';
 
@@ -25,6 +26,32 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
   double? _latitude;
   double? _longitude;
   bool _isLoadingLocation = false;
+  bool _phonePreFilled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pré-remplir le téléphone avec celui du profil
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _preFillPhone();
+    });
+  }
+
+  Future<void> _preFillPhone() async {
+    if (_phonePreFilled) return;
+    
+    final formDataAsync = ref.read(addressFormDataProvider);
+    formDataAsync.whenData((formData) {
+      if (formData.defaultPhone != null && 
+          formData.defaultPhone!.isNotEmpty && 
+          _phoneController.text.isEmpty) {
+        setState(() {
+          _phoneController.text = formData.defaultPhone!;
+          _phonePreFilled = true;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -39,7 +66,24 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(addressesProvider);
-    final labelsAsync = ref.watch(addressLabelsProvider);
+    final formDataAsync = ref.watch(addressFormDataProvider);
+    
+    // Pré-remplir le téléphone si disponible
+    formDataAsync.whenData((formData) {
+      if (!_phonePreFilled && 
+          formData.defaultPhone != null && 
+          formData.defaultPhone!.isNotEmpty && 
+          _phoneController.text.isEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _phoneController.text = formData.defaultPhone!;
+              _phonePreFilled = true;
+            });
+          }
+        });
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -55,8 +99,8 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
             // Label selector
             _buildSectionTitle('Type d\'adresse'),
             const SizedBox(height: 8),
-            labelsAsync.when(
-              data: (labels) => _buildLabelSelector(labels),
+            formDataAsync.when(
+              data: (formData) => _buildLabelSelector(formData.labels),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stackTrace) => _buildLabelSelector(
                 ['Maison', 'Bureau', 'Famille', 'Autre'],
@@ -376,10 +420,63 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
         _longitude = position.longitude;
       });
 
+      // Reverse geocoding - convertir les coordonnées en adresse
+      try {
+        final placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+
+        if (placemarks.isNotEmpty && mounted) {
+          final place = placemarks.first;
+          
+          // Construire l'adresse complète
+          final streetParts = <String>[];
+          if (place.street != null && place.street!.isNotEmpty) {
+            streetParts.add(place.street!);
+          }
+          if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+            streetParts.add(place.subLocality!);
+          }
+          if (place.thoroughfare != null && place.thoroughfare!.isNotEmpty && 
+              place.thoroughfare != place.street) {
+            streetParts.add(place.thoroughfare!);
+          }
+          
+          setState(() {
+            // Remplir le champ adresse
+            if (streetParts.isNotEmpty) {
+              _addressController.text = streetParts.join(', ');
+            } else if (place.name != null && place.name!.isNotEmpty) {
+              _addressController.text = place.name!;
+            }
+            
+            // Remplir la ville
+            if (place.locality != null && place.locality!.isNotEmpty) {
+              _cityController.text = place.locality!;
+            } else if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
+              _cityController.text = place.administrativeArea!;
+            }
+            
+            // Remplir le quartier/district
+            if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+              _districtController.text = place.subLocality!;
+            } else if (place.subAdministrativeArea != null && place.subAdministrativeArea!.isNotEmpty) {
+              _districtController.text = place.subAdministrativeArea!;
+            }
+          });
+        }
+      } catch (geocodeError) {
+        // Le reverse geocoding a échoué, mais on a quand même les coordonnées
+        debugPrint('Reverse geocoding failed: $geocodeError');
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Position GPS enregistrée'),
+            content: Text(_addressController.text.isNotEmpty 
+                ? 'Position et adresse enregistrées' 
+                : 'Position GPS enregistrée'),
             backgroundColor: AppColors.success,
           ),
         );
