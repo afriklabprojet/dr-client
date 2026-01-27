@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiConstants {
   // Base URLs
@@ -8,10 +9,21 @@ class ApiConstants {
   // For Web (Chrome/browsers), use localhost
   // For physical device, use your machine's IP address
 
-  // IMPORTANT: Remplacer cette IP par votre IP locale pour les appareils physiques
-  static const String localMachineIP = '192.168.1.100'; // Votre IP locale
+  // Lecture depuis les variables d'environnement
+  static String get _envBaseUrl => dotenv.env['API_BASE_URL'] ?? '';
+  static String get _envStorageUrl => dotenv.env['STORAGE_BASE_URL'] ?? '';
+  static bool get _useEnvUrls => _envBaseUrl.isNotEmpty;
+  
+  // Fallback IP pour appareils physiques en dev
+  static const String localMachineIP = '192.168.1.100';
   
   static String get baseUrlDev {
+    // Si une URL est définie dans .env, l'utiliser
+    if (_useEnvUrls) {
+      return _envBaseUrl;
+    }
+    
+    // Sinon, utiliser les valeurs par défaut selon la plateforme
     if (kIsWeb) {
       return 'http://localhost:8000/api';
     }
@@ -25,6 +37,12 @@ class ApiConstants {
   }
 
   static String get storageBaseUrlDev {
+    // Si une URL est définie dans .env, l'utiliser
+    if (_envStorageUrl.isNotEmpty) {
+      return _envStorageUrl;
+    }
+    
+    // Sinon, utiliser les valeurs par défaut selon la plateforme
     if (kIsWeb) {
       return 'http://localhost:8000/storage';
     }
@@ -37,11 +55,23 @@ class ApiConstants {
     return 'http://localhost:8000/storage';
   }
   
-  static const String storageBaseUrlProd = 'https://api.drpharma.ci/storage';
-  static const String baseUrlProd = 'https://api.drpharma.ci/api';
+  // URLs de production (peuvent aussi être surchargées par .env)
+  static String get baseUrlProd => 
+      dotenv.env['API_BASE_URL_PROD'] ?? 'https://api.drpharma.ci/api';
+  static String get storageBaseUrlProd => 
+      dotenv.env['STORAGE_BASE_URL_PROD'] ?? 'https://api.drpharma.ci/storage';
 
-  // Current environment
-  static const bool isDevelopment = true;
+  // Détection automatique de l'environnement ou lecture depuis .env
+  static bool get isDevelopment {
+    // Si défini dans .env, utiliser cette valeur
+    final envValue = dotenv.env['IS_DEVELOPMENT'];
+    if (envValue != null) {
+      return envValue.toLowerCase() == 'true';
+    }
+    // Sinon, utiliser le mode de build Flutter
+    return !kReleaseMode;
+  }
+  
   static String get baseUrl => isDevelopment ? baseUrlDev : baseUrlProd;
   static String get storageBaseUrl =>
       isDevelopment ? storageBaseUrlDev : storageBaseUrlProd;

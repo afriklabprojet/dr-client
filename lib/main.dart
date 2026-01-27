@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'firebase_options.dart';
 import 'config/providers.dart';
@@ -16,6 +17,24 @@ import 'features/notifications/presentation/pages/notifications_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Charger les variables d'environnement
+  // Utiliser --dart-define=ENV=prod pour charger .env.prod
+  const envFile = String.fromEnvironment('ENV', defaultValue: '');
+  try {
+    if (envFile == 'prod') {
+      await dotenv.load(fileName: '.env.prod');
+      debugPrint("✅ Environment loaded: .env.prod");
+    } else if (envFile == 'dev') {
+      await dotenv.load(fileName: '.env.dev');
+      debugPrint("✅ Environment loaded: .env.dev");
+    } else {
+      await dotenv.load(fileName: '.env');
+      debugPrint("✅ Environment loaded: .env");
+    }
+  } catch (e) {
+    debugPrint("⚠️ Could not load .env file: $e");
+  }
 
   try {
     await Firebase.initializeApp(
