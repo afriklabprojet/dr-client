@@ -186,6 +186,12 @@ class _PrescriptionUploadPageState
           return;
         } else if (e.toString().contains('403') || e.toString().contains('PHONE_NOT_VERIFIED')) {
           errorMessage = 'Veuillez vérifier votre numéro de téléphone pour envoyer une ordonnance';
+        } else if (e.toString().contains('422') || e.toString().contains('Validation')) {
+          errorMessage = 'Format d\'image non supporté. Utilisez JPG, PNG ou GIF.';
+        } else if (e.toString().contains('413') || e.toString().contains('too large')) {
+          errorMessage = 'Image trop volumineuse. Taille max: 10 Mo.';
+        } else if (e.toString().contains('SocketException') || e.toString().contains('Connection')) {
+          errorMessage = 'Erreur de connexion. Vérifiez votre internet.';
         } else {
           errorMessage = 'Erreur lors de l\'envoi. Veuillez réessayer.';
         }

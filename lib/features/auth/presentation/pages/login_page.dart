@@ -28,6 +28,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
 
   bool _obscurePassword = true;
   bool _useEmail = false;
+  bool _isRedirecting = false; // Track post-login operations
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -67,6 +68,12 @@ class _LoginPageState extends ConsumerState<LoginPage>
   }
 
   void _handleLogin() {
+    // Prevent double-tap / multiple submissions
+    final authState = ref.read(authProvider);
+    if (authState.status == AuthStatus.loading || _isRedirecting) {
+      return;
+    }
+    
     if (_formKey.currentState!.validate()) {
       ref
           .read(authProvider.notifier)
@@ -85,9 +92,23 @@ class _LoginPageState extends ConsumerState<LoginPage>
 
     // Listen to auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) async {
-      if (next.status == AuthStatus.authenticated) {
-        // Initialiser les notifications après authentification
-        await ref.read(notificationServiceProvider).initNotifications();
+      if (next.status == AuthStatus.authenticated && !_isRedirecting) {
+        // Prevent multiple redirections and keep loader visible
+        // Use immediate setState to ensure UI updates before async operations
+        if (mounted) {
+          setState(() => _isRedirecting = true);
+        }
+        
+        // Small delay to ensure UI shows loading state
+        await Future.delayed(const Duration(milliseconds: 50));
+        
+        try {
+          // Initialiser les notifications après authentification
+          await ref.read(notificationServiceProvider).initNotifications();
+        } catch (e) {
+          // Continue even if notification init fails
+          debugPrint('Notification init error: $e');
+        }
 
         if (mounted) {
           // ignore: use_build_context_synchronously
@@ -96,25 +117,31 @@ class _LoginPageState extends ConsumerState<LoginPage>
           );
         }
       } else if (next.status == AuthStatus.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(next.errorMessage ?? 'Une erreur est survenue'),
-                ),
-              ],
+        // Reset redirecting state on error
+        if (_isRedirecting && mounted) {
+          setState(() => _isRedirecting = false);
+        }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(next.errorMessage ?? 'Une erreur est survenue'),
+                  ),
+                ],
+              ),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
             ),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+          );
+        }
       }
     });
 
@@ -541,7 +568,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
   }
 
   Widget _buildLoginButton(AuthState authState, bool isDark) {
-    final isLoading = authState.status == AuthStatus.loading;
+    // Show loader during login AND during post-login operations (redirecting)
+    final isLoading = authState.status == AuthStatus.loading || _isRedirecting;
+    final loadingText = _isRedirecting ? 'Connexion...' : null;
 
     return SizedBox(
       width: double.infinity,
@@ -573,13 +602,29 @@ class _LoginPageState extends ConsumerState<LoginPage>
           child: Container(
             alignment: Alignment.center,
             child: isLoading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      ),
+                      if (loadingText != null) ...[
+                        const SizedBox(width: 12),
+                        Text(
+                          loadingText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ],
                   )
                 : const Row(
                     mainAxisAlignment: MainAxisAlignment.center,

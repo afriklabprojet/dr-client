@@ -15,20 +15,21 @@ class LoginUseCase {
     if (email.isEmpty || password.isEmpty) {
       return Left(
         ValidationFailure(
-          message: 'Email and password are required',
+          message: 'Identifiant et mot de passe requis',
           errors: {
-            'form': ['Email and password are required'],
+            'form': ['Identifiant et mot de passe requis'],
           },
         ),
       );
     }
 
-    if (!_isValidEmail(email)) {
+    // Accept either email or phone number format
+    if (!_isValidEmail(email) && !_isValidPhone(email)) {
       return Left(
         ValidationFailure(
-          message: 'Invalid email format',
+          message: 'Format d\'identifiant invalide',
           errors: {
-            'email': ['Invalid email format'],
+            'email': ['Veuillez entrer un email ou numéro de téléphone valide'],
           },
         ),
       );
@@ -37,9 +38,9 @@ class LoginUseCase {
     if (password.length < 6) {
       return Left(
         ValidationFailure(
-          message: 'Password must be at least 6 characters',
+          message: 'Le mot de passe doit contenir au moins 6 caractères',
           errors: {
-            'password': ['Password must be at least 6 characters'],
+            'password': ['Le mot de passe doit contenir au moins 6 caractères'],
           },
         ),
       );
@@ -53,5 +54,12 @@ class LoginUseCase {
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
     return emailRegex.hasMatch(email);
+  }
+
+  bool _isValidPhone(String phone) {
+    // Accept phone numbers: at least 8 digits, may start with + or 0
+    // Supports formats like: +22890123456, 0511223344, 90123456
+    final phoneRegex = RegExp(r'^[+]?[0-9]{8,15}$');
+    return phoneRegex.hasMatch(phone);
   }
 }

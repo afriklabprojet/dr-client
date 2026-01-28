@@ -40,6 +40,8 @@ class OrdersRepositoryImpl implements OrdersRepository {
       return Right(orders.map((model) => model.toEntity()).toList());
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } on UnauthorizedException catch (e) {
+      return Left(UnauthorizedFailure(message: e.message));
     } on NetworkException catch (e) {
       // Try to return cached data on network error
       final cachedOrders = localDataSource.getCachedOrders();
@@ -63,6 +65,8 @@ class OrdersRepositoryImpl implements OrdersRepository {
       return Right(order.toEntity());
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } on UnauthorizedException catch (e) {
+      return Left(UnauthorizedFailure(message: e.message));
     } on NetworkException catch (e) {
       // Try to return cached order on network error
       final cachedOrder = localDataSource.getCachedOrder(orderId);
@@ -106,6 +110,8 @@ class OrdersRepositoryImpl implements OrdersRepository {
       return Right(order.toEntity());
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } on UnauthorizedException catch (e) {
+      return Left(UnauthorizedFailure(message: e.message));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -124,6 +130,8 @@ class OrdersRepositoryImpl implements OrdersRepository {
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } on UnauthorizedException catch (e) {
+      return Left(UnauthorizedFailure(message: e.message));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
@@ -145,6 +153,8 @@ class OrdersRepositoryImpl implements OrdersRepository {
       return Right(result);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } on UnauthorizedException catch (e) {
+      return Left(UnauthorizedFailure(message: e.message));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e) {

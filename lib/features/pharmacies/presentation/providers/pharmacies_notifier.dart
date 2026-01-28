@@ -157,16 +157,24 @@ class PharmaciesNotifier extends StateNotifier<PharmaciesState> {
   }
 
   Future<void> fetchFeaturedPharmacies() async {
-    // Don't show loading for featured to avoid blocking UI
+    // Set loading state for featured pharmacies
+    state = state.copyWith(isFeaturedLoading: true);
+    
     final result = await getFeaturedPharmaciesUseCase();
 
     result.fold(
       (failure) {
-        // Silently fail for featured - they're not critical
+        // Mark as loaded even on failure to stop loading indicator
+        state = state.copyWith(
+          isFeaturedLoading: false,
+          isFeaturedLoaded: true,
+        );
       },
       (pharmacies) {
         state = state.copyWith(
           featuredPharmacies: pharmacies,
+          isFeaturedLoading: false,
+          isFeaturedLoaded: true,
         );
       },
     );

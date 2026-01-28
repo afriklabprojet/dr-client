@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../addresses/domain/entities/address_entity.dart';
 import '../../../addresses/presentation/providers/addresses_provider.dart';
 import '../../../addresses/presentation/widgets/address_selector.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
 import '../../domain/entities/order_item_entity.dart';
 import '../../domain/entities/delivery_address_entity.dart';
@@ -26,9 +27,11 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   final _cityController = TextEditingController();
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
+  final _addressLabelController = TextEditingController();
 
   String _paymentMode = 'platform'; // platform or on_delivery
   bool _useManualAddress = false; // Toggle pour adresse manuelle
+  bool _saveNewAddress = false; // Option pour enregistrer la nouvelle adresse
   AddressEntity? _selectedSavedAddress;
 
   @override
@@ -37,6 +40,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     // Charger les adresses et pré-sélectionner la défaut
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAndSelectDefaultAddress();
+      _prefillUserPhone();
     });
   }
 
@@ -53,12 +57,21 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     }
   }
 
+  /// Pré-remplit le numéro de téléphone depuis le profil utilisateur
+  void _prefillUserPhone() {
+    final authState = ref.read(authProvider);
+    if (authState.user != null && _phoneController.text.isEmpty) {
+      _phoneController.text = authState.user!.phone;
+    }
+  }
+
   @override
   void dispose() {
     _addressController.dispose();
     _cityController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
+    _addressLabelController.dispose();
     super.dispose();
   }
 
@@ -360,7 +373,99 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             return null;
           },
         ),
+        const SizedBox(height: 16),
+        // Option pour enregistrer l'adresse
+        _buildSaveAddressOption(),
       ],
+    );
+  }
+
+  Widget _buildSaveAddressOption() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _saveNewAddress 
+            ? AppColors.primary.withValues(alpha: 0.05) 
+            : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _saveNewAddress 
+              ? AppColors.primary.withValues(alpha: 0.3)
+              : Colors.grey.shade200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => setState(() => _saveNewAddress = !_saveNewAddress),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: _saveNewAddress,
+                    onChanged: (value) => setState(() => _saveNewAddress = value ?? false),
+                    activeColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Enregistrer cette adresse',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'Pour vos prochaines commandes',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textHint,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  _saveNewAddress ? Icons.bookmark : Icons.bookmark_border,
+                  color: _saveNewAddress ? AppColors.primary : AppColors.textHint,
+                ),
+              ],
+            ),
+          ),
+          // Champ pour le label de l'adresse (si on veut enregistrer)
+          if (_saveNewAddress) ...[
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _addressLabelController,
+              decoration: InputDecoration(
+                labelText: 'Nom de l\'adresse',
+                hintText: 'Ex: Maison, Bureau, Chez maman...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                prefixIcon: const Icon(Icons.label_outline),
+                isDense: true,
+              ),
+              validator: (value) {
+                if (_saveNewAddress && (value == null || value.trim().isEmpty)) {
+                  return 'Donnez un nom à cette adresse';
+                }
+                return null;
+              },
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -444,6 +549,11 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         city: _cityController.text.trim(),
         phone: _phoneController.text.trim(),
       );
+      
+      // Enregistrer l'adresse si l'utilisateur l'a demandé
+      if (_saveNewAddress) {
+        await _saveAddressToProfile();
+      }
     } else {
       // Utiliser l'adresse sauvegardée
       deliveryAddress = DeliveryAddressEntity(
@@ -659,5 +769,41 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       MaterialPageRoute(builder: (_) => const OrdersListPage()),
       (route) => route.isFirst,
     );
+  }
+
+  /// Enregistre l'adresse manuelle dans le profil utilisateur
+  Future<void> _saveAddressToProfile() async {
+    try {
+      final label = _addressLabelController.text.trim().isNotEmpty
+          ? _addressLabelController.text.trim()
+          : 'Adresse ${DateTime.now().day}/${DateTime.now().month}';
+      
+      await ref.read(addressesProvider.notifier).createAddress(
+        label: label,
+        address: _addressController.text.trim(),
+        city: _cityController.text.trim(),
+        phone: _phoneController.text.trim(),
+        isDefault: ref.read(addressesProvider).addresses.isEmpty, // Défaut si première adresse
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text('Adresse "$label" enregistrée'),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // Silently fail - l'adresse n'est pas critique pour la commande
+      debugPrint('Erreur lors de l\'enregistrement de l\'adresse: $e');
+    }
   }
 }

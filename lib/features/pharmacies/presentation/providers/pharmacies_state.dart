@@ -13,6 +13,8 @@ class PharmaciesState extends Equatable {
   final String? errorMessage;
   final bool hasReachedMax;
   final int currentPage;
+  final bool isFeaturedLoading;
+  final bool isFeaturedLoaded;
 
   const PharmaciesState({
     this.status = PharmaciesStatus.initial,
@@ -24,6 +26,8 @@ class PharmaciesState extends Equatable {
     this.errorMessage,
     this.hasReachedMax = false,
     this.currentPage = 1,
+    this.isFeaturedLoading = false,
+    this.isFeaturedLoaded = false,
   });
 
   PharmaciesState copyWith({
@@ -36,6 +40,8 @@ class PharmaciesState extends Equatable {
     String? errorMessage,
     bool? hasReachedMax,
     int? currentPage,
+    bool? isFeaturedLoading,
+    bool? isFeaturedLoaded,
   }) {
     return PharmaciesState(
       status: status ?? this.status,
@@ -47,6 +53,8 @@ class PharmaciesState extends Equatable {
       errorMessage: errorMessage ?? this.errorMessage,
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
       currentPage: currentPage ?? this.currentPage,
+      isFeaturedLoading: isFeaturedLoading ?? this.isFeaturedLoading,
+      isFeaturedLoaded: isFeaturedLoaded ?? this.isFeaturedLoaded,
     );
   }
 
@@ -61,5 +69,7 @@ class PharmaciesState extends Equatable {
         errorMessage,
         hasReachedMax,
         currentPage,
+        isFeaturedLoading,
+        isFeaturedLoaded,
       ];
 }

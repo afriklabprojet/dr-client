@@ -765,8 +765,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ],
         ),
         const SizedBox(height: 16),
-        if (pharmaciesState.status == PharmaciesStatus.loading &&
-            pharmacies.isEmpty)
+        if (pharmaciesState.isFeaturedLoading && pharmacies.isEmpty)
           _buildPharmaciesLoadingShimmer(isDark)
         else if (pharmacies.isEmpty)
           _buildNoPharmaciesWidget(isDark)
@@ -866,14 +865,22 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Chargement des pharmacies...',
+              'Aucune pharmacie en vedette',
               style: TextStyle(
                 color: isDark ? Colors.grey[300] : Colors.grey[700],
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
+            Text(
+              'Explorez toutes nos pharmacies partenaires',
+              style: TextStyle(
+                color: isDark ? Colors.grey[500] : Colors.grey[500],
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 12),
             GestureDetector(
               onTap: () {
                 ref.read(pharmaciesProvider.notifier).fetchFeaturedPharmacies();

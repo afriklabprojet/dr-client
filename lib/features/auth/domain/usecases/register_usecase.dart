@@ -20,9 +20,9 @@ class RegisterUseCase {
     if (name.isEmpty) {
       return Left(
         ValidationFailure(
-          message: 'Name is required',
+          message: 'Le nom est requis',
           errors: {
-            'name': ['Name is required'],
+            'name': ['Le nom est requis'],
           },
         ),
       );
@@ -31,9 +31,9 @@ class RegisterUseCase {
     if (email.isEmpty || !_isValidEmail(email)) {
       return Left(
         ValidationFailure(
-          message: 'Invalid email format',
+          message: 'Format d\'email invalide',
           errors: {
-            'email': ['Invalid email format'],
+            'email': ['Format d\'email invalide'],
           },
         ),
       );
@@ -42,9 +42,9 @@ class RegisterUseCase {
     if (phone.isEmpty || !_isValidPhone(phone)) {
       return Left(
         ValidationFailure(
-          message: 'Invalid phone number',
+          message: 'Numéro de téléphone invalide',
           errors: {
-            'phone': ['Invalid phone number'],
+            'phone': ['Numéro de téléphone invalide'],
           },
         ),
       );
@@ -53,9 +53,9 @@ class RegisterUseCase {
     if (password.isEmpty || password.length < 6) {
       return Left(
         ValidationFailure(
-          message: 'Password must be at least 6 characters',
+          message: 'Le mot de passe doit contenir au moins 6 caractères',
           errors: {
-            'password': ['Password must be at least 6 characters'],
+            'password': ['Le mot de passe doit contenir au moins 6 caractères'],
           },
         ),
       );
@@ -64,9 +64,9 @@ class RegisterUseCase {
     if (password != passwordConfirmation) {
       return Left(
         ValidationFailure(
-          message: 'Passwords do not match',
+          message: 'Les mots de passe ne correspondent pas',
           errors: {
-            'password': ['Passwords do not match'],
+            'password': ['Les mots de passe ne correspondent pas'],
           },
         ),
       );
@@ -89,8 +89,10 @@ class RegisterUseCase {
   }
 
   bool _isValidPhone(String phone) {
-    // Côte d'Ivoire phone format: +225 XX XX XX XX XX or variations
-    final phoneRegex = RegExp(r'^(\+?225)?[0-9]{10}$');
-    return phoneRegex.hasMatch(phone.replaceAll(RegExp(r'\s'), ''));
+    // Accept international phone formats: at least 8 digits, may start with + or country code
+    // Supports: +22890123456, 0511223344, 90123456, +225 01 23 45 67 89
+    final cleanPhone = phone.replaceAll(RegExp(r'\s'), '');
+    final phoneRegex = RegExp(r'^[+]?[0-9]{8,15}$');
+    return phoneRegex.hasMatch(cleanPhone);
   }
 }
