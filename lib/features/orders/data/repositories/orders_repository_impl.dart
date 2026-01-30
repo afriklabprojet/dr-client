@@ -108,6 +108,12 @@ class OrdersRepositoryImpl implements OrdersRepository {
       await localDataSource.cacheOrder(order);
 
       return Right(order.toEntity());
+    } on ValidationException catch (e) {
+      String msg = 'Erreur de validation';
+      if (e.errors.isNotEmpty) {
+        msg = e.errors.values.expand((element) => element).join('\n');
+      }
+      return Left(ValidationFailure(message: msg, errors: e.errors));
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } on UnauthorizedException catch (e) {

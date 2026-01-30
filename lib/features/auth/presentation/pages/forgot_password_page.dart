@@ -125,19 +125,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
             ),
           ),
 
-          // Back Button
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
-            left: 16,
-            child: IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                padding: const EdgeInsets.all(12),
-              ),
-            ),
-          ),
+
 
           // Main Content
           SafeArea(
@@ -274,6 +262,19 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+          // Back Button
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            left: 16,
+            child: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                padding: const EdgeInsets.all(12),
               ),
             ),
           ),

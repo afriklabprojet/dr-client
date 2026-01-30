@@ -54,6 +54,16 @@ class _LoginPageState extends ConsumerState<LoginPage>
           ),
         );
 
+    // Check authorization on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = ref.read(authProvider);
+      if (authState.status == AuthStatus.authenticated && mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      }
+    });
+
     _animationController.forward();
   }
 
@@ -145,64 +155,66 @@ class _LoginPageState extends ConsumerState<LoginPage>
       }
     });
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
-      body: Stack(
-        children: [
-          // Background Design
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: size.height * 0.4,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.primary, AppColors.primaryDark],
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
+        body: Stack(
+          children: [
+            // Background Design
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: size.height * 0.4,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.primary, AppColors.primaryDark],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
                 ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: -50,
-                    right: -50,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.1),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: -50,
+                      right: -50,
+                      child: Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    bottom: 50,
-                    left: -30,
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.1),
+                    Positioned(
+                      bottom: 50,
+                      left: -30,
+                      child: Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // Main Content
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
+            // Main Content
+            SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
                 _buildHeader(isDark),
                 const SizedBox(height: 30),
                 Expanded(
@@ -337,6 +349,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
             ),
           ),
         ],
+      ),
       ),
     );
   }

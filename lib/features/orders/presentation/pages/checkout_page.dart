@@ -1,8 +1,10 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../addresses/domain/entities/address_entity.dart';
 import '../../../addresses/presentation/providers/addresses_provider.dart';
 import '../../../addresses/presentation/widgets/address_selector.dart';
@@ -29,7 +31,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   final _notesController = TextEditingController();
   final _addressLabelController = TextEditingController();
 
-  String _paymentMode = 'platform'; // platform or on_delivery
+  String _paymentMode = AppConstants.paymentModePlatform; // platform or on_delivery
   bool _useManualAddress = false; // Toggle pour adresse manuelle
   bool _saveNewAddress = false; // Option pour enregistrer la nouvelle adresse
   AddressEntity? _selectedSavedAddress;
@@ -79,12 +81,14 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
     final ordersState = ref.watch(ordersProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final currencyFormat = NumberFormat.currency(
-      locale: 'fr_CI',
-      symbol: 'F CFA',
+      locale: AppConstants.currencyLocale,
+      symbol: AppConstants.currencySymbol,
       decimalDigits: 0,
     );
+
 
     if (cartState.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -111,8 +115,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                     const SizedBox(height: 24),
 
                     // Delivery Address Section
-                    _buildDeliveryAddressSection(),
+                    _buildDeliveryAddressSection(isDark),
                     const SizedBox(height: 24),
+
 
                     // Payment Mode
                     _buildSectionTitle('Mode de paiement'),
@@ -223,7 +228,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   /// Nouvelle section pour les adresses avec option saved/manuel
-  Widget _buildDeliveryAddressSection() {
+  Widget _buildDeliveryAddressSection(bool isDark) {
     final addressesState = ref.watch(addressesProvider);
     
     return Column(
@@ -239,6 +244,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                   label: 'Adresse enregistrée',
                   isSelected: !_useManualAddress,
                   onTap: () => setState(() => _useManualAddress = false),
+                  isDark: isDark,
                 ),
               ),
               const SizedBox(width: 12),
@@ -248,6 +254,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                   label: 'Nouvelle adresse',
                   isSelected: _useManualAddress,
                   onTap: () => setState(() => _useManualAddress = true),
+                  isDark: isDark,
                 ),
               ),
             ],
@@ -257,7 +264,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         
         // Afficher le sélecteur ou le formulaire
         if (_useManualAddress || addressesState.addresses.isEmpty)
-          _buildDeliveryForm()
+          _buildDeliveryForm(isDark)
         else
           AddressSelector(
             initialAddress: _selectedSavedAddress,
@@ -276,6 +283,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
+    required bool isDark,
   }) {
     return InkWell(
       onTap: onTap,
@@ -283,10 +291,14 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.grey.shade50,
+          color: isSelected 
+              ? AppColors.primary.withValues(alpha: 0.1) 
+              : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.grey.shade300,
+            color: isSelected 
+                ? AppColors.primary 
+                : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey.shade300),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -305,7 +317,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                  color: isSelected 
+                      ? AppColors.primary 
+                      : (isDark ? Colors.white70 : AppColors.textSecondary),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -316,11 +330,12 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     );
   }
 
-  Widget _buildDeliveryForm() {
+  Widget _buildDeliveryForm(bool isDark) {
     return Column(
       children: [
         TextFormField(
           controller: _addressController,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: const InputDecoration(
             labelText: 'Adresse complète *',
             hintText: 'Ex: 123 Rue des Jardins, Cocody',
@@ -340,6 +355,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         const SizedBox(height: 12),
         TextFormField(
           controller: _cityController,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: const InputDecoration(
             labelText: 'Ville *',
             hintText: 'Ex: Abidjan',
@@ -357,6 +373,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         TextFormField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: const InputDecoration(
             labelText: 'Téléphone *',
             hintText: '+225 07 00 00 00 00',
@@ -375,23 +392,23 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         ),
         const SizedBox(height: 16),
         // Option pour enregistrer l'adresse
-        _buildSaveAddressOption(),
+        _buildSaveAddressOption(isDark),
       ],
     );
   }
 
-  Widget _buildSaveAddressOption() {
+  Widget _buildSaveAddressOption(bool isDark) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: _saveNewAddress 
-            ? AppColors.primary.withValues(alpha: 0.05) 
-            : Colors.grey.shade50,
+            ? AppColors.primary.withValues(alpha: 0.1) 
+            : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: _saveNewAddress 
               ? AppColors.primary.withValues(alpha: 0.3)
-              : Colors.grey.shade200,
+              : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey.shade200),
         ),
       ),
       child: Column(
@@ -408,6 +425,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                     value: _saveNewAddress,
                     onChanged: (value) => setState(() => _saveNewAddress = value ?? false),
                     activeColor: AppColors.primary,
+                    side: BorderSide(
+                      color: isDark ? Colors.white60 : Colors.grey,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -418,18 +438,19 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Enregistrer cette adresse',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
+                          color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
                       Text(
                         'Pour vos prochaines commandes',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textHint,
+                          color: isDark ? Colors.white60 : AppColors.textHint,
                         ),
                       ),
                     ],
@@ -437,7 +458,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                 ),
                 Icon(
                   _saveNewAddress ? Icons.bookmark : Icons.bookmark_border,
-                  color: _saveNewAddress ? AppColors.primary : AppColors.textHint,
+                  color: _saveNewAddress 
+                      ? AppColors.primary 
+                      : (isDark ? Colors.white60 : AppColors.textHint),
                 ),
               ],
             ),
@@ -447,6 +470,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _addressLabelController,
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
               decoration: InputDecoration(
                 labelText: 'Nom de l\'adresse',
                 hintText: 'Ex: Maison, Bureau, Chez maman...',
@@ -470,28 +494,28 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   Widget _buildPaymentMode() {
-    return RadioGroup<String>(
-      groupValue: _paymentMode,
-      onChanged: (value) => setState(() => _paymentMode = value!),
-      child: Column(
-        children: [
-          RadioListTile<String>(
-            value: 'platform',
-            title: const Text('Paiement en ligne'),
-            subtitle: const Text('Payez maintenant par mobile money'),
-            secondary: const Icon(Icons.payment, color: AppColors.primary),
+    return Column(
+      children: [
+        RadioListTile<String>(
+          value: AppConstants.paymentModePlatform,
+          groupValue: _paymentMode,
+          onChanged: (value) => setState(() => _paymentMode = value!),
+          title: const Text('Paiement en ligne'),
+          subtitle: const Text('Payez maintenant par mobile money'),
+          secondary: const Icon(Icons.payment, color: AppColors.primary),
+        ),
+        RadioListTile<String>(
+          value: AppConstants.paymentModeOnDelivery,
+          groupValue: _paymentMode,
+          onChanged: (value) => setState(() => _paymentMode = value!),
+          title: const Text('Paiement à la livraison'),
+          subtitle: const Text('Payez en espèces lors de la réception'),
+          secondary: const Icon(
+            Icons.local_shipping,
+            color: AppColors.primary,
           ),
-          RadioListTile<String>(
-            value: 'on_delivery',
-            title: const Text('Paiement à la livraison'),
-            subtitle: const Text('Payez en espèces lors de la réception'),
-            secondary: const Icon(
-              Icons.local_shipping,
-              color: AppColors.primary,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -533,6 +557,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     // Convert cart items to order items
     final orderItems = cartState.items.map((item) {
       return OrderItemEntity(
+        productId: item.product.id,
         name: item.product.name,
         quantity: item.quantity,
         unitPrice: item.product.price,

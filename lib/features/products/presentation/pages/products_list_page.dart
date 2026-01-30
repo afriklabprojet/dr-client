@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:badges/badges.dart' as badges;
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/widgets/cached_image.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/utils/page_transitions.dart';
 import '../../../prescriptions/presentation/pages/prescription_upload_page.dart';
+import '../../../orders/presentation/pages/cart_page.dart';
+import '../../../orders/presentation/providers/cart_provider.dart';
 import '../widgets/category_chip.dart';
 import '../providers/products_provider.dart';
 import '../providers/products_state.dart';
@@ -87,6 +90,37 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // Cart Icon
+          Consumer(
+            builder: (context, ref, child) {
+              final cartState = ref.watch(cartProvider);
+              final itemCount = cartState.items.length;
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: badges.Badge(
+                  position: badges.BadgePosition.topEnd(top: 0, end: 3),
+                  showBadge: itemCount > 0,
+                  badgeContent: Text(
+                    '$itemCount',
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.shopping_cart_outlined),
+                    tooltip: 'Panier',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CartPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
           // Prescription button
           IconButton(
             icon: const Icon(Icons.file_upload_outlined),
@@ -97,6 +131,29 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
                 MaterialPageRoute(
                   builder: (_) => const PrescriptionUploadPage(),
                 ),
+              );
+            },
+          ),
+
+          // Cart button
+          Consumer(
+            builder: (context, ref, child) {
+              final cart = ref.watch(cartProvider);
+              return IconButton(
+                icon: badges.Badge(
+                  badgeContent: Text(
+                    cart.items.length.toString(),
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                  child: const Icon(Icons.shopping_cart),
+                ),
+                tooltip: 'Voir le panier',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CartPage()),
+                  );
+                },
               );
             },
           ),

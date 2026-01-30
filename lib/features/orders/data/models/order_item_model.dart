@@ -5,6 +5,8 @@ part 'order_item_model.g.dart';
 
 @JsonSerializable()
 class OrderItemModel {
+  @JsonKey(name: 'product_id')
+  final int? productId;
   final int? id;
   final String name;
   final int quantity;
@@ -14,6 +16,7 @@ class OrderItemModel {
   final double totalPrice;
 
   const OrderItemModel({
+    this.productId,
     this.id,
     required this.name,
     required this.quantity,
@@ -29,6 +32,7 @@ class OrderItemModel {
   OrderItemEntity toEntity() {
     return OrderItemEntity(
       id: id,
+      productId: productId,
       name: name,
       quantity: quantity,
       unitPrice: unitPrice,
@@ -39,6 +43,7 @@ class OrderItemModel {
   factory OrderItemModel.fromEntity(OrderItemEntity entity) {
     return OrderItemModel(
       id: entity.id,
+      productId: entity.productId,
       name: entity.name,
       quantity: entity.quantity,
       unitPrice: entity.unitPrice,

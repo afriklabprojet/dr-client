@@ -15,7 +15,6 @@ import 'features/notifications/presentation/providers/notifications_provider.dar
 import 'features/pharmacies/presentation/pages/pharmacies_list_page_v2.dart';
 import 'features/pharmacies/presentation/pages/pharmacy_details_page.dart';
 import 'features/pharmacies/presentation/pages/on_duty_pharmacies_map_page.dart';
-import 'features/pharmacies/presentation/providers/pharmacies_state.dart';
 import 'features/prescriptions/presentation/pages/prescription_upload_page.dart';
 import 'features/prescriptions/presentation/pages/prescriptions_list_page.dart';
 

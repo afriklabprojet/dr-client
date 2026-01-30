@@ -22,6 +22,15 @@ class AppConstants {
 
   // Phone number format (Côte d'Ivoire)
   static const String phoneRegex = r'^\+225\s?\d{2}\s?\d{2}\s?\d{2}\s?\d{2}$';
+  static const int phoneLengthWithPrefix = 10; // e.g. 07xxxxxxxx
+
+  // Payment Modes
+  static const String paymentModePlatform = 'platform';
+  static const String paymentModeOnDelivery = 'on_delivery';
+
+  // Currency
+  static const String currencyLocale = 'fr_CI';
+  static const String currencySymbol = 'F CFA';
 
   // Timeouts
   static const Duration splashDuration = Duration(seconds: 2);

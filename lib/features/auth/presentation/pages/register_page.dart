@@ -213,6 +213,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             ),
           ),
 
+
+
           // Main Content
           SafeArea(
             child: Column(
@@ -319,6 +321,19 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               ],
             ),
           ),
+          // Back Button
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            left: 16,
+            child: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                padding: const EdgeInsets.all(12),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -408,6 +423,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         }
         if (value.length != 10) {
           return 'Le numéro doit contenir 10 chiffres';
+        }
+        if (!value.startsWith('0')) {
+          return 'Le numéro doit commencer par 0';
         }
         return null;
       },
