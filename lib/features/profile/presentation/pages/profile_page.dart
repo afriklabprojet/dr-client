@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/widgets/cached_image.dart';
 import '../../../../core/providers/theme_provider.dart';
-import '../../../addresses/presentation/pages/addresses_list_page.dart';
-import '../../../auth/presentation/pages/change_password_page.dart';
+import '../../../../core/router/app_router.dart';
 import '../providers/profile_provider.dart';
-import 'edit_profile_page.dart';
-import 'notification_settings_page.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -219,13 +217,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   icon: Icons.edit,
                   title: 'Modifier le profil',
                   subtitle: 'Changer vos informations personnelles',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const EditProfilePage(),
-                      ),
-                    );
-                  },
+                  onTap: () => context.goToEditProfile(),
                 ),
                 const SizedBox(height: 12),
 
@@ -233,13 +225,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   icon: Icons.location_on,
                   title: 'Mes adresses',
                   subtitle: 'Gérer vos adresses de livraison',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const AddressesListPage(),
-                      ),
-                    );
-                  },
+                  onTap: () => context.goToAddresses(),
                 ),
                 const SizedBox(height: 12),
 
@@ -247,13 +233,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   icon: Icons.lock,
                   title: 'Changer le mot de passe',
                   subtitle: 'Mettre à jour votre mot de passe',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const ChangePasswordPage(),
-                      ),
-                    );
-                  },
+                  onTap: () => context.go(AppRoutes.changePassword),
                 ),
                 const SizedBox(height: 12),
 
@@ -261,13 +241,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   icon: Icons.notifications,
                   title: 'Notifications',
                   subtitle: 'Gérer vos préférences de notification',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const NotificationSettingsPage(),
-                      ),
-                    );
-                  },
+                  onTap: () => context.goToNotificationSettings(),
                 ),
                 const SizedBox(height: 12),
 

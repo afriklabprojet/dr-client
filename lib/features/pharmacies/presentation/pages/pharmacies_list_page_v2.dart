@@ -5,8 +5,8 @@ import '../../domain/entities/pharmacy_entity.dart';
 import '../../../../config/providers.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/url_launcher_service.dart';
+import '../../../../core/router/app_router.dart';
 import '../providers/pharmacies_state.dart';
-import 'pharmacy_details_page.dart';
 import 'pharmacies_map_page.dart';
 
 class PharmaciesListPageV2 extends ConsumerStatefulWidget {
@@ -521,14 +521,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PharmacyDetailsPage(pharmacyId: pharmacy.id),
-              ),
-            );
-          },
+          onTap: () => context.pushToPharmacyDetails(pharmacy.id),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -759,14 +752,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
                         icon: Icons.info_outline,
                         label: 'Détails',
                         color: Colors.grey[700]!,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => PharmacyDetailsPage(pharmacyId: pharmacy.id),
-                            ),
-                          );
-                        },
+                        onTap: () => context.pushToPharmacyDetails(pharmacy.id),
                       ),
                     ),
                   ],

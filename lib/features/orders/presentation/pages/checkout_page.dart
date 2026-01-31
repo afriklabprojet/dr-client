@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../addresses/domain/entities/address_entity.dart';
 import '../../../addresses/presentation/providers/addresses_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -14,7 +15,6 @@ import '../../domain/entities/delivery_address_entity.dart';
 import '../providers/orders_state.dart';
 import '../providers/orders_provider.dart';
 import '../widgets/widgets.dart';
-import 'orders_list_page.dart';
 
 class CheckoutPage extends ConsumerStatefulWidget {
   const CheckoutPage({super.key});
@@ -393,9 +393,6 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   void _navigateToOrders() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const OrdersListPage()),
-      (route) => route.isFirst,
-    );
+    context.goToOrders();
   }
 }

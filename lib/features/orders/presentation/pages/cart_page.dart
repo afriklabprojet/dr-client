@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../providers/cart_provider.dart';
 import '../providers/cart_state.dart';
-import 'checkout_page.dart';
 
 class CartPage extends ConsumerWidget {
   const CartPage({super.key});
@@ -328,11 +328,7 @@ class CartPage extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const CheckoutPage()),
-                  );
-                },
+                onPressed: () => context.pushToCheckout(),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
