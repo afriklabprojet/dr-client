@@ -8,11 +8,7 @@ import 'config/providers.dart';
 import 'core/constants/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/theme_provider.dart';
-import 'core/services/navigation_service.dart';
-import 'features/auth/presentation/pages/splash_page.dart';
-import 'features/orders/presentation/pages/order_details_page.dart';
-import 'features/orders/presentation/pages/orders_list_page.dart';
-import 'features/notifications/presentation/pages/notifications_page.dart';
+import 'core/router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,30 +41,15 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeState = ref.watch(themeProvider);
+    final router = ref.watch(routerProvider);
 
-    return MaterialApp(
+    return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      navigatorKey: navigatorKey, // Global navigator key for notifications
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeState.themeMode,
-      home: const SplashPage(),
-      // Named routes for deep linking from notifications
-      routes: {
-        '/orders': (context) => const OrdersListPage(),
-        '/notifications': (context) => const NotificationsPage(),
-      },
-      onGenerateRoute: (settings) {
-        // Handle /order-details route with parameter
-        if (settings.name == '/order-details') {
-          final orderId = settings.arguments as int;
-          return MaterialPageRoute(
-            builder: (context) => OrderDetailsPage(orderId: orderId),
-          );
-        }
-        return null;
-      },
+      routerConfig: router,
     );
   }
 }

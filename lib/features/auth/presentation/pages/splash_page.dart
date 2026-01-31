@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../home_page.dart';
+import '../../../../core/router/app_router.dart';
 import '../providers/auth_provider.dart';
 import '../providers/auth_state.dart';
-import 'login_page.dart';
-import 'onboarding_page.dart';
-import 'otp_verification_page.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -68,9 +66,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
     if (!mounted) return;
 
     if (!onboardingCompleted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const OnboardingPage()),
-      );
+      context.go(AppRoutes.onboarding);
       return;
     }
 
@@ -92,21 +88,13 @@ class _SplashPageState extends ConsumerState<SplashPage>
       final user = authState.user;
       if (user != null && !user.isPhoneVerified) {
         // Rediriger vers OTP si téléphone non vérifié
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => OtpVerificationPage(phoneNumber: user.phone),
-          ),
-        );
+        context.goToOtpVerification(user.phone);
       } else {
         // Rediriger vers Home si téléphone vérifié
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
+        context.goToHome();
       }
     } else {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()));
+      context.goToLogin();
     }
   }
 

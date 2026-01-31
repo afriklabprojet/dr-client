@@ -3,12 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../config/providers.dart'; // Import pour notificationService
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../providers/auth_provider.dart';
 import '../providers/auth_state.dart';
-import 'register_page.dart';
-import 'forgot_password_page.dart';
-import 'otp_verification_page.dart';
-import '../../../../home_page.dart';
 
 /// Écran de connexion premium pour DR-PHARMA
 /// Design moderne, minimaliste et professionnel
@@ -62,16 +59,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
         final user = authState.user;
         if (user != null && !user.isPhoneVerified) {
           // Rediriger vers OTP si téléphone non vérifié
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => OtpVerificationPage(phoneNumber: user.phone),
-            ),
-          );
+          context.goToOtpVerification(user.phone);
         } else {
           // Rediriger vers Home si téléphone vérifié
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const HomePage()),
-          );
+          context.goToHome();
         }
       }
     });
@@ -226,17 +217,11 @@ class _LoginPageState extends ConsumerState<LoginPage>
           if (user != null && !user.isPhoneVerified) {
             // Rediriger vers OTP si téléphone non vérifié
             // ignore: use_build_context_synchronously
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => OtpVerificationPage(phoneNumber: user.phone),
-              ),
-            );
+            context.goToOtpVerification(user.phone);
           } else {
             // Rediriger vers Home si téléphone vérifié
             // ignore: use_build_context_synchronously
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const HomePage()),
-            );
+            context.goToHome();
           }
         }
       } else if (next.status == AuthStatus.error) {
@@ -419,14 +404,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                                   Align(
                                     alignment: Alignment.centerRight,
                                     child: TextButton(
-                                      onPressed: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                const ForgotPasswordPage(),
-                                          ),
-                                        );
-                                      },
+                                      onPressed: () => context.goToForgotPassword(),
                                       child: Text(
                                         'Mot de passe oublié ?',
                                         style: TextStyle(
@@ -822,11 +800,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
           ),
         ),
         GestureDetector(
-          onTap: () {
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const RegisterPage()));
-          },
+          onTap: () => context.goToRegister(),
           child: Text(
             'Créer un compte',
             style: TextStyle(
