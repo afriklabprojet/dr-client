@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../config/providers.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/ui_state_providers.dart';
+
+// Provider IDs for this page
+const _obscureCurrentId = 'change_pwd_obscure_current';
+const _obscureNewId = 'change_pwd_obscure_new';
+const _obscureConfirmId = 'change_pwd_obscure_confirm';
+const _loadingId = 'change_pwd_loading';
 
 class ChangePasswordPage extends ConsumerStatefulWidget {
   const ChangePasswordPage({super.key});
@@ -17,12 +24,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  bool _isLoading = false;
-  bool _obscureCurrent = true;
-  bool _obscureNew = true;
-  bool _obscureConfirm = true;
-  
-  // Password strength
+  // Password strength - kept as setState (tightly coupled with listener)
   double _passwordStrength = 0;
   String _passwordStrengthText = '';
   Color _passwordStrengthColor = Colors.grey;
@@ -97,7 +99,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    ref.read(loadingProvider(_loadingId).notifier).startLoading();
 
     try {
       final result = await ref.read(updatePasswordUseCaseProvider).call(
@@ -148,7 +150,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) ref.read(loadingProvider(_loadingId).notifier).stopLoading();
     }
   }
 
@@ -205,6 +207,13 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch providers for UI state
+    final obscureCurrent = ref.watch(toggleProvider(_obscureCurrentId));
+    final obscureNew = ref.watch(toggleProvider(_obscureNewId));
+    final obscureConfirm = ref.watch(toggleProvider(_obscureConfirmId));
+    final loadingState = ref.watch(loadingProvider(_loadingId));
+    final isLoading = loadingState.isLoading;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FD),
       appBar: AppBar(
@@ -282,8 +291,8 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                 controller: _currentPasswordController,
                 label: 'Mot de passe actuel',
                 hint: 'Entrez votre mot de passe actuel',
-                obscure: _obscureCurrent,
-                onToggleObscure: () => setState(() => _obscureCurrent = !_obscureCurrent),
+                obscure: obscureCurrent,
+                onToggleObscure: () => ref.read(toggleProvider(_obscureCurrentId).notifier).toggle(),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Veuillez entrer votre mot de passe actuel';
@@ -298,8 +307,8 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                 controller: _newPasswordController,
                 label: 'Nouveau mot de passe',
                 hint: 'Entrez votre nouveau mot de passe',
-                obscure: _obscureNew,
-                onToggleObscure: () => setState(() => _obscureNew = !_obscureNew),
+                obscure: obscureNew,
+                onToggleObscure: () => ref.read(toggleProvider(_obscureNewId).notifier).toggle(),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Veuillez entrer un nouveau mot de passe';
@@ -351,8 +360,8 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                 controller: _confirmPasswordController,
                 label: 'Confirmer le mot de passe',
                 hint: 'Confirmez votre nouveau mot de passe',
-                obscure: _obscureConfirm,
-                onToggleObscure: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                obscure: obscureConfirm,
+                onToggleObscure: () => ref.read(toggleProvider(_obscureConfirmId).notifier).toggle(),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Veuillez confirmer votre mot de passe';
@@ -370,7 +379,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
+                  onPressed: isLoading ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -379,7 +388,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                     ),
                     elevation: 0,
                   ),
-                  child: _isLoading
+                  child: isLoading
                       ? const SizedBox(
                           width: 24,
                           height: 24,
