@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/errors/error_handler.dart';
+import '../../../../core/services/app_logger.dart';
+import '../../../../core/validators/form_validators.dart';
 import '../providers/addresses_provider.dart';
 
 /// Page d'ajout d'une nouvelle adresse
@@ -119,12 +122,7 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
                 prefixIcon: Icon(Icons.location_on_outlined),
                 border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'L\'adresse est requise';
-                }
-                return null;
-              },
+              validator: FormValidators.validateAddress,
               maxLines: 2,
             ),
             const SizedBox(height: 16),
@@ -387,11 +385,9 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Permission de localisation refusée'),
-                backgroundColor: Colors.orange,
-              ),
+            ErrorHandler.showWarningSnackBar(
+              context, 
+              'Permission de localisation refusée',
             );
           }
           return;
@@ -400,11 +396,9 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
 
       if (permission == LocationPermission.deniedForever) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('La localisation est désactivée. Activez-la dans les paramètres.'),
-              backgroundColor: Colors.orange,
-            ),
+          ErrorHandler.showWarningSnackBar(
+            context,
+            'La localisation est désactivée. Activez-la dans les paramètres.',
           );
         }
         return;
@@ -468,27 +462,20 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
         }
       } catch (geocodeError) {
         // Le reverse geocoding a échoué, mais on a quand même les coordonnées
-        debugPrint('Reverse geocoding failed: $geocodeError');
+        AppLogger.location('Reverse geocoding failed', error: geocodeError);
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_addressController.text.isNotEmpty 
-                ? 'Position et adresse enregistrées' 
-                : 'Position GPS enregistrée'),
-            backgroundColor: AppColors.success,
-          ),
+        ErrorHandler.showSuccessSnackBar(
+          context,
+          _addressController.text.isNotEmpty 
+              ? 'Position et adresse enregistrées' 
+              : 'Position GPS enregistrée',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur de localisation: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        ErrorHandler.showErrorSnackBar(context, 'Erreur de localisation: $e');
       }
     } finally {
       if (mounted) {
@@ -514,20 +501,13 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Adresse ajoutée avec succès'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        ErrorHandler.showSuccessSnackBar(context, 'Adresse ajoutée avec succès');
         Navigator.pop(context);
       } else {
         final error = ref.read(addressesProvider).error;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error ?? 'Erreur lors de l\'ajout de l\'adresse'),
-            backgroundColor: AppColors.error,
-          ),
+        ErrorHandler.showErrorSnackBar(
+          context, 
+          error ?? 'Erreur lors de l\'ajout de l\'adresse',
         );
       }
     }

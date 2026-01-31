@@ -5,7 +5,9 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/errors/error_handler.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/services/app_logger.dart';
 import '../../../addresses/domain/entities/address_entity.dart';
 import '../../../addresses/presentation/providers/addresses_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -357,39 +359,25 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       );
       
       if (mounted) {
-        _showSnackBar(
-          'Adresse "$label" enregistrée',
-          AppColors.success,
-          icon: Icons.check_circle,
-          duration: const Duration(seconds: 2),
-        );
+        ErrorHandler.showSuccessSnackBar(context, 'Adresse "$label" enregistrée');
       }
     } catch (e) {
-      debugPrint('Erreur lors de l\'enregistrement de l\'adresse: $e');
+      AppLogger.error('Erreur lors de l\'enregistrement de l\'adresse', error: e);
     }
   }
 
   void _showSnackBar(
     String message,
     Color backgroundColor, {
-    IconData? icon,
     Duration duration = const Duration(seconds: 3),
   }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: icon != null
-            ? Row(
-                children: [
-                  Icon(icon, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Text(message),
-                ],
-              )
-            : Text(message),
-        backgroundColor: backgroundColor,
-        duration: duration,
-      ),
-    );
+    if (backgroundColor == AppColors.success) {
+      ErrorHandler.showSuccessSnackBar(context, message);
+    } else if (backgroundColor == AppColors.error) {
+      ErrorHandler.showErrorSnackBar(context, message);
+    } else {
+      ErrorHandler.showWarningSnackBar(context, message);
+    }
   }
 
   void _navigateToOrders() {
