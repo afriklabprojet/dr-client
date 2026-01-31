@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../providers/prescriptions_provider.dart';
+
+// Provider ID for this page
+const _uploadLoadingId = 'prescription_upload_loading';
 
 class PrescriptionUploadPage extends ConsumerStatefulWidget {
   const PrescriptionUploadPage({super.key});
@@ -18,7 +22,7 @@ class _PrescriptionUploadPageState
   final ImagePicker _picker = ImagePicker();
   final List<XFile> _selectedImages = [];
   final TextEditingController _notesController = TextEditingController();
-  bool _isUploading = false;
+  // _isUploading migrated to loadingProvider(_uploadLoadingId)
 
   @override
   void dispose() {
@@ -150,9 +154,7 @@ class _PrescriptionUploadPageState
       return;
     }
 
-    setState(() {
-      _isUploading = true;
-    });
+    ref.read(loadingProvider(_uploadLoadingId).notifier).startLoading();
 
     try {
       // Upload prescription with API call
@@ -206,15 +208,15 @@ class _PrescriptionUploadPageState
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
+        ref.read(loadingProvider(_uploadLoadingId).notifier).stopLoading();
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isUploading = ref.watch(loadingProvider(_uploadLoadingId)).isLoading;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Upload d\'ordonnance'),
@@ -222,7 +224,7 @@ class _PrescriptionUploadPageState
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: _isUploading
+      body: isUploading
           ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

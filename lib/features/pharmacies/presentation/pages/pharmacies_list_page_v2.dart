@@ -4,10 +4,14 @@ import 'package:geolocator/geolocator.dart';
 import '../../domain/entities/pharmacy_entity.dart';
 import '../../../../config/providers.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/services/app_logger.dart';
 import '../../../../core/services/url_launcher_service.dart';
 import '../../../../core/router/app_router.dart';
 import '../providers/pharmacies_state.dart';
+
+// Provider ID for this page
+const _searchQueryId = 'pharmacies_v2_search_query';
 
 class PharmaciesListPageV2 extends ConsumerStatefulWidget {
   const PharmaciesListPageV2({super.key});
@@ -24,8 +28,9 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
   
+  // _currentPosition kept as setState (complex GPS type)
   Position? _currentPosition;
-  String _searchQuery = '';
+  // _searchQuery migrated to formFieldsProvider
 
   @override
   void initState() {
@@ -160,12 +165,13 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
         sourceList = state.pharmacies;
     }
 
-    if (_searchQuery.isEmpty) return sourceList;
+    final searchQuery = ref.read(formFieldsProvider(_searchQueryId))['query'] ?? '';
+    if (searchQuery.isEmpty) return sourceList;
 
     return sourceList.where((pharmacy) {
       final nameLower = pharmacy.name.toLowerCase();
       final addressLower = pharmacy.address.toLowerCase();
-      final queryLower = _searchQuery.toLowerCase();
+      final queryLower = searchQuery.toLowerCase();
       return nameLower.contains(queryLower) || addressLower.contains(queryLower);
     }).toList();
   }
@@ -292,22 +298,24 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
   }
 
   Widget _buildSearchBar() {
+    final searchQuery = ref.watch(formFieldsProvider(_searchQueryId))['query'] ?? '';
+    
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
       child: TextField(
         controller: _searchController,
-        onChanged: (value) => setState(() => _searchQuery = value),
+        onChanged: (value) => ref.read(formFieldsProvider(_searchQueryId).notifier).setField('query', value),
         decoration: InputDecoration(
           hintText: 'Rechercher une pharmacie...',
           hintStyle: TextStyle(color: Colors.grey[400]),
           prefixIcon: const Icon(Icons.search, color: AppColors.primary),
-          suffixIcon: _searchQuery.isNotEmpty
+          suffixIcon: searchQuery.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: () {
                     _searchController.clear();
-                    setState(() => _searchQuery = '');
+                    ref.read(formFieldsProvider(_searchQueryId).notifier).setField('query', '');
                   },
                 )
               : null,
@@ -445,6 +453,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
   Widget _buildEmptyState() {
     String message;
     IconData icon;
+    final searchQuery = ref.read(formFieldsProvider(_searchQueryId))['query'] ?? '';
     
     switch (_tabController.index) {
       case 1:
@@ -456,8 +465,8 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
         icon = Icons.emergency;
         break;
       default:
-        message = _searchQuery.isNotEmpty
-            ? 'Aucun résultat pour "$_searchQuery"'
+        message = searchQuery.isNotEmpty
+            ? 'Aucun résultat pour "$searchQuery"'
             : 'Aucune pharmacie disponible';
         icon = Icons.search_off;
     }
