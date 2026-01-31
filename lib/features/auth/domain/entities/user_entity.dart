@@ -8,6 +8,7 @@ class UserEntity extends Equatable {
   final String? address;
   final String? profilePicture;
   final DateTime? emailVerifiedAt;
+  final DateTime? phoneVerifiedAt;
   final DateTime createdAt;
 
   const UserEntity({
@@ -18,10 +19,12 @@ class UserEntity extends Equatable {
     this.address,
     this.profilePicture,
     this.emailVerifiedAt,
+    this.phoneVerifiedAt,
     required this.createdAt,
   });
 
   bool get isEmailVerified => emailVerifiedAt != null;
+  bool get isPhoneVerified => phoneVerifiedAt != null;
 
   @override
   List<Object?> get props => [
@@ -32,6 +35,7 @@ class UserEntity extends Equatable {
         address,
         profilePicture,
         emailVerifiedAt,
+        phoneVerifiedAt,
         createdAt,
       ];
 }

@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/auth_state.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart';
+import 'otp_verification_page.dart';
 import '../../../../home_page.dart';
 
 /// Écran de connexion premium pour DR-PHARMA
@@ -58,9 +59,20 @@ class _LoginPageState extends ConsumerState<LoginPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authState = ref.read(authProvider);
       if (authState.status == AuthStatus.authenticated && mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
+        final user = authState.user;
+        if (user != null && !user.isPhoneVerified) {
+          // Rediriger vers OTP si téléphone non vérifié
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => OtpVerificationPage(phoneNumber: user.phone),
+            ),
+          );
+        } else {
+          // Rediriger vers Home si téléphone vérifié
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomePage()),
+          );
+        }
       }
     });
 
@@ -209,10 +221,23 @@ class _LoginPageState extends ConsumerState<LoginPage>
         }
 
         if (mounted) {
-          // ignore: use_build_context_synchronously
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const HomePage()),
-          );
+          // Vérifier si le téléphone est vérifié
+          final user = next.user;
+          if (user != null && !user.isPhoneVerified) {
+            // Rediriger vers OTP si téléphone non vérifié
+            // ignore: use_build_context_synchronously
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => OtpVerificationPage(phoneNumber: user.phone),
+              ),
+            );
+          } else {
+            // Rediriger vers Home si téléphone vérifié
+            // ignore: use_build_context_synchronously
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const HomePage()),
+            );
+          }
         }
       } else if (next.status == AuthStatus.error) {
         // Reset redirecting state on error

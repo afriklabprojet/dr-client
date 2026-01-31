@@ -13,6 +13,8 @@ class UserModel {
   final String? avatar;
   @JsonKey(name: 'email_verified_at')
   final String? emailVerifiedAt;
+  @JsonKey(name: 'phone_verified_at')
+  final String? phoneVerifiedAt;
   @JsonKey(name: 'created_at')
   final String? createdAt;
 
@@ -24,6 +26,7 @@ class UserModel {
     this.role,
     this.avatar,
     this.emailVerifiedAt,
+    this.phoneVerifiedAt,
     this.createdAt,
   });
 
@@ -42,6 +45,9 @@ class UserModel {
       profilePicture: avatar,
       emailVerifiedAt: emailVerifiedAt != null
           ? DateTime.parse(emailVerifiedAt!)
+          : null,
+      phoneVerifiedAt: phoneVerifiedAt != null
+          ? DateTime.parse(phoneVerifiedAt!)
           : null,
       createdAt: createdAt != null
           ? DateTime.parse(createdAt!)
