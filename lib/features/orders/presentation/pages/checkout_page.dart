@@ -185,32 +185,51 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Sous-total'),
-                Text(currencyFormat.format(cartState.subtotal)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Frais de livraison'),
-                Text(currencyFormat.format(cartState.deliveryFee)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                const Flexible(
+                  child: Text('Sous-total'),
                 ),
-                Text(
-                  currencyFormat.format(cartState.total),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+                Flexible(
+                  child: Text(
+                    currencyFormat.format(cartState.subtotal),
+                    textAlign: TextAlign.end,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Flexible(
+                  child: Text('Frais de livraison'),
+                ),
+                Flexible(
+                  child: Text(
+                    currencyFormat.format(cartState.deliveryFee),
+                    textAlign: TextAlign.end,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Flexible(
+                  child: Text(
+                    'Total',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Flexible(
+                  child: Text(
+                    currencyFormat.format(cartState.total),
+                    textAlign: TextAlign.end,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ],
