@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../domain/entities/address_entity.dart';
 import '../providers/addresses_provider.dart';
+
+// Provider IDs pour cette page
+const _isDefaultId = 'edit_address_is_default';
+const _selectedLabelId = 'edit_address_selected_label';
+const _isLoadingLocationId = 'edit_address_loading_location';
 
 /// Page d'édition d'une adresse existante
 class EditAddressPage extends ConsumerStatefulWidget {
@@ -26,11 +32,9 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
   late final TextEditingController _phoneController;
   late final TextEditingController _instructionsController;
   
-  late String _selectedLabel;
-  late bool _isDefault;
   double? _latitude;
   double? _longitude;
-  bool _isLoadingLocation = false;
+  bool _initialized = false;
 
   @override
   void initState() {
@@ -41,8 +45,6 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
     _districtController = TextEditingController(text: widget.address.district ?? '');
     _phoneController = TextEditingController(text: widget.address.phone ?? '');
     _instructionsController = TextEditingController(text: widget.address.instructions ?? '');
-    _selectedLabel = widget.address.label;
-    _isDefault = widget.address.isDefault;
     _latitude = widget.address.latitude;
     _longitude = widget.address.longitude;
   }
@@ -61,6 +63,20 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(addressesProvider);
     final labelsAsync = ref.watch(addressLabelsProvider);
+    
+    // Providers pour l'état UI
+    final isDefault = ref.watch(toggleProvider(_isDefaultId));
+    final selectedLabel = ref.watch(formFieldsProvider(_selectedLabelId))['label'] ?? widget.address.label;
+    final isLoadingLocation = ref.watch(loadingProvider(_isLoadingLocationId)).isLoading;
+    
+    // Initialiser les providers avec les valeurs de l'adresse au premier build
+    if (!_initialized) {
+      _initialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(toggleProvider(_isDefaultId).notifier).set(widget.address.isDefault);
+        ref.read(formFieldsProvider(_selectedLabelId).notifier).setField('label', widget.address.label);
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -77,10 +93,11 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
             _buildSectionTitle('Type d\'adresse'),
             const SizedBox(height: 8),
             labelsAsync.when(
-              data: (labels) => _buildLabelSelector(labels),
+              data: (labels) => _buildLabelSelector(labels, selectedLabel),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stackTrace) => _buildLabelSelector(
                 ['Maison', 'Bureau', 'Famille', 'Autre'],
+                selectedLabel,
               ),
             ),
             const SizedBox(height: 24),
@@ -138,7 +155,7 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
             // GPS Location
             _buildSectionTitle('Position GPS (optionnel)'),
             const SizedBox(height: 8),
-            _buildLocationSection(),
+            _buildLocationSection(isLoadingLocation),
             const SizedBox(height: 24),
 
             // Contact
@@ -178,8 +195,8 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
                 'Cette adresse sera utilisée par défaut pour vos commandes',
                 style: TextStyle(fontSize: 12, color: AppColors.textHint),
               ),
-              value: _isDefault,
-              onChanged: (value) => setState(() => _isDefault = value),
+              value: isDefault,
+              onChanged: (value) => ref.read(toggleProvider(_isDefaultId).notifier).set(value),
               activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
               thumbColor: WidgetStateProperty.resolveWith((states) =>
                 states.contains(WidgetState.selected) ? AppColors.primary : null),
@@ -191,7 +208,7 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
             SizedBox(
               height: 50,
               child: ElevatedButton(
-                onPressed: state.isLoading ? null : _submitForm,
+                onPressed: state.isLoading ? null : () => _submitForm(selectedLabel, isDefault),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -232,12 +249,12 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
     );
   }
 
-  Widget _buildLabelSelector(List<String> labels) {
+  Widget _buildLabelSelector(List<String> labels, String selectedLabel) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: labels.map((label) {
-        final isSelected = _selectedLabel == label;
+        final isSelected = selectedLabel == label;
         return ChoiceChip(
           label: Row(
             mainAxisSize: MainAxisSize.min,
@@ -254,7 +271,7 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
           selected: isSelected,
           onSelected: (selected) {
             if (selected) {
-              setState(() => _selectedLabel = label);
+              ref.read(formFieldsProvider(_selectedLabelId).notifier).setField('label', label);
             }
           },
           selectedColor: AppColors.primary,
@@ -279,7 +296,7 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
     }
   }
 
-  Widget _buildLocationSection() {
+  Widget _buildLocationSection(bool isLoadingLocation) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -324,8 +341,8 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: _isLoadingLocation ? null : _getCurrentLocation,
-                  icon: _isLoadingLocation
+                  onPressed: isLoadingLocation ? null : _getCurrentLocation,
+                  icon: isLoadingLocation
                       ? const SizedBox(
                           height: 18,
                           width: 18,
@@ -347,8 +364,8 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: _isLoadingLocation ? null : _getCurrentLocation,
-                  icon: _isLoadingLocation
+                  onPressed: isLoadingLocation ? null : _getCurrentLocation,
+                  icon: isLoadingLocation
                       ? const SizedBox(
                           height: 18,
                           width: 18,
@@ -356,7 +373,7 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
                         )
                       : const Icon(Icons.my_location),
                   label: Text(
-                    _isLoadingLocation
+                    isLoadingLocation
                         ? 'Localisation en cours...'
                         : 'Utiliser ma position actuelle',
                   ),
@@ -370,7 +387,7 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
   }
 
   Future<void> _getCurrentLocation() async {
-    setState(() => _isLoadingLocation = true);
+    ref.read(loadingProvider(_isLoadingLocationId).notifier).startLoading();
 
     try {
       LocationPermission permission = await Geolocator.checkPermission();
@@ -429,17 +446,17 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoadingLocation = false);
+        ref.read(loadingProvider(_isLoadingLocationId).notifier).stopLoading();
       }
     }
   }
 
-  Future<void> _submitForm() async {
+  Future<void> _submitForm(String selectedLabel, bool isDefault) async {
     if (!_formKey.currentState!.validate()) return;
 
     final success = await ref.read(addressesProvider.notifier).updateAddress(
       id: widget.address.id,
-      label: _selectedLabel,
+      label: selectedLabel,
       address: _addressController.text.trim(),
       city: _cityController.text.trim().isEmpty ? null : _cityController.text.trim(),
       district: _districtController.text.trim().isEmpty ? null : _districtController.text.trim(),
@@ -447,7 +464,7 @@ class _EditAddressPageState extends ConsumerState<EditAddressPage> {
       instructions: _instructionsController.text.trim().isEmpty ? null : _instructionsController.text.trim(),
       latitude: _latitude,
       longitude: _longitude,
-      isDefault: _isDefault,
+      isDefault: isDefault,
     );
 
     if (mounted) {

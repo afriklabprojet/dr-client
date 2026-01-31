@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/widgets/cached_image.dart';
 import '../../domain/entities/update_profile_entity.dart';
 import '../providers/profile_provider.dart';
+
+// Provider IDs pour cette page
+const _obscureCurrentPwdId = 'edit_profile_obscure_current';
+const _obscureNewPwdId = 'edit_profile_obscure_new';
+const _obscureConfirmPwdId = 'edit_profile_obscure_confirm';
+const _changingPasswordId = 'edit_profile_changing_password';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
@@ -20,11 +27,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-
-  bool _obscureCurrentPassword = true;
-  bool _obscureNewPassword = true;
-  bool _obscureConfirmPassword = true;
-  bool _isChangingPassword = false;
 
   // Helper method for theme-aware input decoration
   InputDecoration _buildInputDecoration({
@@ -97,6 +99,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       return;
     }
 
+    final isChangingPassword = ref.read(toggleProvider(_changingPasswordId));
     final updateProfile = UpdateProfileEntity(
       name: _nameController.text.trim().isNotEmpty
           ? _nameController.text.trim()
@@ -108,14 +111,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           ? _phoneController.text.trim()
           : null,
       currentPassword:
-          _isChangingPassword && _currentPasswordController.text.isNotEmpty
+          isChangingPassword && _currentPasswordController.text.isNotEmpty
           ? _currentPasswordController.text
           : null,
-      newPassword: _isChangingPassword && _newPasswordController.text.isNotEmpty
+      newPassword: isChangingPassword && _newPasswordController.text.isNotEmpty
           ? _newPasswordController.text
           : null,
       newPasswordConfirmation:
-          _isChangingPassword && _confirmPasswordController.text.isNotEmpty
+          isChangingPassword && _confirmPasswordController.text.isNotEmpty
           ? _confirmPasswordController.text
           : null,
     );
@@ -151,6 +154,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final isUpdating = profileState.isUpdating;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
+
+    // Providers pour les toggles de visibilité mot de passe
+    final obscureCurrentPwd = ref.watch(toggleProvider(_obscureCurrentPwdId));
+    final obscureNewPwd = ref.watch(toggleProvider(_obscureNewPwdId));
+    final obscureConfirmPwd = ref.watch(toggleProvider(_obscureConfirmPwdId));
+    final isChangingPassword = ref.watch(toggleProvider(_changingPasswordId));
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
@@ -368,29 +377,27 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   ),
                   const Spacer(),
                   Switch(
-                    value: _isChangingPassword,
+                    value: isChangingPassword,
                     onChanged: (value) {
-                      setState(() {
-                        _isChangingPassword = value;
-                        if (!value) {
-                          _currentPasswordController.clear();
-                          _newPasswordController.clear();
-                          _confirmPasswordController.clear();
-                        }
-                      });
+                      ref.read(toggleProvider(_changingPasswordId).notifier).set(value);
+                      if (!value) {
+                        _currentPasswordController.clear();
+                        _newPasswordController.clear();
+                        _confirmPasswordController.clear();
+                      }
                     },
                     activeThumbColor: AppColors.primary,
                   ),
                 ],
               ),
 
-              if (_isChangingPassword) ...[
+              if (isChangingPassword) ...[
                 const SizedBox(height: 16),
 
                 // Current Password
                 TextFormField(
                   controller: _currentPasswordController,
-                  obscureText: _obscureCurrentPassword,
+                  obscureText: !obscureCurrentPwd,
                   style: TextStyle(color: textColor),
                   decoration: _buildInputDecoration(
                     labelText: 'Mot de passe actuel',
@@ -398,20 +405,18 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     isDark: isDark,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureCurrentPassword
+                        !obscureCurrentPwd
                             ? Icons.visibility_off
                             : Icons.visibility,
                         color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                       onPressed: () {
-                        setState(() {
-                          _obscureCurrentPassword = !_obscureCurrentPassword;
-                        });
+                        ref.read(toggleProvider(_obscureCurrentPwdId).notifier).toggle();
                       },
                     ),
                   ),
                   validator: (value) {
-                    if (_isChangingPassword) {
+                    if (isChangingPassword) {
                       if (value == null || value.isEmpty) {
                         return 'Le mot de passe actuel est requis';
                       }
@@ -424,7 +429,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 // New Password
                 TextFormField(
                   controller: _newPasswordController,
-                  obscureText: _obscureNewPassword,
+                  obscureText: !obscureNewPwd,
                   style: TextStyle(color: textColor),
                   decoration: _buildInputDecoration(
                     labelText: 'Nouveau mot de passe',
@@ -432,20 +437,18 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     isDark: isDark,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureNewPassword
+                        !obscureNewPwd
                             ? Icons.visibility_off
                             : Icons.visibility,
                         color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                       onPressed: () {
-                        setState(() {
-                          _obscureNewPassword = !_obscureNewPassword;
-                        });
+                        ref.read(toggleProvider(_obscureNewPwdId).notifier).toggle();
                       },
                     ),
                   ),
                   validator: (value) {
-                    if (_isChangingPassword) {
+                    if (isChangingPassword) {
                       if (value == null || value.isEmpty) {
                         return 'Le nouveau mot de passe est requis';
                       }
@@ -461,7 +464,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 // Confirm Password
                 TextFormField(
                   controller: _confirmPasswordController,
-                  obscureText: _obscureConfirmPassword,
+                  obscureText: !obscureConfirmPwd,
                   style: TextStyle(color: textColor),
                   decoration: _buildInputDecoration(
                     labelText: 'Confirmer le mot de passe',
@@ -469,20 +472,18 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     isDark: isDark,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirmPassword
+                        !obscureConfirmPwd
                             ? Icons.visibility_off
                             : Icons.visibility,
                         color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                       onPressed: () {
-                        setState(() {
-                          _obscureConfirmPassword = !_obscureConfirmPassword;
-                        });
+                        ref.read(toggleProvider(_obscureConfirmPwdId).notifier).toggle();
                       },
                     ),
                   ),
                   validator: (value) {
-                    if (_isChangingPassword) {
+                    if (isChangingPassword) {
                       if (value == null || value.isEmpty) {
                         return 'La confirmation est requise';
                       }

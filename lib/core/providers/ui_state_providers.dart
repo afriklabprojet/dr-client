@@ -80,7 +80,13 @@ class FormFieldsNotifier extends StateNotifier<Map<String, String?>> {
     state = {};
   }
 
+  /// Set a generic field value (can be used for any string value, not just errors)
+  void setField(String field, String? value) {
+    state = {...state, field: value};
+  }
+
   String? getError(String field) => state[field];
+  String? getValue(String field) => state[field];
 }
 
 final formFieldsProvider = StateNotifierProvider.family<FormFieldsNotifier, Map<String, String?>, String>(

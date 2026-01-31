@@ -4,9 +4,15 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/errors/error_handler.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/services/app_logger.dart';
 import '../../../../core/validators/form_validators.dart';
 import '../providers/addresses_provider.dart';
+
+// Provider IDs pour cette page
+const _isDefaultId = 'add_address_is_default';
+const _selectedLabelId = 'add_address_selected_label';
+const _isLoadingLocationId = 'add_address_loading_location';
 
 /// Page d'ajout d'une nouvelle adresse
 class AddAddressPage extends ConsumerStatefulWidget {
@@ -24,11 +30,8 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
   final _phoneController = TextEditingController();
   final _instructionsController = TextEditingController();
   
-  String _selectedLabel = 'Maison';
-  bool _isDefault = false;
   double? _latitude;
   double? _longitude;
-  bool _isLoadingLocation = false;
   bool _phonePreFilled = false;
 
   @override
@@ -71,6 +74,11 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
     final state = ref.watch(addressesProvider);
     final formDataAsync = ref.watch(addressFormDataProvider);
     
+    // Providers pour l'état UI
+    final isDefault = ref.watch(toggleProvider(_isDefaultId));
+    final selectedLabel = ref.watch(formFieldsProvider(_selectedLabelId))['label'] ?? 'Maison';
+    final isLoadingLocation = ref.watch(loadingProvider(_isLoadingLocationId)).isLoading;
+    
     // Pré-remplir le téléphone si disponible
     formDataAsync.whenData((formData) {
       if (!_phonePreFilled && 
@@ -79,10 +87,8 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
           _phoneController.text.isEmpty) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            setState(() {
-              _phoneController.text = formData.defaultPhone!;
-              _phonePreFilled = true;
-            });
+            _phoneController.text = formData.defaultPhone!;
+            _phonePreFilled = true;
           }
         });
       }
@@ -103,10 +109,11 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
             _buildSectionTitle('Type d\'adresse'),
             const SizedBox(height: 8),
             formDataAsync.when(
-              data: (formData) => _buildLabelSelector(formData.labels),
+              data: (formData) => _buildLabelSelector(formData.labels, selectedLabel),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stackTrace) => _buildLabelSelector(
                 ['Maison', 'Bureau', 'Famille', 'Autre'],
+                selectedLabel,
               ),
             ),
             const SizedBox(height: 24),
@@ -159,7 +166,7 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
             // GPS Location
             _buildSectionTitle('Position GPS (optionnel)'),
             const SizedBox(height: 8),
-            _buildLocationSection(),
+            _buildLocationSection(isLoadingLocation),
             const SizedBox(height: 24),
 
             // Contact
@@ -199,8 +206,8 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
                 'Cette adresse sera utilisée par défaut pour vos commandes',
                 style: TextStyle(fontSize: 12, color: AppColors.textHint),
               ),
-              value: _isDefault,
-              onChanged: (value) => setState(() => _isDefault = value),
+              value: isDefault,
+              onChanged: (value) => ref.read(toggleProvider(_isDefaultId).notifier).set(value),
               activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
               thumbColor: WidgetStateProperty.resolveWith((states) =>
                 states.contains(WidgetState.selected) ? AppColors.primary : null),
@@ -212,7 +219,7 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
             SizedBox(
               height: 50,
               child: ElevatedButton(
-                onPressed: state.isLoading ? null : _submitForm,
+                onPressed: state.isLoading ? null : () => _submitForm(selectedLabel, isDefault),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -253,12 +260,12 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
     );
   }
 
-  Widget _buildLabelSelector(List<String> labels) {
+  Widget _buildLabelSelector(List<String> labels, String selectedLabel) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: labels.map((label) {
-        final isSelected = _selectedLabel == label;
+        final isSelected = selectedLabel == label;
         return ChoiceChip(
           label: Row(
             mainAxisSize: MainAxisSize.min,
@@ -275,7 +282,7 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
           selected: isSelected,
           onSelected: (selected) {
             if (selected) {
-              setState(() => _selectedLabel = label);
+              ref.read(formFieldsProvider(_selectedLabelId).notifier).setField('label', label);
             }
           },
           selectedColor: AppColors.primary,
@@ -300,7 +307,7 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
     }
   }
 
-  Widget _buildLocationSection() {
+  Widget _buildLocationSection(bool isLoadingLocation) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -353,8 +360,8 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: _isLoadingLocation ? null : _getCurrentLocation,
-                  icon: _isLoadingLocation
+                  onPressed: isLoadingLocation ? null : _getCurrentLocation,
+                  icon: isLoadingLocation
                       ? const SizedBox(
                           height: 18,
                           width: 18,
@@ -362,7 +369,7 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
                         )
                       : const Icon(Icons.my_location),
                   label: Text(
-                    _isLoadingLocation
+                    isLoadingLocation
                         ? 'Localisation en cours...'
                         : 'Utiliser ma position actuelle',
                   ),
@@ -376,7 +383,7 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
   }
 
   Future<void> _getCurrentLocation() async {
-    setState(() => _isLoadingLocation = true);
+    ref.read(loadingProvider(_isLoadingLocationId).notifier).startLoading();
 
     try {
       // Check permissions
@@ -479,16 +486,16 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoadingLocation = false);
+        ref.read(loadingProvider(_isLoadingLocationId).notifier).stopLoading();
       }
     }
   }
 
-  Future<void> _submitForm() async {
+  Future<void> _submitForm(String selectedLabel, bool isDefault) async {
     if (!_formKey.currentState!.validate()) return;
 
     final success = await ref.read(addressesProvider.notifier).createAddress(
-      label: _selectedLabel,
+      label: selectedLabel,
       address: _addressController.text.trim(),
       city: _cityController.text.trim().isEmpty ? null : _cityController.text.trim(),
       district: _districtController.text.trim().isEmpty ? null : _districtController.text.trim(),
@@ -496,7 +503,7 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
       instructions: _instructionsController.text.trim().isEmpty ? null : _instructionsController.text.trim(),
       latitude: _latitude,
       longitude: _longitude,
-      isDefault: _isDefault,
+      isDefault: isDefault,
     );
 
     if (mounted) {

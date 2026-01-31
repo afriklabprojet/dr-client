@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../config/providers.dart';
+
+// Provider IDs pour cette page
+const _forgotPwdLoadingId = 'forgot_pwd_loading';
+const _emailSentId = 'forgot_pwd_email_sent';
+const _errorFormId = 'forgot_pwd_error';
 
 /// Page de récupération de mot de passe
 class ForgotPasswordPage extends ConsumerStatefulWidget {
@@ -15,8 +21,11 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  bool _isLoading = false;
-  bool _emailSent = false;
+  
+  // UI state moved to Riverpod providers:
+  // - _isLoading -> loadingProvider(_forgotPwdLoadingId)
+  // - _emailSent -> toggleProvider(_emailSentId) initialValue: false
+  // - _errorMessage -> formFieldsProvider(_errorFormId)
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -54,10 +63,8 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
 
   Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
+      ref.read(loadingProvider(_forgotPwdLoadingId).notifier).startLoading();
+      ref.read(formFieldsProvider(_errorFormId).notifier).clearAll();
 
       try {
         // Appel API réel pour la réinitialisation du mot de passe
@@ -69,31 +76,23 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
         if (mounted) {
           result.fold(
             (failure) {
-              setState(() {
-                _isLoading = false;
-                _errorMessage = _getReadableErrorMessage(failure.message);
-              });
+              ref.read(loadingProvider(_forgotPwdLoadingId).notifier).stopLoading();
+              ref.read(formFieldsProvider(_errorFormId).notifier).setError('general', _getReadableErrorMessage(failure.message));
             },
             (success) {
-              setState(() {
-                _isLoading = false;
-                _emailSent = true;
-              });
+              ref.read(loadingProvider(_forgotPwdLoadingId).notifier).stopLoading();
+              ref.read(toggleProvider(_emailSentId).notifier).set(true);
             },
           );
         }
       } catch (e) {
         if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'Une erreur est survenue. Veuillez réessayer.';
-          });
+          ref.read(loadingProvider(_forgotPwdLoadingId).notifier).stopLoading();
+          ref.read(formFieldsProvider(_errorFormId).notifier).setError('general', 'Une erreur est survenue. Veuillez réessayer.');
         }
       }
     }
   }
-
-  String? _errorMessage;
 
   /// Convertit les messages d'erreur techniques en messages utilisateur
   String _getReadableErrorMessage(String? error) {
@@ -129,6 +128,11 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Watch UI state providers
+    final isLoading = ref.watch(loadingProvider(_forgotPwdLoadingId)).isLoading;
+    final emailSent = ref.watch(toggleProvider(_emailSentId));
+    final errorMessage = ref.watch(formFieldsProvider(_errorFormId))['general'];
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
@@ -261,7 +265,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (!_emailSent) ...[
+                            if (!emailSent) ...[
                               Text(
                                 'Réinitialisation',
                                 style: TextStyle(
@@ -307,7 +311,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
                                       },
                                     ),
                                     // Affichage du message d'erreur API
-                                    if (_errorMessage != null) ...[
+                                    if (errorMessage != null) ...[
                                       const SizedBox(height: 16),
                                       Container(
                                         padding: const EdgeInsets.all(12),
@@ -328,7 +332,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: Text(
-                                                _errorMessage!,
+                                                errorMessage,
                                                 style: const TextStyle(
                                                   color: Colors.red,
                                                   fontSize: 13,
@@ -340,7 +344,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
                                       ),
                                     ],
                                     const SizedBox(height: 32),
-                                    _buildSubmitButton(isDark),
+                                    _buildSubmitButton(isDark, isLoading),
                                   ],
                                 ),
                               ),
@@ -452,7 +456,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
     );
   }
 
-  Widget _buildSubmitButton(bool isDark) {
+  Widget _buildSubmitButton(bool isDark, bool isLoading) {
     return Container(
       width: double.infinity,
       height: 56,
@@ -474,10 +478,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: _isLoading ? null : _handleSubmit,
+          onTap: isLoading ? null : _handleSubmit,
           borderRadius: BorderRadius.circular(16),
           child: Center(
-            child: _isLoading
+            child: isLoading
                 ? const SizedBox(
                     height: 24,
                     width: 24,
@@ -588,7 +592,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
         const SizedBox(height: 16),
         TextButton(
           onPressed: () {
-            setState(() => _emailSent = false);
+            ref.read(toggleProvider(_emailSentId).notifier).set(false);
           },
           child: Text(
             'Renvoyer l\'email',
