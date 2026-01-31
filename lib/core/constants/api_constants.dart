@@ -1,67 +1,51 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import '../config/env_config.dart';
 
+/// Constantes et endpoints de l'API
+/// Utilise EnvConfig pour les URLs (configurables via .env)
 class ApiConstants {
   // ============================================================
-  // CONFIGURATION
-  // ============================================================
-  // Pour changer l'environnement, modifier cette valeur :
-  // - true  = développement (serveur local)
-  // - false = production (serveur distant)
-  // - null  = auto-détection basée sur le mode de build Flutter
-  static const bool? _forceEnvironment = null;
-  
-  // IP de votre machine locale (pour les appareils physiques en dev)
-  static const String localMachineIP = '192.168.1.100';
-  
-  // ============================================================
-  // URLs
+  // URLs - Chargées depuis .env via EnvConfig
   // ============================================================
   
-  // URLs de production
-  static const String _baseUrlProd = 'https://api.drpharma.ci/api';
-  static const String _storageBaseUrlProd = 'https://api.drpharma.ci/storage';
-  
-  // URLs de développement (auto-détection selon la plateforme)
-  static String get _baseUrlDev {
-    if (kIsWeb) {
-      return 'http://localhost:8000/api';
+  /// URL de base de l'API
+  static String get baseUrl {
+    final envUrl = EnvConfig.apiUrl;
+    
+    // En développement, adapter l'URL selon la plateforme
+    if (EnvConfig.isDevelopment && envUrl.contains('localhost')) {
+      return _adaptUrlForPlatform(envUrl);
     }
+    
+    return envUrl;
+  }
+  
+  /// URL de stockage des fichiers
+  static String get storageBaseUrl {
+    final envUrl = EnvConfig.storageBaseUrl;
+    
+    if (EnvConfig.isDevelopment && envUrl.contains('localhost')) {
+      return _adaptUrlForPlatform(envUrl);
+    }
+    
+    return envUrl;
+  }
+  
+  /// Adapte l'URL localhost pour Android emulator
+  static String _adaptUrlForPlatform(String url) {
+    if (kIsWeb) return url;
+    
     if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8000/api'; // Android Emulator
+      return url.replaceAll('localhost', '10.0.2.2');
     }
-    if (Platform.isIOS) {
-      return 'http://localhost:8000/api'; // iOS Simulator
-    }
-    return 'http://localhost:8000/api';
-  }
-
-  static String get _storageBaseUrlDev {
-    if (kIsWeb) {
-      return 'http://localhost:8000/storage';
-    }
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8000/storage';
-    }
-    if (Platform.isIOS) {
-      return 'http://localhost:8000/storage';
-    }
-    return 'http://localhost:8000/storage';
+    
+    return url;
   }
   
-  // ============================================================
-  // GETTERS PRINCIPAUX
-  // ============================================================
-  
-  static bool get isDevelopment {
-    if (_forceEnvironment != null) {
-      return _forceEnvironment!;
-    }
-    return !kReleaseMode;
-  }
-  
-  static String get baseUrl => isDevelopment ? _baseUrlDev : _baseUrlProd;
-  static String get storageBaseUrl => isDevelopment ? _storageBaseUrlDev : _storageBaseUrlProd;
+  /// Environnement actuel
+  static bool get isDevelopment => EnvConfig.isDevelopment;
+  static bool get isProduction => EnvConfig.isProduction;
 
   // ============================================================
   // ENDPOINTS - Authentication
@@ -76,7 +60,6 @@ class ApiConstants {
   static const String deleteAvatar = '/auth/avatar';
   static const String updatePassword = '/auth/password';
   static const String forgotPassword = '/auth/forgot-password';
-  
   static const String verifyOtp = '/auth/verify';
   static const String resendOtp = '/auth/resend';
 
@@ -84,15 +67,15 @@ class ApiConstants {
   // ENDPOINTS - Products
   // ============================================================
   static const String products = '/products';
-  static String productDetails(int id) => '/products/$id';
+  static String productDetails(int id) => '/products/\$id';
   static const String searchProducts = '/products';
 
   // ============================================================
   // ENDPOINTS - Orders
   // ============================================================
   static const String orders = '/customer/orders';
-  static String orderDetails(int id) => '/customer/orders/$id';
-  static String cancelOrder(int id) => '/customer/orders/$id/cancel';
+  static String orderDetails(int id) => '/customer/orders/\$id';
+  static String cancelOrder(int id) => '/customer/orders/\$id/cancel';
 
   // ============================================================
   // ENDPOINTS - Pharmacies
@@ -101,7 +84,22 @@ class ApiConstants {
   static const String featuredPharmacies = '/customer/pharmacies/featured';
   static const String nearbyPharmacies = '/customer/pharmacies/nearby';
   static const String onDutyPharmacies = '/customer/pharmacies/on-duty';
-  static String pharmacyDetails(int id) => '/customer/pharmacies/$id';
+  static String pharmacyDetails(int id) => '/customer/pharmacies/\$id';
+
+  // ============================================================
+  // ENDPOINTS - Addresses
+  // ============================================================
+  static const String addresses = '/customer/addresses';
+  static String addressDetails(int id) => '/customer/addresses/\$id';
+  static String setDefaultAddress(int id) => '/customer/addresses/\$id/default';
+
+  // ============================================================
+  // ENDPOINTS - Notifications
+  // ============================================================
+  static const String notifications = '/notifications';
+  static const String updateFcmToken = '/notifications/fcm-token';
+  static String markNotificationRead(int id) => '/notifications/\$id/read';
+  static const String markAllNotificationsRead = '/notifications/read-all';
 
   // ============================================================
   // ENDPOINTS - Payment
@@ -109,8 +107,8 @@ class ApiConstants {
   static const String createPaymentIntent = '/payments/intents';
 
   // ============================================================
-  // TIMEOUTS
+  // TIMEOUTS - Chargés depuis .env via EnvConfig
   // ============================================================
-  static const Duration connectionTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
+  static Duration get connectionTimeout => EnvConfig.connectionTimeout;
+  static Duration get receiveTimeout => EnvConfig.receiveTimeout;
 }

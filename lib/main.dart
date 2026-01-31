@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
 import 'config/providers.dart';
+import 'core/config/env_config.dart';
 import 'core/constants/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/theme_provider.dart';
@@ -13,6 +14,10 @@ import 'core/services/app_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Charger la configuration d'environnement
+  await EnvConfig.init();
+  EnvConfig.printConfig();
 
   try {
     await Firebase.initializeApp(

@@ -12,6 +12,14 @@
 .swiftpm/
 migrate_working_dir/
 
+# Environment files (contiennent des secrets)
+.env
+.env.local
+.env.production
+.env.staging
+# Garder .env.example pour documentation
+!.env.example
+
 # IntelliJ related
 *.iml
 *.ipr
