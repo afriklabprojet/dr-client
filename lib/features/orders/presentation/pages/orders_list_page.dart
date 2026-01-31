@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../providers/orders_provider.dart';
 import '../providers/orders_state.dart';
 import '../../domain/entities/order_entity.dart';
 import 'order_details_page.dart';
+
+// Provider ID pour cette page
+const _selectedStatusId = 'orders_list_selected_status';
 
 class OrdersListPage extends ConsumerStatefulWidget {
   const OrdersListPage({super.key});
@@ -17,8 +21,6 @@ class OrdersListPage extends ConsumerStatefulWidget {
 }
 
 class _OrdersListPageState extends ConsumerState<OrdersListPage> {
-  String? _selectedStatus;
-
   @override
   void initState() {
     super.initState();
@@ -30,6 +32,7 @@ class _OrdersListPageState extends ConsumerState<OrdersListPage> {
   @override
   Widget build(BuildContext context) {
     final ordersState = ref.watch(ordersProvider);
+    final selectedStatus = ref.watch(formFieldsProvider(_selectedStatusId))['status'];
 
     return Scaffold(
       appBar: AppBar(
@@ -39,10 +42,11 @@ class _OrdersListPageState extends ConsumerState<OrdersListPage> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
             onSelected: (value) {
-              setState(() => _selectedStatus = value == 'all' ? null : value);
+              final status = value == 'all' ? null : value;
+              ref.read(formFieldsProvider(_selectedStatusId).notifier).setField('status', status);
               ref
                   .read(ordersProvider.notifier)
-                  .loadOrders(status: _selectedStatus);
+                  .loadOrders(status: status);
             },
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'all', child: Text('Toutes')),
@@ -64,14 +68,14 @@ class _OrdersListPageState extends ConsumerState<OrdersListPage> {
       body: ordersState.status == OrdersStatus.loading
           ? const OrdersListSkeleton()
           : ordersState.status == OrdersStatus.error
-          ? _buildError(ordersState.errorMessage)
+          ? _buildError(ordersState.errorMessage, selectedStatus)
           : ordersState.orders.isEmpty
           ? _buildEmptyState()
           : RefreshIndicator(
               onRefresh: () async {
                 await ref
                     .read(ordersProvider.notifier)
-                    .loadOrders(status: _selectedStatus);
+                    .loadOrders(status: selectedStatus);
               },
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -84,7 +88,7 @@ class _OrdersListPageState extends ConsumerState<OrdersListPage> {
     );
   }
 
-  Widget _buildError(String? message) {
+  Widget _buildError(String? message, String? selectedStatus) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -100,7 +104,7 @@ class _OrdersListPageState extends ConsumerState<OrdersListPage> {
             onPressed: () {
               ref
                   .read(ordersProvider.notifier)
-                  .loadOrders(status: _selectedStatus);
+                  .loadOrders(status: selectedStatus);
             },
             child: const Text('Réessayer'),
           ),
