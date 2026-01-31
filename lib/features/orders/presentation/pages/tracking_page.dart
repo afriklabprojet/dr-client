@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../domain/entities/delivery_address_entity.dart';
 import '../../../../config/providers.dart'; // Pour ordersRepositoryProvider
+import '../../../../core/services/app_logger.dart';
 
 class TrackingPage extends ConsumerStatefulWidget {
   final int orderId;
@@ -81,7 +82,7 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
         }
       }
     } catch (e) {
-      debugPrint('Error fetching tracking info: $e');
+      AppLogger.warning('Error fetching tracking info: $e');
     }
   }
 

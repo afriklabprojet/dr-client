@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/app_logger.dart';
 import '../../../notifications/data/datasources/notifications_remote_datasource.dart';
 import '../../domain/entities/notification_entity.dart';
 import 'notifications_state.dart';
@@ -177,7 +177,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
       await remoteDataSource.updateFcmToken(fcmToken);
     } catch (e) {
       // Silent fail for FCM token update - pas besoin d'afficher d'erreur
-      debugPrint('FCM token update failed: $e');
+      AppLogger.warning('FCM token update failed: $e');
     }
   }
 

@@ -9,6 +9,7 @@ import 'core/constants/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/router/app_router.dart';
+import 'core/services/app_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,9 +18,9 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    debugPrint("✅ Firebase initialized successfully");
+    AppLogger.info("Firebase initialized successfully");
   } catch (e) {
-    debugPrint("❌ Firebase initialization failed: $e");
+    AppLogger.error("Firebase initialization failed", error: e);
   }
 
   // Initialize SharedPreferences

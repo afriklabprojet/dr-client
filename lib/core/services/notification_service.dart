@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../network/api_client.dart';
+import 'app_logger.dart';
 
 class NotificationService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -19,7 +20,7 @@ class NotificationService {
       );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        debugPrint('✅ User granted notification permission');
+        AppLogger.info('User granted notification permission');
 
         // 2. Récupérer le token
         try {
@@ -29,13 +30,13 @@ class NotificationService {
                 : null,
           );
           if (token != null) {
-            debugPrint('✅ FCM Token obtained');
+            AppLogger.info('FCM Token obtained');
             // 3. Envoyer au backend
             await sendTokenToBackend(token);
           }
         } catch (tokenError) {
           // Sur web, l'erreur du service worker peut survenir ici
-          debugPrint('⚠️ Could not get FCM token (may be normal on web dev): $tokenError');
+          AppLogger.warning('Could not get FCM token (may be normal on web dev): $tokenError');
         }
 
         // 4. Écouter les rafraîchissements de token
@@ -43,11 +44,11 @@ class NotificationService {
           sendTokenToBackend(newToken);
         });
       } else {
-        debugPrint('⚠️ User declined notification permission');
+        AppLogger.warning('User declined notification permission');
       }
     } catch (e) {
       // Ne pas bloquer l'app si les notifications ne marchent pas
-      debugPrint('⛔ Error initializing notifications: $e');
+      AppLogger.error('Error initializing notifications', error: e);
     }
   }
 
@@ -65,9 +66,9 @@ class NotificationService {
           'platform': platform,
         },
       );
-      debugPrint('✅ FCM Token sent to backend successfully');
+      AppLogger.info('FCM Token sent to backend successfully');
     } catch (e) {
-      debugPrint('⛔ Failed to send FCM token to backend: $e');
+      AppLogger.error('Failed to send FCM token to backend', error: e);
     }
   }
 }

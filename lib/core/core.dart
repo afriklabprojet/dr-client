@@ -18,7 +18,7 @@ export 'widgets/async_value_widget.dart';
 
 // Errors
 export 'errors/failures.dart';
-export 'errors/exceptions.dart';
+export 'errors/exceptions.dart' hide NetworkException, ValidationException;
 export 'errors/error_handler.dart';
 
 // Utils

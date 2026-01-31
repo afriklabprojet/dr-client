@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../domain/entities/pharmacy_entity.dart';
 import '../../../../config/providers.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/app_logger.dart';
 import '../../../../core/services/url_launcher_service.dart';
 import '../../../../core/router/app_router.dart';
 import '../providers/pharmacies_state.dart';
@@ -98,7 +99,7 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
 
       setState(() => _currentPosition = position);
     } catch (e) {
-      debugPrint('Error getting location: $e');
+      AppLogger.warning('Error getting location: $e');
     }
   }
 
