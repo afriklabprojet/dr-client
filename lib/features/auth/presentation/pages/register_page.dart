@@ -65,6 +65,74 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     return 'Fort';
   }
 
+  /// Convertit les messages d'erreur techniques en messages utilisateur explicites
+  String _getReadableErrorMessage(String? error) {
+    if (error == null || error.isEmpty) {
+      return 'Une erreur est survenue. Veuillez réessayer.';
+    }
+    
+    final errorLower = error.toLowerCase();
+    
+    // Email déjà utilisé
+    if (errorLower.contains('email') && 
+        (errorLower.contains('taken') || 
+         errorLower.contains('already') || 
+         errorLower.contains('exists') ||
+         errorLower.contains('utilisé') ||
+         errorLower.contains('existe'))) {
+      return 'Cette adresse email est déjà utilisée.\nVeuillez utiliser une autre adresse ou vous connecter.';
+    }
+    
+    // Téléphone déjà utilisé
+    if (errorLower.contains('phone') && 
+        (errorLower.contains('taken') || 
+         errorLower.contains('already') || 
+         errorLower.contains('exists') ||
+         errorLower.contains('utilisé'))) {
+      return 'Ce numéro de téléphone est déjà utilisé.\nVeuillez utiliser un autre numéro.';
+    }
+    
+    // Erreurs de validation email
+    if (errorLower.contains('email') && 
+        (errorLower.contains('invalid') || errorLower.contains('format'))) {
+      return 'Le format de l\'email est invalide.\nVeuillez vérifier votre saisie.';
+    }
+    
+    // Erreurs de mot de passe
+    if (errorLower.contains('password')) {
+      if (errorLower.contains('confirmation') || errorLower.contains('match')) {
+        return 'Les mots de passe ne correspondent pas.\nVeuillez vérifier votre saisie.';
+      }
+      if (errorLower.contains('short') || errorLower.contains('minimum') || errorLower.contains('length')) {
+        return 'Le mot de passe est trop court.\nIl doit contenir au moins 8 caractères.';
+      }
+      return 'Le mot de passe ne respecte pas les critères requis.';
+    }
+    
+    // Erreurs réseau
+    if (errorLower.contains('network') || 
+        errorLower.contains('connexion') ||
+        errorLower.contains('internet') ||
+        errorLower.contains('timeout')) {
+      return 'Problème de connexion internet.\nVérifiez votre connexion et réessayez.';
+    }
+    
+    // Erreurs serveur
+    if (errorLower.contains('server') || 
+        errorLower.contains('500') ||
+        errorLower.contains('503')) {
+      return 'Le service est temporairement indisponible.\nVeuillez réessayer dans quelques instants.';
+    }
+    
+    // Erreurs de validation génériques
+    if (errorLower.contains('validation') || errorLower.contains('required')) {
+      return 'Certaines informations sont manquantes ou incorrectes.\nVeuillez vérifier tous les champs.';
+    }
+    
+    // Message par défaut
+    return 'Une erreur s\'est produite lors de l\'inscription.\nVeuillez vérifier vos informations et réessayer.';
+  }
+
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -107,13 +175,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
     if (authState.status == AuthStatus.error &&
         authState.errorMessage != null) {
+      // Convertir le message technique en message utilisateur explicite
+      final userFriendlyMessage = _getReadableErrorMessage(authState.errorMessage);
+      
       messenger.showSnackBar(
         SnackBar(
           content: Row(
             children: [
               const Icon(Icons.error_outline, color: Colors.white),
               const SizedBox(width: 12),
-              Expanded(child: Text(authState.errorMessage!)),
+              Expanded(child: Text(userFriendlyMessage)),
             ],
           ),
           backgroundColor: Colors.red.shade700,
@@ -121,6 +192,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          duration: const Duration(seconds: 4),
         ),
       );
     } else if (authState.status == AuthStatus.authenticated) {

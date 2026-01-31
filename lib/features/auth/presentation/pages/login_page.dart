@@ -94,6 +94,94 @@ class _LoginPageState extends ConsumerState<LoginPage>
     }
   }
 
+  /// Convertit les messages d'erreur techniques en messages utilisateur explicites
+  String _getReadableErrorMessage(String? error) {
+    if (error == null || error.isEmpty) {
+      return 'Une erreur est survenue. Veuillez réessayer.';
+    }
+    
+    final errorLower = error.toLowerCase();
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Erreurs d'identifiants (401)
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (errorLower.contains('invalid') || 
+        errorLower.contains('credentials') ||
+        errorLower.contains('incorrect') ||
+        errorLower.contains('identifiants') ||
+        errorLower.contains('unauthorized') ||
+        errorLower.contains('401')) {
+      return 'Email ou mot de passe invalide.\nVeuillez vérifier vos identifiants.';
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Compte non trouvé
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (errorLower.contains('not found') || 
+        errorLower.contains('introuvable') ||
+        errorLower.contains('n\'existe pas') ||
+        errorLower.contains('no user')) {
+      return 'Aucun compte n\'existe avec cet email.\nVeuillez créer un compte ou vérifier votre saisie.';
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Compte désactivé/suspendu
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (errorLower.contains('disabled') || 
+        errorLower.contains('suspended') ||
+        errorLower.contains('blocked') ||
+        errorLower.contains('désactivé') ||
+        errorLower.contains('suspendu') ||
+        errorLower.contains('bloqué')) {
+      return 'Votre compte a été désactivé.\nVeuillez contacter le support pour plus d\'informations.';
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Erreurs réseau
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (errorLower.contains('network') || 
+        errorLower.contains('connexion') ||
+        errorLower.contains('internet') ||
+        errorLower.contains('timeout') ||
+        errorLower.contains('socket') ||
+        errorLower.contains('connection')) {
+      return 'Problème de connexion internet.\nVérifiez votre connexion et réessayez.';
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Erreurs serveur
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (errorLower.contains('server') || 
+        errorLower.contains('500') ||
+        errorLower.contains('503') ||
+        errorLower.contains('serveur')) {
+      return 'Le service est temporairement indisponible.\nVeuillez réessayer dans quelques instants.';
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Erreurs de validation
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (errorLower.contains('validation') || 
+        errorLower.contains('required') ||
+        errorLower.contains('format')) {
+      return 'Les informations saisies sont incorrectes.\nVeuillez vérifier le format de votre email et mot de passe.';
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Trop de tentatives
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (errorLower.contains('too many') || 
+        errorLower.contains('rate limit') ||
+        errorLower.contains('throttle') ||
+        errorLower.contains('tentatives')) {
+      return 'Trop de tentatives de connexion.\nVeuillez patienter quelques minutes avant de réessayer.';
+    }
+    
+    // Message par défaut si aucun pattern ne correspond
+    // Mais on évite d'afficher l'erreur technique brute
+    return 'Les identifiants fournis sont incorrects.\nVeuillez vérifier votre email et mot de passe.';
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -132,6 +220,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
           setState(() => _isRedirecting = false);
         }
         if (mounted) {
+          // Convertir le message technique en message utilisateur explicite
+          final userFriendlyMessage = _getReadableErrorMessage(next.errorMessage);
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
@@ -139,7 +230,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                   const Icon(Icons.error_outline, color: Colors.white),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(next.errorMessage ?? 'Une erreur est survenue'),
+                    child: Text(userFriendlyMessage),
                   ),
                 ],
               ),
@@ -149,6 +240,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                 borderRadius: BorderRadius.circular(12),
               ),
               margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 4),
             ),
           );
         }
