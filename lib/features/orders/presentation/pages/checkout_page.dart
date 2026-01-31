@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/error_handler.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_logger.dart';
 import '../../../addresses/domain/entities/address_entity.dart';
@@ -17,6 +18,15 @@ import '../../domain/entities/delivery_address_entity.dart';
 import '../providers/orders_state.dart';
 import '../providers/orders_provider.dart';
 import '../widgets/widgets.dart';
+
+// Provider IDs pour cette page
+const _useManualAddressId = 'checkout_use_manual_address';
+const _saveNewAddressId = 'checkout_save_new_address';
+const _isSubmittingId = 'checkout_is_submitting';
+const _paymentModeId = 'checkout_payment_mode';
+
+// Provider spécifique pour l'adresse sélectionnée (objet nullable)
+final selectedAddressProvider = StateProvider<AddressEntity?>((ref) => null);
 
 class CheckoutPage extends ConsumerStatefulWidget {
   const CheckoutPage({super.key});
@@ -33,12 +43,6 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   final _notesController = TextEditingController();
   final _addressLabelController = TextEditingController();
 
-  String _paymentMode = AppConstants.paymentModePlatform;
-  bool _useManualAddress = false;
-  bool _saveNewAddress = false;
-  bool _isSubmitting = false;
-  AddressEntity? _selectedSavedAddress;
-
   @override
   void initState() {
     super.initState();
@@ -52,12 +56,10 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     await ref.read(addressesProvider.notifier).loadAddresses();
     final state = ref.read(addressesProvider);
     if (state.defaultAddress != null) {
-      setState(() {
-        _selectedSavedAddress = state.defaultAddress;
-        _useManualAddress = false;
-      });
+      ref.read(selectedAddressProvider.notifier).state = state.defaultAddress;
+      ref.read(toggleProvider(_useManualAddressId).notifier).set(false);
     } else if (state.addresses.isEmpty) {
-      setState(() => _useManualAddress = true);
+      ref.read(toggleProvider(_useManualAddressId).notifier).set(true);
     }
   }
 
@@ -84,6 +86,13 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     final ordersState = ref.watch(ordersProvider);
     final addressesState = ref.watch(addressesProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Providers pour l'état UI
+    final useManualAddress = ref.watch(toggleProvider(_useManualAddressId));
+    final saveNewAddress = ref.watch(toggleProvider(_saveNewAddressId));
+    final isSubmitting = ref.watch(loadingProvider(_isSubmittingId)).isLoading;
+    final paymentMode = ref.watch(formFieldsProvider(_paymentModeId))['mode'] ?? AppConstants.paymentModePlatform;
+    final selectedSavedAddress = ref.watch(selectedAddressProvider);
 
     final currencyFormat = NumberFormat.currency(
       locale: AppConstants.currencyLocale,
@@ -123,22 +132,22 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
                     // Delivery Address Section
                     DeliveryAddressSection(
-                      useManualAddress: _useManualAddress,
+                      useManualAddress: useManualAddress,
                       hasAddresses: addressesState.addresses.isNotEmpty,
-                      selectedAddress: _selectedSavedAddress,
+                      selectedAddress: selectedSavedAddress,
                       onToggleManualAddress: (manual) {
-                        setState(() => _useManualAddress = manual);
+                        ref.read(toggleProvider(_useManualAddressId).notifier).set(manual);
                       },
                       onAddressSelected: (address) {
-                        setState(() => _selectedSavedAddress = address);
+                        ref.read(selectedAddressProvider.notifier).state = address;
                       },
                       addressController: _addressController,
                       cityController: _cityController,
                       phoneController: _phoneController,
                       labelController: _addressLabelController,
-                      saveAddress: _saveNewAddress,
+                      saveAddress: saveNewAddress,
                       onSaveAddressChanged: (save) {
-                        setState(() => _saveNewAddress = save);
+                        ref.read(toggleProvider(_saveNewAddressId).notifier).set(save);
                       },
                       isDark: isDark,
                     ),
@@ -148,9 +157,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                     _buildSectionTitle('Mode de paiement'),
                     const SizedBox(height: 12),
                     PaymentModeSelector(
-                      selectedMode: _paymentMode,
+                      selectedMode: paymentMode,
                       onModeChanged: (mode) {
-                        setState(() => _paymentMode = mode);
+                        ref.read(formFieldsProvider(_paymentModeId).notifier).setField('mode', mode);
                       },
                     ),
                     const SizedBox(height: 24),
@@ -170,9 +179,14 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
                     // Submit Button
                     CheckoutSubmitButton(
-                      isSubmitting: _isSubmitting,
+                      isSubmitting: isSubmitting,
                       totalFormatted: currencyFormat.format(cartState.total),
-                      onPressed: _submitOrder,
+                      onPressed: () => _submitOrder(
+                        useManualAddress: useManualAddress,
+                        saveNewAddress: saveNewAddress,
+                        paymentMode: paymentMode,
+                        selectedSavedAddress: selectedSavedAddress,
+                      ),
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -189,28 +203,34 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     );
   }
 
-  Future<void> _submitOrder() async {
-    if (_isSubmitting) {
+  Future<void> _submitOrder({
+    required bool useManualAddress,
+    required bool saveNewAddress,
+    required String paymentMode,
+    required AddressEntity? selectedSavedAddress,
+  }) async {
+    final isSubmitting = ref.read(loadingProvider(_isSubmittingId)).isLoading;
+    if (isSubmitting) {
       _showSnackBar('Commande en cours de traitement...', Colors.orange);
       return;
     }
 
-    if (!_useManualAddress && _selectedSavedAddress == null) {
+    if (!useManualAddress && selectedSavedAddress == null) {
       _showSnackBar('Veuillez sélectionner une adresse de livraison', Colors.orange);
       return;
     }
 
-    if (_useManualAddress && !_formKey.currentState!.validate()) {
+    if (useManualAddress && !_formKey.currentState!.validate()) {
       return;
     }
 
-    setState(() => _isSubmitting = true);
+    ref.read(loadingProvider(_isSubmittingId).notifier).startLoading();
 
     final cartState = ref.read(cartProvider);
     final orderItems = _buildOrderItems(cartState);
-    final deliveryAddress = _buildDeliveryAddress();
+    final deliveryAddress = _buildDeliveryAddress(useManualAddress, selectedSavedAddress);
 
-    if (_useManualAddress && _saveNewAddress) {
+    if (useManualAddress && saveNewAddress) {
       await _saveAddressToProfile();
     }
 
@@ -218,7 +238,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       pharmacyId: cartState.selectedPharmacyId!,
       items: orderItems,
       deliveryAddress: deliveryAddress,
-      paymentMode: _paymentMode,
+      paymentMode: paymentMode,
       customerNotes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),
@@ -231,7 +251,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       await ref.read(cartProvider.notifier).clearCart();
 
       if (mounted) {
-        if (_paymentMode == 'platform') {
+        if (paymentMode == 'platform') {
           await _processPayment(ordersState.createdOrder!.id);
         } else {
           _showSnackBar('Commande créée avec succès!', AppColors.success);
@@ -240,7 +260,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       }
     } else if (ordersState.status == OrdersStatus.error) {
       if (mounted) {
-        setState(() => _isSubmitting = false);
+        ref.read(loadingProvider(_isSubmittingId).notifier).stopLoading();
         _showSnackBar(
           _getReadableOrderError(ordersState.errorMessage),
           AppColors.error,
@@ -262,8 +282,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     }).toList();
   }
 
-  DeliveryAddressEntity _buildDeliveryAddress() {
-    if (_useManualAddress) {
+  DeliveryAddressEntity _buildDeliveryAddress(bool useManualAddress, AddressEntity? selectedSavedAddress) {
+    if (useManualAddress) {
       return DeliveryAddressEntity(
         address: _addressController.text.trim(),
         city: _cityController.text.trim(),
@@ -271,11 +291,11 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       );
     }
     return DeliveryAddressEntity(
-      address: _selectedSavedAddress!.fullAddress,
-      city: _selectedSavedAddress!.city,
-      phone: _selectedSavedAddress!.phone,
-      latitude: _selectedSavedAddress!.latitude,
-      longitude: _selectedSavedAddress!.longitude,
+      address: selectedSavedAddress!.fullAddress,
+      city: selectedSavedAddress.city,
+      phone: selectedSavedAddress.phone,
+      latitude: selectedSavedAddress.latitude,
+      longitude: selectedSavedAddress.longitude,
     );
   }
 

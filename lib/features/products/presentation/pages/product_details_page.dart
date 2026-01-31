@@ -4,12 +4,16 @@ import 'package:intl/intl.dart';
 import 'package:badges/badges.dart' as badges;
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/cached_image.dart';
 import '../providers/products_provider.dart';
 import '../providers/products_state.dart';
 import '../../../orders/presentation/providers/cart_provider.dart';
 import '../../../orders/presentation/providers/cart_state.dart';
+
+// Provider ID pour cette page
+const _quantityId = 'product_details_quantity';
 
 class ProductDetailsPage extends ConsumerStatefulWidget {
   final int productId;
@@ -27,14 +31,14 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     decimalDigits: 0,
   );
 
-  int _quantity = 1;
-
   @override
   void initState() {
     super.initState();
     // Load product details when page opens
     Future.microtask(() {
       ref.read(productsProvider.notifier).loadProductDetails(widget.productId);
+      // Initialize quantity to 1
+      ref.read(countdownProvider(_quantityId).notifier).setValue(1);
     });
   }
 
@@ -43,6 +47,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     final productsState = ref.watch(productsProvider);
     final cartState = ref.watch(cartProvider);
     final product = productsState.selectedProduct;
+    final quantity = ref.watch(countdownProvider(_quantityId));
 
     // Show cart error as snackbar
     if (cartState.status == CartStatus.error &&
@@ -74,7 +79,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
           ? _buildError('Produit non trouvé')
           : _buildProductDetails(product),
       floatingActionButton: product != null && product.isAvailable
-          ? _buildAddToCartFAB(product)
+          ? _buildAddToCartFAB(product, quantity)
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       appBar: AppBar(
@@ -111,7 +116,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     );
   }
 
-  Widget _buildAddToCartFAB(dynamic product) {
+  Widget _buildAddToCartFAB(dynamic product, int quantity) {
     final cartItem = ref.watch(cartProvider).getItem(product.id);
     final currentQuantity = cartItem?.quantity ?? 0;
 
@@ -137,22 +142,22 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  onPressed: _quantity > 1
-                      ? () => setState(() => _quantity--)
+                  onPressed: quantity > 1
+                      ? () => ref.read(countdownProvider(_quantityId).notifier).decrement()
                       : null,
                   icon: const Icon(Icons.remove),
                   color: AppColors.primary,
                 ),
                 Text(
-                  '$_quantity',
+                  '$quantity',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 IconButton(
-                  onPressed: _quantity < product.stockQuantity
-                      ? () => setState(() => _quantity++)
+                  onPressed: quantity < product.stockQuantity
+                      ? () => ref.read(countdownProvider(_quantityId).notifier).setValue(quantity + 1)
                       : null,
                   icon: const Icon(Icons.add),
                   color: AppColors.primary,
@@ -167,12 +172,12 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
               onPressed: () {
                 ref
                     .read(cartProvider.notifier)
-                    .addItem(product, quantity: _quantity);
+                    .addItem(product, quantity: quantity);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
                       currentQuantity > 0
-                          ? 'Quantité mise à jour: ${currentQuantity + _quantity}'
+                          ? 'Quantité mise à jour: ${currentQuantity + quantity}'
                           : 'Ajouté au panier',
                     ),
                     backgroundColor: AppColors.success,

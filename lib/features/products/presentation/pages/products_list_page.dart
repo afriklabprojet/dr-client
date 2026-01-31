@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:badges/badges.dart' as badges;
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/widgets/cached_image.dart';
@@ -13,6 +14,9 @@ import '../widgets/category_chip.dart';
 import '../providers/products_provider.dart';
 import '../providers/products_state.dart';
 import 'product_details_page.dart';
+
+// Provider ID pour cette page
+const _selectedCategoryId = 'products_list_selected_category';
 
 class ProductsListPage extends ConsumerStatefulWidget {
   const ProductsListPage({super.key});
@@ -29,8 +33,6 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
     symbol: 'FCFA',
     decimalDigits: 0,
   );
-
-  String? _selectedCategory;
 
   final List<Map<String, dynamic>> _categories = [
     {'name': 'Tous', 'icon': Icons.grid_view, 'id': null},
@@ -65,11 +67,12 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
   }
 
   void _onSearch(String query) {
+    final selectedCategory = ref.read(formFieldsProvider(_selectedCategoryId))['category'];
     if (query.isEmpty) {
-      if (_selectedCategory != null) {
+      if (selectedCategory != null) {
         ref
             .read(productsProvider.notifier)
-            .filterByCategory(_selectedCategory!);
+            .filterByCategory(selectedCategory);
       } else {
         ref.read(productsProvider.notifier).loadProducts(refresh: true);
       }
@@ -433,6 +436,7 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
   }
 
   Widget _buildCategoriesSection() {
+    final selectedCategory = ref.watch(formFieldsProvider(_selectedCategoryId))['category'];
     return Container(
       height: 50,
       margin: const EdgeInsets.only(top: 16, left: 16, right: 16),
@@ -444,21 +448,19 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
           return CategoryChip(
             name: category['name'],
             icon: category['icon'],
-            isSelected: _selectedCategory == category['id'],
+            isSelected: selectedCategory == category['id'],
             onTap: () {
-              setState(() {
-                if (_selectedCategory == category['id']) {
-                  _selectedCategory = null;
-                  ref
-                      .read(productsProvider.notifier)
-                      .loadProducts(refresh: true);
-                } else {
-                  _selectedCategory = category['id'];
-                  ref
-                      .read(productsProvider.notifier)
-                      .filterByCategory(_selectedCategory, refresh: true);
-                }
-              });
+              if (selectedCategory == category['id']) {
+                ref.read(formFieldsProvider(_selectedCategoryId).notifier).setField('category', null);
+                ref
+                    .read(productsProvider.notifier)
+                    .loadProducts(refresh: true);
+              } else {
+                ref.read(formFieldsProvider(_selectedCategoryId).notifier).setField('category', category['id']);
+                ref
+                    .read(productsProvider.notifier)
+                    .filterByCategory(category['id'], refresh: true);
+              }
             },
           );
         },
