@@ -4,9 +4,8 @@ import 'package:intl/intl.dart';
 import '../providers/prescriptions_provider.dart';
 import '../providers/prescriptions_state.dart';
 import '../../domain/entities/prescription_entity.dart';
-import 'prescription_details_page.dart';
-import 'prescription_upload_page.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 
 class PrescriptionsListPage extends ConsumerStatefulWidget {
   const PrescriptionsListPage({super.key});
@@ -406,11 +405,11 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
   }
 
   void _navigateToDetails(PrescriptionEntity prescription) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => PrescriptionDetailsPage(prescriptionId: prescription.id)));
+    context.goToPrescriptionDetails(prescription.id);
   }
 
   void _navigateToUpload() async {
-    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const PrescriptionUploadPage()));
-    if (result == true) ref.read(prescriptionsProvider.notifier).loadPrescriptions();
+    context.goToPrescriptionUpload();
+    // Note: Le rechargement sera géré par le retour de la page ou un listener
   }
 }

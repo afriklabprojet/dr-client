@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../domain/entities/address_entity.dart';
 import '../providers/addresses_provider.dart';
-import 'add_address_page.dart';
-import 'edit_address_page.dart';
 
 /// Page de liste des adresses de livraison
 class AddressesListPage extends ConsumerStatefulWidget {
@@ -403,19 +402,11 @@ class _AddressesListPageState extends ConsumerState<AddressesListPage> {
   }
 
   void _navigateToAddAddress() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddAddressPage()),
-    );
+    context.goToAddAddress();
   }
 
   void _navigateToEditAddress(AddressEntity address) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditAddressPage(address: address),
-      ),
-    );
+    context.goToEditAddress(address);
   }
 
   void _selectAddress(AddressEntity address) {

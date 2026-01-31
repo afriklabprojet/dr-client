@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../addresses/domain/entities/address_entity.dart';
 import '../../../addresses/presentation/pages/addresses_list_page.dart';
-import '../../../addresses/presentation/pages/add_address_page.dart';
 import '../../../addresses/presentation/providers/addresses_provider.dart';
 
 /// Widget pour sélectionner une adresse de livraison dans le checkout
@@ -301,10 +301,7 @@ class _AddressSelectorState extends ConsumerState<AddressSelector> {
   }
 
   Future<void> _addNewAddress() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddAddressPage()),
-    );
+    context.goToAddAddress();
     
     // Rafraîchir les adresses et sélectionner la nouvelle si c'est la première
     await ref.read(addressesProvider.notifier).loadAddresses();

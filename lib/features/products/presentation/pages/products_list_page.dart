@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:badges/badges.dart' as badges;
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/widgets/cached_image.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/utils/page_transitions.dart';
-import '../../../prescriptions/presentation/pages/prescription_upload_page.dart';
-import '../../../orders/presentation/pages/cart_page.dart';
 import '../../../orders/presentation/providers/cart_provider.dart';
 import '../widgets/category_chip.dart';
 import '../providers/products_provider.dart';
@@ -108,14 +107,7 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
                   child: IconButton(
                     icon: const Icon(Icons.shopping_cart_outlined),
                     tooltip: 'Panier',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CartPage(),
-                        ),
-                      );
-                    },
+                    onPressed: () => context.goToCart(),
                   ),
                 ),
               );
@@ -125,14 +117,7 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
           IconButton(
             icon: const Icon(Icons.file_upload_outlined),
             tooltip: 'Upload ordonnance',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const PrescriptionUploadPage(),
-                ),
-              );
-            },
+            onPressed: () => context.goToPrescriptionUpload(),
           ),
         ],
       ),
@@ -392,12 +377,7 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PrescriptionUploadPage()),
-            );
-          },
+          onTap: () => context.goToPrescriptionUpload(),
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(16),

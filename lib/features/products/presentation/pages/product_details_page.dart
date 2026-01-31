@@ -4,8 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:badges/badges.dart' as badges;
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/cached_image.dart';
-import '../../../orders/presentation/pages/cart_page.dart';
 import '../providers/products_provider.dart';
 import '../providers/products_state.dart';
 import '../../../orders/presentation/providers/cart_provider.dart';
@@ -99,12 +99,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                   child: IconButton(
                     icon: Icon(Icons.shopping_cart_outlined, color: AppColors.textPrimary),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CartPage(),
-                        ),
-                      );
+                      context.goToCart();
                     },
                   ),
                 ),

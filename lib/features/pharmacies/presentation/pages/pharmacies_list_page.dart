@@ -4,10 +4,9 @@ import 'package:geolocator/geolocator.dart';
 import '../../domain/entities/pharmacy_entity.dart';
 import '../../../../config/providers.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../providers/pharmacies_state.dart';
 import '../widgets/pharmacy_card.dart';
-import 'pharmacy_details_page.dart';
-import 'pharmacies_map_page.dart';
 
 class PharmaciesListPage extends ConsumerStatefulWidget {
   const PharmaciesListPage({super.key});
@@ -320,18 +319,11 @@ class _PharmaciesListPageState extends ConsumerState<PharmaciesListPage> {
           IconButton(
             icon: const Icon(Icons.map, color: Colors.white),
             tooltip: 'Voir la carte',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PharmaciesMapPage(
-                    pharmacies: pharmaciesState.pharmacies,
-                    userLatitude: _currentPosition?.latitude,
-                    userLongitude: _currentPosition?.longitude,
-                  ),
-                ),
-              );
-            },
+            onPressed: () => context.goToPharmaciesMap(
+              pharmacies: pharmaciesState.pharmacies,
+              userLatitude: _currentPosition?.latitude,
+              userLongitude: _currentPosition?.longitude,
+            ),
           ),
         ],
       ),
@@ -458,14 +450,7 @@ class _PharmaciesListPageState extends ConsumerState<PharmaciesListPage> {
         return PharmacyCard(
           pharmacy: pharmacy,
           distance: distance,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PharmacyDetailsPage(pharmacyId: pharmacy.id),
-              ),
-            );
-          },
+          onTap: () => context.goToPharmacy(pharmacyId: pharmacy.id),
         );
       },
     );

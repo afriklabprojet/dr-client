@@ -7,7 +7,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/url_launcher_service.dart';
 import '../../../../core/router/app_router.dart';
 import '../providers/pharmacies_state.dart';
-import 'pharmacies_map_page.dart';
 
 class PharmaciesListPageV2 extends ConsumerStatefulWidget {
   const PharmaciesListPageV2({super.key});
@@ -206,15 +205,10 @@ class _PharmaciesListPageV2State extends ConsumerState<PharmaciesListPageV2>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PharmaciesMapPage(
-                pharmacies: _getFilteredPharmacies(pharmaciesState),
-                userLatitude: _currentPosition?.latitude,
-                userLongitude: _currentPosition?.longitude,
-              ),
-            ),
+          context.goToPharmaciesMap(
+            pharmacies: _getFilteredPharmacies(pharmaciesState),
+            userLatitude: _currentPosition?.latitude,
+            userLongitude: _currentPosition?.longitude,
           );
         },
         backgroundColor: AppColors.primary,

@@ -12,17 +12,22 @@ import '../../features/auth/presentation/pages/change_password_page.dart';
 import '../../home_page.dart';
 import '../../features/pharmacies/presentation/pages/pharmacies_list_page_v2.dart';
 import '../../features/pharmacies/presentation/pages/pharmacy_details_page.dart';
+import '../../features/pharmacies/presentation/pages/pharmacies_map_page.dart';
 import '../../features/pharmacies/presentation/pages/on_duty_pharmacies_map_page.dart';
 import '../../features/products/presentation/pages/product_details_page.dart';
 import '../../features/orders/presentation/pages/cart_page.dart';
 import '../../features/orders/presentation/pages/checkout_page.dart';
 import '../../features/orders/presentation/pages/orders_list_page.dart';
 import '../../features/orders/presentation/pages/order_details_page.dart';
+import '../../features/orders/presentation/pages/tracking_page.dart';
+import '../../features/orders/domain/entities/delivery_address_entity.dart';
 import '../../features/prescriptions/presentation/pages/prescriptions_list_page.dart';
 import '../../features/prescriptions/presentation/pages/prescription_details_page.dart';
 import '../../features/prescriptions/presentation/pages/prescription_upload_page.dart';
 import '../../features/addresses/presentation/pages/addresses_list_page.dart';
 import '../../features/addresses/presentation/pages/add_address_page.dart';
+import '../../features/addresses/presentation/pages/edit_address_page.dart';
+import '../../features/addresses/domain/entities/address_entity.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/profile/presentation/pages/notification_settings_page.dart';
@@ -46,6 +51,7 @@ abstract class AppRoutes {
   // Pharmacies
   static const pharmacies = '/pharmacies';
   static const pharmacyDetails = '/pharmacies/:id';
+  static const pharmaciesMap = '/pharmacies/map';
   static const onDutyPharmacies = '/on-duty-pharmacies';
 
   // Products
@@ -56,6 +62,7 @@ abstract class AppRoutes {
   static const checkout = '/checkout';
   static const orders = '/orders';
   static const orderDetails = '/orders/:id';
+  static const orderTracking = '/orders/:id/tracking';
 
   // Prescriptions
   static const prescriptions = '/prescriptions';
@@ -64,7 +71,9 @@ abstract class AppRoutes {
 
   // Addresses
   static const addresses = '/addresses';
+  static const addressesSelect = '/addresses/select';
   static const addAddress = '/addresses/add';
+  static const editAddress = '/addresses/edit';
 
   // Profile
   static const profile = '/profile';
@@ -144,6 +153,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: AppRoutes.pharmaciesMap,
+        name: 'pharmaciesMap',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return PharmaciesMapPage(
+            pharmacies: extra?['pharmacies'] ?? [],
+            userLatitude: extra?['userLatitude'],
+            userLongitude: extra?['userLongitude'],
+          );
+        },
+      ),
+      GoRoute(
         path: AppRoutes.onDutyPharmacies,
         name: 'onDutyPharmacies',
         builder: (context, state) => const OnDutyPharmaciesMapPage(),
@@ -183,6 +204,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           return OrderDetailsPage(orderId: orderId);
         },
       ),
+      GoRoute(
+        path: AppRoutes.orderTracking,
+        name: 'orderTracking',
+        builder: (context, state) {
+          final orderId = int.parse(state.pathParameters['id']!);
+          final extra = state.extra as Map<String, dynamic>;
+          return TrackingPage(
+            orderId: orderId,
+            deliveryAddress: extra['deliveryAddress'] as DeliveryAddressEntity,
+            pharmacyAddress: extra['pharmacyAddress'] as String?,
+          );
+        },
+      ),
 
       // ===== Prescription Routes =====
       GoRoute(
@@ -211,9 +245,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AddressesListPage(),
       ),
       GoRoute(
+        path: AppRoutes.addressesSelect,
+        name: 'addressesSelect',
+        builder: (context, state) => const AddressesListPage(selectionMode: true),
+      ),
+      GoRoute(
         path: AppRoutes.addAddress,
         name: 'addAddress',
         builder: (context, state) => const AddAddressPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.editAddress,
+        name: 'editAddress',
+        builder: (context, state) {
+          final address = state.extra as AddressEntity;
+          return EditAddressPage(address: address);
+        },
       ),
 
       // ===== Profile Routes =====
@@ -284,8 +331,21 @@ extension GoRouterExtension on BuildContext {
 
   // Pharmacy navigation
   void goToPharmacies() => go(AppRoutes.pharmacies);
+  void goToPharmacy({required int pharmacyId}) => go('/pharmacies/$pharmacyId');
   void goToPharmacyDetails(int pharmacyId) => go('/pharmacies/$pharmacyId');
   void goToOnDutyPharmacies() => go(AppRoutes.onDutyPharmacies);
+  void goToPharmaciesMap({
+    required List pharmacies,
+    double? userLatitude,
+    double? userLongitude,
+  }) => push(
+    '/pharmacies/map',
+    extra: {
+      'pharmacies': pharmacies,
+      'userLatitude': userLatitude,
+      'userLongitude': userLongitude,
+    },
+  );
 
   // Product navigation
   void goToProductDetails(int productId) => go('/products/$productId');
@@ -295,6 +355,17 @@ extension GoRouterExtension on BuildContext {
   void goToCheckout() => go(AppRoutes.checkout);
   void goToOrders() => go(AppRoutes.orders);
   void goToOrderDetails(int orderId) => go('/orders/$orderId');
+  void goToOrderTracking({
+    required int orderId,
+    required DeliveryAddressEntity deliveryAddress,
+    String? pharmacyAddress,
+  }) => push(
+    '/orders/$orderId/tracking',
+    extra: {
+      'deliveryAddress': deliveryAddress,
+      'pharmacyAddress': pharmacyAddress,
+    },
+  );
 
   // Prescription navigation
   void goToPrescriptions() => go(AppRoutes.prescriptions);
@@ -305,6 +376,7 @@ extension GoRouterExtension on BuildContext {
   // Address navigation
   void goToAddresses() => go(AppRoutes.addresses);
   void goToAddAddress() => go(AppRoutes.addAddress);
+  void goToEditAddress(AddressEntity address) => push(AppRoutes.editAddress, extra: address);
 
   // Profile navigation
   void goToProfile() => go(AppRoutes.profile);

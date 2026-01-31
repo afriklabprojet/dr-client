@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../domain/entities/pharmacy_entity.dart';
-import 'pharmacy_details_page.dart';
 
 class PharmaciesMapPage extends StatefulWidget {
   final List<PharmacyEntity> pharmacies;
@@ -79,13 +79,7 @@ class _PharmaciesMapPageState extends State<PharmaciesMapPage> {
                   ? 'Garde ${pharmacy.dutyType != null ? "- ${pharmacy.dutyType}" : ""}' 
                   : (pharmacy.isOpen ? 'Ouverte' : 'Fermée'),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        PharmacyDetailsPage(pharmacyId: pharmacy.id),
-                  ),
-                );
+                context.goToPharmacyDetails(pharmacy.id);
               },
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(
@@ -294,12 +288,7 @@ class _PharmaciesMapPageState extends State<PharmaciesMapPage> {
                     ],
                   ),
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PharmacyDetailsPage(pharmacyId: pharmacy.id),
-                      ),
-                    );
+                    context.goToPharmacyDetails(pharmacy.id);
                   },
                 ),
               );

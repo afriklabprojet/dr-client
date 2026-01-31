@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../providers/orders_provider.dart';
 import '../providers/orders_state.dart';
 import '../../domain/entities/order_entity.dart';
-import 'tracking_page.dart';
 
 class OrderDetailsPage extends ConsumerStatefulWidget {
   final int orderId;
@@ -308,15 +308,10 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TrackingPage(
-                      orderId: order.id,
-                      deliveryAddress: order.deliveryAddress,
-                      pharmacyAddress: order.pharmacyAddress,
-                    ),
-                  ),
+                context.goToOrderTracking(
+                  orderId: order.id,
+                  deliveryAddress: order.deliveryAddress,
+                  pharmacyAddress: order.pharmacyAddress,
                 );
               },
               icon: const Icon(Icons.map),

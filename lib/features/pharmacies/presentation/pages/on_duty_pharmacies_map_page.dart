@@ -7,9 +7,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../config/providers.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../domain/entities/pharmacy_entity.dart';
 import '../providers/pharmacies_state.dart';
-import 'pharmacy_details_page.dart';
 
 /// Page dédiée aux pharmacies de garde avec vue carte directe
 class OnDutyPharmaciesMapPage extends ConsumerStatefulWidget {
@@ -215,12 +215,7 @@ class _OnDutyPharmaciesMapPageState
   bool _isValidLongitude(double lng) => lng >= -180.0 && lng <= 180.0;
 
   void _onPharmacyTap(PharmacyEntity pharmacy) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PharmacyDetailsPage(pharmacyId: pharmacy.id),
-      ),
-    );
+    context.goToPharmacyDetails(pharmacy.id);
   }
 
   String _getDutyLabel(String? type) {
