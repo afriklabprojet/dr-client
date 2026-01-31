@@ -185,7 +185,7 @@ class LoginPage extends ConsumerWidget {
    - ✅ `register_page.dart` - _obscurePassword, _obscureConfirmPassword, _acceptTerms
    - ✅ `otp_verification_page.dart` - _isLoading, _resendTimer, _errorMessage
    - ✅ `forgot_password_page.dart` - _isLoading, _emailSent, _errorMessage
-   - ✅ `change_password_page.dart` - _obscure* toggles
+   - ✅ `change_password_page.dart` - _obscure* toggles (password strength gardé setState)
    - ✅ `checkout_page.dart` - useManualAddress, saveNewAddress, isSubmitting, paymentMode
 3. ✅ Migrer les pages secondaires :
    - ✅ `edit_profile_page.dart` - password toggles
@@ -194,17 +194,20 @@ class LoginPage extends ConsumerWidget {
    - ✅ `products_list_page.dart` - selectedCategory
    - ✅ `product_details_page.dart` - quantity
    - ✅ `orders_list_page.dart` - selectedStatus
+   - ✅ `prescription_upload_page.dart` - _isUploading → loadingProvider
+   - ✅ `pharmacies_list_page_v2.dart` - _searchQuery → formFieldsProvider
 4. ⏳ Pages non migrées (setState acceptable) :
    - `onboarding_page.dart` - PageController sync
    - `tracking_page.dart` - LatLng, Set<Marker> (objets complexes)
    - `pharmacies_list_page.dart` - multiples filtres + Position GPS
+   - `pharmacies_map_page.dart` - Set<Marker> Google Maps
    - `on_duty_pharmacies_map_page.dart` - état carte Google Maps
 
-## Statistiques actuelles
+## Statistiques actuelles (1 février 2026)
 
-- **~50 occurrences** de `setState` restantes (sur 102 initiales)
-- **12 pages migrées** sur 20
-- **8 pages gardent setState** (acceptable pour états complexes)
+- **38 occurrences** de `setState` restantes (sur 102 initiales = **-63%**)
+- **14 pages migrées** sur 20
+- **6 pages gardent setState** (acceptable pour états complexes: GPS, Google Maps, PageController)
 
 ## Tests
 
