@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/errors/error_handler.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/validators/form_validators.dart';
 import '../providers/auth_provider.dart';
 import '../providers/auth_state.dart';
-import 'otp_verification_page.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -137,26 +139,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     if (!_formKey.currentState!.validate()) return;
 
     if (!_acceptTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.white),
-              SizedBox(width: 12),
-              Text("Veuillez accepter les conditions d'utilisation"),
-            ],
-          ),
-          backgroundColor: Colors.orange.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+      ErrorHandler.showWarningSnackBar(
+        context, 
+        "Veuillez accepter les conditions d'utilisation",
       );
       return;
     }
-
-    final messenger = ScaffoldMessenger.of(context);
 
     await ref
         .read(authProvider.notifier)
@@ -177,50 +165,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         authState.errorMessage != null) {
       // Convertir le message technique en message utilisateur explicite
       final userFriendlyMessage = _getReadableErrorMessage(authState.errorMessage);
-      
-      messenger.showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(child: Text(userFriendlyMessage)),
-            ],
-          ),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    } else if (authState.status == AuthStatus.authenticated) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text('Inscription reussie ! Bienvenue'),
-            ],
-          ),
-          backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
       if (mounted) {
-        // Utiliser pushReplacement pour éviter les retours et les rebuilds
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => OtpVerificationPage(
-              phoneNumber: '+225${_phoneController.text.trim()}',
-            ),
-          ),
-        );
+        ErrorHandler.showErrorSnackBar(context, userFriendlyMessage);
+      }
+    } else if (authState.status == AuthStatus.authenticated) {
+      if (mounted) {
+        ErrorHandler.showSuccessSnackBar(context, 'Inscription réussie ! Bienvenue');
+        context.goToOtpVerification('+225${_phoneController.text.trim()}');
       }
     }
   }
@@ -447,15 +398,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       label: 'Nom complet',
       icon: Icons.person_outline,
       isDark: isDark,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Veuillez entrer votre nom';
-        }
-        if (value.length < 2) {
-          return 'Le nom doit contenir au moins 2 caracteres';
-        }
-        return null;
-      },
+      validator: (value) => FormValidators.validateName(
+        value, 
+        fieldName: 'Le nom',
+        minLength: 2,
+      ),
     );
   }
 
@@ -466,15 +413,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       icon: Icons.email_outlined,
       keyboardType: TextInputType.emailAddress,
       isDark: isDark,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Veuillez entrer votre email';
-        }
-        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Veuillez entrer un email valide';
-        }
-        return null;
-      },
+      validator: FormValidators.validateEmail,
     );
   }
 
@@ -489,18 +428,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         FilteringTextInputFormatter.digitsOnly,
         LengthLimitingTextInputFormatter(10),
       ],
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Veuillez entrer votre numéro';
-        }
-        if (value.length != 10) {
-          return 'Le numéro doit contenir 10 chiffres';
-        }
-        if (!value.startsWith('0')) {
-          return 'Le numéro doit commencer par 0';
-        }
-        return null;
-      },
+      validator: FormValidators.validatePhone,
     );
   }
 
@@ -530,15 +458,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ),
         onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Veuillez entrer un mot de passe';
-        }
-        if (value.length < 8) {
-          return 'Le mot de passe doit contenir au moins 8 caracteres';
-        }
-        return null;
-      },
+      validator: (value) => FormValidators.validatePassword(
+        value,
+        strength: PasswordStrength.strong,
+      ),
     );
   }
 
@@ -591,15 +514,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         onPressed: () =>
             setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Veuillez confirmer votre mot de passe';
-        }
-        if (value != _passwordController.text) {
-          return 'Les mots de passe ne correspondent pas';
-        }
-        return null;
-      },
+      validator: (value) => FormValidators.validatePasswordConfirmation(
+        value,
+        _passwordController.text,
+      ),
     );
   }
 

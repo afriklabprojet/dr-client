@@ -3,7 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../config/providers.dart'; // Import pour notificationService
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/errors/error_handler.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/services/app_logger.dart';
+import '../../../../core/validators/form_validators.dart';
 import '../providers/auth_provider.dart';
 import '../providers/auth_state.dart';
 
@@ -208,7 +211,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
           await ref.read(notificationServiceProvider).initNotifications();
         } catch (e) {
           // Continue even if notification init fails
-          debugPrint('Notification init error: $e');
+          AppLogger.warning('Notification init error: $e');
         }
 
         if (mounted) {
@@ -232,27 +235,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
         if (mounted) {
           // Convertir le message technique en message utilisateur explicite
           final userFriendlyMessage = _getReadableErrorMessage(next.errorMessage);
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.white),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(userFriendlyMessage),
-                  ),
-                ],
-              ),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              margin: const EdgeInsets.all(16),
-              duration: const Duration(seconds: 4),
-            ),
-          );
+          ErrorHandler.showErrorSnackBar(context, userFriendlyMessage);
         }
       }
     });
@@ -630,16 +613,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
       textInputAction: TextInputAction.next,
       onFieldSubmitted: (_) => _passwordFocusNode.requestFocus(),
       validator: (value) {
-        if (value == null || value.isEmpty) {
-          return _useEmail ? 'Email requis' : 'Numéro requis';
+        if (_useEmail) {
+          return FormValidators.validateEmail(value);
         }
-        if (_useEmail && !value.contains('@')) {
-          return 'Email invalide';
-        }
-        if (!_useEmail && value.length < 8) {
-          return 'Numéro invalide';
-        }
-        return null;
+        return FormValidators.validatePhone(value);
       },
     );
   }
@@ -663,15 +640,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
           color: isDark ? Colors.white54 : Colors.grey[600],
         ),
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Mot de passe requis';
-        }
-        if (value.length < 6) {
-          return 'Minimum 6 caractères';
-        }
-        return null;
-      },
+      validator: (value) => FormValidators.validatePassword(
+        value,
+        strength: PasswordStrength.medium,
+      ),
     );
   }
 
