@@ -32,12 +32,13 @@ class CartState extends Equatable {
     List<CartItemEntity>? items,
     String? errorMessage,
     int? selectedPharmacyId,
+    bool clearPharmacyId = false,
   }) {
     return CartState(
       status: status ?? this.status,
       items: items ?? this.items,
       errorMessage: errorMessage,
-      selectedPharmacyId: selectedPharmacyId ?? this.selectedPharmacyId,
+      selectedPharmacyId: clearPharmacyId ? null : (selectedPharmacyId ?? this.selectedPharmacyId),
     );
   }
 

@@ -1,0 +1,159 @@
+import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../products/presentation/pages/products_list_page.dart';
+import '../../../pharmacies/presentation/pages/pharmacies_list_page_v2.dart';
+import '../../../pharmacies/presentation/pages/on_duty_pharmacies_map_page.dart';
+import '../../../prescriptions/presentation/pages/prescriptions_list_page.dart';
+
+/// Grille des actions rapides sur la page d'accueil
+class QuickActionsGrid extends StatelessWidget {
+  final bool isDark;
+
+  const QuickActionsGrid({
+    super.key,
+    this.isDark = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 16,
+      crossAxisSpacing: 16,
+      childAspectRatio: 1.5,
+      children: [
+        QuickActionCard(
+          icon: Icons.medication_outlined,
+          title: 'Produits',
+          subtitle: 'Parcourir le catalogue',
+          color: AppColors.primary,
+          isDark: isDark,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ProductsListPage()),
+            );
+          },
+        ),
+        QuickActionCard(
+          icon: Icons.emergency_outlined,
+          title: 'Garde',
+          subtitle: 'Pharmacies de garde',
+          color: const Color(0xFFFF5722),
+          isDark: isDark,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const OnDutyPharmaciesMapPage()),
+            );
+          },
+        ),
+        QuickActionCard(
+          icon: Icons.local_pharmacy_outlined,
+          title: 'Pharmacies',
+          subtitle: 'Trouver à proximité',
+          color: AppColors.accent,
+          isDark: isDark,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PharmaciesListPageV2()),
+            );
+          },
+        ),
+        QuickActionCard(
+          icon: Icons.upload_file_outlined,
+          title: 'Ordonnance',
+          subtitle: 'Mes ordonnances',
+          color: const Color(0xFF9C27B0),
+          isDark: isDark,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PrescriptionsListPage()),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// Carte d'action rapide individuelle
+class QuickActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+  final bool isDark;
+
+  const QuickActionCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? Colors.white10 : Colors.grey.shade100,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.grey[400] : AppColors.textSecondary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

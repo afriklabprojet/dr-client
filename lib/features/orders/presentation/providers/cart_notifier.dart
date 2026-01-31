@@ -196,9 +196,7 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(
       status: CartStatus.loaded,
       items: updatedItems,
-      selectedPharmacyId: updatedItems.isEmpty
-          ? null
-          : state.selectedPharmacyId,
+      clearPharmacyId: updatedItems.isEmpty,
       errorMessage: null,
     );
 
