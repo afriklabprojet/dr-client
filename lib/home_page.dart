@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'core/constants/app_colors.dart';
@@ -117,27 +118,34 @@ class _HomePageState extends ConsumerState<HomePage> {
     final user = authState.user;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildSliverAppBar(context, ref, cartState, isDark),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildWelcomeSection(user?.name, isDark),
-                  const SizedBox(height: 32),
-                  _buildFeaturedPharmaciesSection(context, ref, isDark),
-                  const SizedBox(height: 32),
-                  _buildSectionTitle('Services', isDark),
-                  const SizedBox(height: 16),
-                  _buildQuickActionsGrid(context, isDark),
-                  const SizedBox(height: 32),
-                  _buildSectionTitle('À la une', isDark),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _showExitConfirmation(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
+        body: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            _buildSliverAppBar(context, ref, cartState, isDark),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildWelcomeSection(user?.name, isDark),
+                    const SizedBox(height: 32),
+                    _buildFeaturedPharmaciesSection(context, ref, isDark),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('Services', isDark),
+                    const SizedBox(height: 16),
+                    _buildQuickActionsGrid(context, isDark),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('À la une', isDark),
                   const SizedBox(height: 16),
                   _buildPromoSlider(context, isDark),
                   const SizedBox(height: 100), // Bottom padding
@@ -147,7 +155,31 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
+      ),
     );
+  }
+
+  Future<void> _showExitConfirmation(BuildContext context) async {
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Quitter l\'application'),
+        content: const Text('Voulez-vous vraiment quitter DR-PHARMA ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Quitter', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (shouldExit == true) {
+      SystemNavigator.pop();
+    }
   }
 
   Widget _buildSliverAppBar(

@@ -179,7 +179,6 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
       // Silent fail for FCM token update - pas besoin d'afficher d'erreur
       debugPrint('FCM token update failed: $e');
     }
-    }
   }
 
   // Remove FCM token

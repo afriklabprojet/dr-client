@@ -34,8 +34,8 @@ class InitiatePaymentUseCase {
       );
     }
 
-    // Supported providers: cinetpay, fedapay, wave
-    final supportedProviders = ['cinetpay', 'fedapay', 'wave'];
+    // Supported providers: cinetpay, fedapay, wave, jeko
+    final supportedProviders = ['cinetpay', 'fedapay', 'wave', 'jeko'];
     if (!supportedProviders.contains(provider.toLowerCase())) {
       return Left(
         ValidationFailure(
