@@ -48,4 +48,9 @@ abstract class AuthRepository {
   Future<Either<Failure, Map<String, dynamic>>> resendOtp({
     required String identifier,
   });
+
+  /// Request password reset email
+  Future<Either<Failure, void>> forgotPassword({
+    required String email,
+  });
 }

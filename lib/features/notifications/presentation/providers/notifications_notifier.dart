@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../notifications/data/datasources/notifications_remote_datasource.dart';
 import '../../domain/entities/notification_entity.dart';
@@ -8,6 +9,28 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
 
   NotificationsNotifier(this.remoteDataSource)
       : super(const NotificationsState.initial());
+
+  /// Convertit les erreurs techniques en messages lisibles
+  String _getReadableErrorMessage(dynamic error) {
+    final errorStr = error.toString().toLowerCase();
+    
+    if (errorStr.contains('network') || 
+        errorStr.contains('connexion') ||
+        errorStr.contains('socket') ||
+        errorStr.contains('timeout')) {
+      return 'Problème de connexion. Vérifiez votre internet.';
+    }
+    
+    if (errorStr.contains('unauthorized') || errorStr.contains('401')) {
+      return 'Session expirée. Veuillez vous reconnecter.';
+    }
+    
+    if (errorStr.contains('server') || errorStr.contains('500')) {
+      return 'Le service est temporairement indisponible.';
+    }
+    
+    return 'Une erreur est survenue. Veuillez réessayer.';
+  }
 
   // Load all notifications
   Future<void> loadNotifications() async {
@@ -30,7 +53,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     } catch (e) {
       state = state.copyWith(
         status: NotificationsStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _getReadableErrorMessage(e),
       );
     }
   }
@@ -54,7 +77,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     } catch (e) {
       state = state.copyWith(
         status: NotificationsStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _getReadableErrorMessage(e),
       );
     }
   }
@@ -89,7 +112,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     } catch (e) {
       state = state.copyWith(
         status: NotificationsStatus.error,
-        errorMessage: 'Erreur lors du marquage comme lu: $e',
+        errorMessage: _getReadableErrorMessage(e),
       );
     }
   }
@@ -119,7 +142,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     } catch (e) {
       state = state.copyWith(
         status: NotificationsStatus.error,
-        errorMessage: 'Erreur lors du marquage de toutes comme lues: $e',
+        errorMessage: _getReadableErrorMessage(e),
       );
     }
   }
@@ -143,7 +166,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     } catch (e) {
       state = state.copyWith(
         status: NotificationsStatus.error,
-        errorMessage: 'Erreur lors de la suppression: $e',
+        errorMessage: _getReadableErrorMessage(e),
       );
     }
   }
@@ -153,10 +176,9 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     try {
       await remoteDataSource.updateFcmToken(fcmToken);
     } catch (e) {
-      // Silent fail for FCM token update
-      state = state.copyWith(
-        errorMessage: 'Erreur lors de la mise à jour du token FCM: $e',
-      );
+      // Silent fail for FCM token update - pas besoin d'afficher d'erreur
+      debugPrint('FCM token update failed: $e');
+    }
     }
   }
 

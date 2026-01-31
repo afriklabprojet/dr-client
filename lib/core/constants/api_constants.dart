@@ -75,6 +75,7 @@ class ApiConstants {
   static const String uploadAvatar = '/auth/avatar';
   static const String deleteAvatar = '/auth/avatar';
   static const String updatePassword = '/auth/password';
+  static const String forgotPassword = '/auth/forgot-password';
   
   static const String verifyOtp = '/auth/verify';
   static const String resendOtp = '/auth/resend';

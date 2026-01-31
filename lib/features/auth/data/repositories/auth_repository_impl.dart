@@ -279,4 +279,29 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> forgotPassword({
+    required String email,
+  }) async {
+    try {
+      await remoteDataSource.forgotPassword(email: email);
+      return const Right(null);
+    } on ValidationException catch (e) {
+      String errorMessage = 'Email non trouvé';
+      if (e.errors.isNotEmpty) {
+        final firstKey = e.errors.keys.first;
+        if (e.errors[firstKey]!.isNotEmpty) {
+          errorMessage = e.errors[firstKey]!.first;
+        }
+      }
+      return Left(ValidationFailure(message: errorMessage, errors: e.errors));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
 }

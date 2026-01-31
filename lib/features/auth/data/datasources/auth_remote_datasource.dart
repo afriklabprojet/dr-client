@@ -37,6 +37,11 @@ abstract class AuthRemoteDataSource {
   Future<Map<String, dynamic>> resendOtp({
     required String identifier,
   });
+
+  /// Request password reset email
+  Future<void> forgotPassword({
+    required String email,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -155,5 +160,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       'message': response.data['message'] ?? 'Code envoyé',
       'channel': response.data['channel'] ?? 'sms',
     };
+  }
+
+  @override
+  Future<void> forgotPassword({
+    required String email,
+  }) async {
+    await apiClient.post(
+      ApiConstants.forgotPassword,
+      data: {
+        'email': email.toLowerCase().trim(),
+      },
+    );
   }
 }

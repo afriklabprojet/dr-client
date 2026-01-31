@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../config/providers.dart';
 
 /// Page de récupération de mot de passe
 class ForgotPasswordPage extends ConsumerStatefulWidget {
@@ -53,18 +54,75 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
 
   Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
 
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        // Appel API réel pour la réinitialisation du mot de passe
+        final authRepository = ref.read(authRepositoryProvider);
+        final result = await authRepository.forgotPassword(
+          email: _emailController.text.trim(),
+        );
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _emailSent = true;
-        });
+        if (mounted) {
+          result.fold(
+            (failure) {
+              setState(() {
+                _isLoading = false;
+                _errorMessage = _getReadableErrorMessage(failure.message);
+              });
+            },
+            (success) {
+              setState(() {
+                _isLoading = false;
+                _emailSent = true;
+              });
+            },
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'Une erreur est survenue. Veuillez réessayer.';
+          });
+        }
       }
     }
+  }
+
+  String? _errorMessage;
+
+  /// Convertit les messages d'erreur techniques en messages utilisateur
+  String _getReadableErrorMessage(String? error) {
+    if (error == null || error.isEmpty) {
+      return 'Une erreur est survenue. Veuillez réessayer.';
+    }
+    
+    final errorLower = error.toLowerCase();
+    
+    if (errorLower.contains('not found') || 
+        errorLower.contains('introuvable') ||
+        errorLower.contains('no user')) {
+      return 'Aucun compte n\'existe avec cet email.\nVeuillez vérifier votre saisie.';
+    }
+    
+    if (errorLower.contains('network') || 
+        errorLower.contains('connexion') ||
+        errorLower.contains('internet') ||
+        errorLower.contains('timeout')) {
+      return 'Problème de connexion internet.\nVérifiez votre connexion et réessayez.';
+    }
+    
+    if (errorLower.contains('too many') || 
+        errorLower.contains('rate limit') ||
+        errorLower.contains('throttle')) {
+      return 'Trop de tentatives.\nVeuillez patienter quelques minutes.';
+    }
+    
+    return 'Une erreur est survenue. Veuillez réessayer.';
   }
 
   @override

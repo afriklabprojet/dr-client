@@ -34,6 +34,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   String _paymentMode = AppConstants.paymentModePlatform; // platform or on_delivery
   bool _useManualAddress = false; // Toggle pour adresse manuelle
   bool _saveNewAddress = false; // Option pour enregistrer la nouvelle adresse
+  bool _isSubmitting = false; // Protection contre double clic
   AddressEntity? _selectedSavedAddress;
 
   @override
@@ -523,20 +524,51 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () => _submitOrder(),
+        onPressed: _isSubmitting ? null : () => _submitOrder(),
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          backgroundColor: AppColors.primary,
+          backgroundColor: _isSubmitting ? Colors.grey : AppColors.primary,
         ),
-        child: Text(
-          'Confirmer la commande - ${currencyFormat.format(cartState.total)}',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+        child: _isSubmitting
+            ? const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    'Traitement en cours...',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              )
+            : Text(
+                'Confirmer la commande - ${currencyFormat.format(cartState.total)}',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
       ),
     );
   }
 
   Future<void> _submitOrder() async {
+    // Protection contre double clic
+    if (_isSubmitting) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Commande en cours de traitement...'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     // Validation de l'adresse
     if (!_useManualAddress && _selectedSavedAddress == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -551,6 +583,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     if (_useManualAddress && !_formKey.currentState!.validate()) {
       return;
     }
+
+    // Activer la protection contre double clic
+    setState(() => _isSubmitting = true);
 
     final cartState = ref.read(cartProvider);
 
@@ -629,17 +664,48 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         }
       }
     } else if (ordersState.status == OrdersStatus.error) {
+      // Réinitialiser le flag en cas d'erreur
       if (mounted) {
+        setState(() => _isSubmitting = false);
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              ordersState.errorMessage ?? 'Erreur lors de la création',
+              _getReadableOrderError(ordersState.errorMessage),
             ),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
     }
+  }
+
+  /// Convertit les erreurs de commande en messages lisibles
+  String _getReadableOrderError(String? error) {
+    if (error == null || error.isEmpty) {
+      return 'Une erreur est survenue lors de la création de la commande.';
+    }
+    
+    final errorLower = error.toLowerCase();
+    
+    if (errorLower.contains('stock') || errorLower.contains('disponible')) {
+      return 'Certains produits ne sont plus disponibles. Veuillez vérifier votre panier.';
+    }
+    
+    if (errorLower.contains('pharmacy') || errorLower.contains('pharmacie')) {
+      return 'La pharmacie n\'est pas disponible actuellement. Veuillez en choisir une autre.';
+    }
+    
+    if (errorLower.contains('network') || errorLower.contains('connexion')) {
+      return 'Problème de connexion. Vérifiez votre internet et réessayez.';
+    }
+    
+    if (errorLower.contains('address') || errorLower.contains('adresse')) {
+      return 'L\'adresse de livraison est invalide. Veuillez la vérifier.';
+    }
+    
+    return 'Une erreur est survenue. Veuillez réessayer.';
   }
 
   Future<void> _processPayment(int orderId) async {
