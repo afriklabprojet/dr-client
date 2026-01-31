@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../pharmacies/presentation/pages/on_duty_pharmacies_map_page.dart';
-import '../../../prescriptions/presentation/pages/prescription_upload_page.dart';
+import '../../../../core/router/app_router.dart';
 import '../../domain/models/promo_item.dart';
 
 /// Widget du slider promotionnel
@@ -24,14 +23,10 @@ class PromoSlider extends StatelessWidget {
   void _handlePromoTap(BuildContext context, PromoItem promo) {
     switch (promo.actionType) {
       case 'onDuty':
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const OnDutyPharmaciesMapPage()),
-        );
+        context.goToOnDutyPharmacies();
         break;
       case 'prescription':
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const PrescriptionUploadPage()),
-        );
+        context.goToPrescriptionUpload();
         break;
       default:
         break;

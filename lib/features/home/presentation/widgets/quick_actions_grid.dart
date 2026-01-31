@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../products/presentation/pages/products_list_page.dart';
-import '../../../pharmacies/presentation/pages/pharmacies_list_page_v2.dart';
-import '../../../pharmacies/presentation/pages/on_duty_pharmacies_map_page.dart';
-import '../../../prescriptions/presentation/pages/prescriptions_list_page.dart';
+import '../../../../core/router/app_router.dart';
 
 /// Grille des actions rapides sur la page d'accueil
 class QuickActionsGrid extends StatelessWidget {
@@ -30,11 +27,7 @@ class QuickActionsGrid extends StatelessWidget {
           subtitle: 'Parcourir le catalogue',
           color: AppColors.primary,
           isDark: isDark,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ProductsListPage()),
-            );
-          },
+          onTap: () => context.goToPharmacies(), // ProductsListPage requires pharmacy
         ),
         QuickActionCard(
           icon: Icons.emergency_outlined,
@@ -42,11 +35,7 @@ class QuickActionsGrid extends StatelessWidget {
           subtitle: 'Pharmacies de garde',
           color: const Color(0xFFFF5722),
           isDark: isDark,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const OnDutyPharmaciesMapPage()),
-            );
-          },
+          onTap: () => context.goToOnDutyPharmacies(),
         ),
         QuickActionCard(
           icon: Icons.local_pharmacy_outlined,
@@ -54,11 +43,7 @@ class QuickActionsGrid extends StatelessWidget {
           subtitle: 'Trouver à proximité',
           color: AppColors.accent,
           isDark: isDark,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PharmaciesListPageV2()),
-            );
-          },
+          onTap: () => context.goToPharmacies(),
         ),
         QuickActionCard(
           icon: Icons.upload_file_outlined,
@@ -66,11 +51,7 @@ class QuickActionsGrid extends StatelessWidget {
           subtitle: 'Mes ordonnances',
           color: const Color(0xFF9C27B0),
           isDark: isDark,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PrescriptionsListPage()),
-            );
-          },
+          onTap: () => context.goToPrescriptions(),
         ),
       ],
     );

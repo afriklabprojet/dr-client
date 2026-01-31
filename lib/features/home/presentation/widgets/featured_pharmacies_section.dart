@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../pharmacies/presentation/pages/pharmacies_list_page_v2.dart';
-import '../../../pharmacies/presentation/pages/pharmacy_details_page.dart';
+import '../../../../core/router/app_router.dart';
 
 /// Section des pharmacies en vedette avec carousel automatique
 class FeaturedPharmaciesSection extends StatelessWidget {
@@ -71,11 +70,7 @@ class FeaturedPharmaciesSection extends StatelessWidget {
           ],
         ),
         TextButton(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PharmaciesListPageV2()),
-            );
-          },
+          onPressed: () => context.goToPharmacies(),
           child: Row(
             children: [
               Text(
@@ -208,14 +203,7 @@ class FeaturedPharmaciesSection extends StatelessWidget {
                 child: FeaturedPharmacyCard(
                   pharmacy: pharmacy,
                   isDark: isDark,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            PharmacyDetailsPage(pharmacyId: pharmacy.id),
-                      ),
-                    );
-                  },
+                  onTap: () => context.pushToPharmacyDetails(pharmacy.id),
                 ),
               );
             },

@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../notifications/presentation/pages/notifications_page.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
-import '../../../orders/presentation/pages/cart_page.dart';
-import '../../../orders/presentation/pages/orders_list_page.dart';
-import '../../../profile/presentation/pages/profile_page.dart';
-import '../../../auth/presentation/pages/login_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -78,11 +74,7 @@ class NotificationButton extends ConsumerWidget {
             Icons.notifications_outlined,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const NotificationsPage()),
-            );
-          },
+          onPressed: () => context.goToNotifications(),
         ),
         Consumer(
           builder: (context, ref, _) {
@@ -141,11 +133,7 @@ class CartButton extends StatelessWidget {
             Icons.shopping_bag_outlined,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CartPage()),
-            );
-          },
+          onPressed: () => context.pushToCart(),
         ),
         if (cartState.itemCount > 0)
           Positioned(
@@ -233,20 +221,14 @@ class ProfileMenuButton extends ConsumerWidget {
   ) {
     switch (value) {
       case 'profile':
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const ProfilePage()),
-        );
+        context.goToProfile();
         break;
       case 'orders':
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const OrdersListPage()),
-        );
+        context.goToOrders();
         break;
       case 'logout':
         ref.read(authProvider.notifier).logout();
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginPage()),
-        );
+        context.goToLogin();
         break;
     }
   }
