@@ -7,7 +7,7 @@
 
 **Dépôt GitHub**: https://github.com/afriklabprojet/dr-client  
 **Branche**: main  
-**Commits**: 16+ commits de corrections
+**Commits**: 19 commits de corrections
 
 ---
 
@@ -190,12 +190,12 @@
 
 | Métrique | Avant | Après | Amélioration |
 |----------|-------|-------|--------------|
-| Tests unitaires | 0 | 40 | +40 tests |
+| Tests unitaires | 0 | **104** | +104 tests |
 | home_page.dart | 1252 lignes | 194 lignes | -84% |
 | checkout_page.dart | 919 lignes | 401 lignes | -56% |
 | Sécurité tokens | SharedPreferences | flutter_secure_storage | ✅ |
-| Navigation | Navigator 1.0 | GoRouter | ✅ |
-| Commits session | - | 9 | - |
+| Navigation | Navigator 1.0 | GoRouter (100%) | ✅ |
+| Commits session | - | 19 | - |
 
 ---
 
@@ -359,12 +359,22 @@ d30470c refactor(checkout): Décomposition checkout_page.dart (919→401 lignes,
 
 | Métrique | Avant | Après |
 |----------|-------|-------|
-| Score Audit | 5.5/10 | 8/10 |
-| Tests | 0 | **54** |
+| Score Audit | 5.5/10 | **8/10** |
+| Tests | 0 | **104** |
 | home_page.dart | 1252 lignes | 194 lignes (-84%) |
 | checkout_page.dart | 919 lignes | 401 lignes (-56%) |
-| Navigator.push | ~20+ usages | 1 (sélection avec retour) |
+| Navigator.push | ~20+ usages | 0 (100% GoRouter) |
 | Services centralisés | 0 | 4 (AppLogger, FormValidators, ErrorHandler, SecureStorage) |
+
+### Détail des Tests (104 tests)
+| Provider/Widget | Tests |
+|-----------------|-------|
+| AuthNotifier | 11 |
+| CartNotifier | 29 |
+| OrdersNotifier | 14 |
+| AddressesNotifier | 17 |
+| PharmaciesNotifier | 18 |
+| LoginPage (widget) | 15 |
 
 ---
 
@@ -374,10 +384,10 @@ Cette session a significativement amélioré la qualité du code de l'applicatio
 
 - **Sécurité**: Tokens stockés de manière sécurisée avec flutter_secure_storage
 - **Architecture**: Code modulaire et réutilisable (~2000 lignes décomposées)
-- **Navigation**: Déclarative et type-safe avec GoRouter (95% migré)
-- **Tests**: **54 tests** couvrant la logique métier critique (AuthNotifier, CartNotifier, OrdersNotifier)
+- **Navigation**: 100% migré vers GoRouter (déclarative et type-safe)
+- **Tests**: **104 tests** couvrant toute la logique métier critique
 - **DX**: Services centralisés pour logging, validation, erreurs
-- **GitHub**: Code poussé sur https://github.com/afriklabprojet/dr-client
+- **GitHub**: Code poussé sur https://github.com/afriklabprojet/dr-client (19 commits)
 - **Intégration**: Services activement utilisés dans les pages auth, checkout, addresses
 
 Le score technique estimé passe de **5.5/10 à 8/10**.
