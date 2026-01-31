@@ -180,18 +180,31 @@ class LoginPage extends ConsumerWidget {
 ## Plan de migration
 
 1. ✅ Créer `ui_state_providers.dart`
-2. ⏳ Migrer les pages critiques :
-   - [ ] `login_page.dart`
-   - [ ] `register_page.dart`
-   - [ ] `otp_verification_page.dart`
-   - [ ] `checkout_page.dart`
-3. ⏳ Migrer les pages secondaires progressivement
+2. ✅ Migrer les pages critiques :
+   - ✅ `login_page.dart` - _obscurePassword, _useEmail, _isRedirecting
+   - ✅ `register_page.dart` - _obscurePassword, _obscureConfirmPassword, _acceptTerms
+   - ✅ `otp_verification_page.dart` - _isLoading, _resendTimer, _errorMessage
+   - ✅ `forgot_password_page.dart` - _isLoading, _emailSent, _errorMessage
+   - ✅ `change_password_page.dart` - _obscure* toggles
+   - ✅ `checkout_page.dart` - useManualAddress, saveNewAddress, isSubmitting, paymentMode
+3. ✅ Migrer les pages secondaires :
+   - ✅ `edit_profile_page.dart` - password toggles
+   - ✅ `add_address_page.dart` - isDefault, selectedLabel, isLoadingLocation
+   - ✅ `edit_address_page.dart` - idem
+   - ✅ `products_list_page.dart` - selectedCategory
+   - ✅ `product_details_page.dart` - quantity
+   - ✅ `orders_list_page.dart` - selectedStatus
+4. ⏳ Pages non migrées (setState acceptable) :
+   - `onboarding_page.dart` - PageController sync
+   - `tracking_page.dart` - LatLng, Set<Marker> (objets complexes)
+   - `pharmacies_list_page.dart` - multiples filtres + Position GPS
+   - `on_duty_pharmacies_map_page.dart` - état carte Google Maps
 
 ## Statistiques actuelles
 
-- **102 occurrences** de `setState` dans **20 fichiers**
-- Majorité : toggles booléens et états de loading
-- Priorité : formulaires d'authentification et checkout
+- **~50 occurrences** de `setState` restantes (sur 102 initiales)
+- **12 pages migrées** sur 20
+- **8 pages gardent setState** (acceptable pour états complexes)
 
 ## Tests
 
