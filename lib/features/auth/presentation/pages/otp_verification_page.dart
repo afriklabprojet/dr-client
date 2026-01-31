@@ -3,8 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../config/providers.dart';
 import '../../../../home_page.dart';
+
+// Provider IDs pour cette page
+const _otpLoadingId = 'otp_loading';
+const _otpCountdownId = 'otp_countdown';
+const _otpErrorId = 'otp_error';
 
 class OtpVerificationPage extends ConsumerStatefulWidget {
   final String phoneNumber;
@@ -24,9 +30,10 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   final List<TextEditingController> _controllers = [];
   final List<FocusNode> _focusNodes = [];
   
-  bool _isLoading = false;
-  String? _errorMessage;
-  int _resendTimer = 30;
+  // UI state moved to Riverpod providers:
+  // - _isLoading -> loadingProvider(_otpLoadingId)
+  // - _resendTimer -> countdownProvider(_otpCountdownId)
+  // - _errorMessage -> formFieldsProvider(_otpErrorId)
   Timer? _timer;
   
   late AnimationController _animationController;
@@ -80,11 +87,12 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   }
 
   void _startResendTimer() {
-    setState(() => _resendTimer = 30);
+    ref.read(countdownProvider(_otpCountdownId).notifier).setValue(30);
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_resendTimer > 0) {
-        setState(() => _resendTimer--);
+      final currentValue = ref.read(countdownProvider(_otpCountdownId));
+      if (currentValue > 0) {
+        ref.read(countdownProvider(_otpCountdownId).notifier).decrement();
       } else {
         timer.cancel();
       }
@@ -93,8 +101,9 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
 
   void _onOtpChanged(String value, int index) {
     // Clear any previous error when user types
-    if (_errorMessage != null) {
-      setState(() => _errorMessage = null);
+    final errorMessage = ref.read(formFieldsProvider(_otpErrorId))['otp'];
+    if (errorMessage != null) {
+      ref.read(formFieldsProvider(_otpErrorId).notifier).clearError('otp');
     }
     
     if (value.length == 1 && index < _otpLength - 1) {
@@ -115,12 +124,11 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
     if (otp.length != _otpLength) return;
     
     // Prevent multiple simultaneous calls
-    if (_isLoading) return;
+    final isLoading = ref.read(loadingProvider(_otpLoadingId)).isLoading;
+    if (isLoading) return;
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    ref.read(loadingProvider(_otpLoadingId).notifier).startLoading();
+    ref.read(formFieldsProvider(_otpErrorId).notifier).clearAll();
 
     try {
       final authRepository = ref.read(authRepositoryProvider);
@@ -132,10 +140,8 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
       if (mounted) {
         result.fold(
           (failure) {
-            setState(() {
-              _isLoading = false;
-              _errorMessage = failure.message;
-            });
+            ref.read(loadingProvider(_otpLoadingId).notifier).stopLoading();
+            ref.read(formFieldsProvider(_otpErrorId).notifier).setError('otp', failure.message);
             // Clear OTP fields on error
             for (var controller in _controllers) {
               controller.clear();
@@ -143,7 +149,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
             _focusNodes[0].requestFocus();
           },
           (authResponse) {
-            setState(() => _isLoading = false);
+            ref.read(loadingProvider(_otpLoadingId).notifier).stopLoading();
             // Navigate to Home on success
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const HomePage()),
@@ -154,18 +160,18 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Erreur de connexion. Veuillez réessayer.';
-        });
+        ref.read(loadingProvider(_otpLoadingId).notifier).stopLoading();
+        ref.read(formFieldsProvider(_otpErrorId).notifier).setError('otp', 'Erreur de connexion. Veuillez réessayer.');
       }
     }
   }
 
   Future<void> _resendCode() async {
-    if (_resendTimer > 0 || _isLoading) return;
+    final resendTimer = ref.read(countdownProvider(_otpCountdownId));
+    final isLoading = ref.read(loadingProvider(_otpLoadingId)).isLoading;
+    if (resendTimer > 0 || isLoading) return;
     
-    setState(() => _isLoading = true);
+    ref.read(loadingProvider(_otpLoadingId).notifier).startLoading();
 
     try {
       final authRepository = ref.read(authRepositoryProvider);
@@ -176,7 +182,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
       if (mounted) {
         result.fold(
           (failure) {
-            setState(() => _isLoading = false);
+            ref.read(loadingProvider(_otpLoadingId).notifier).stopLoading();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(failure.message),
@@ -185,7 +191,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
             );
           },
           (data) {
-            setState(() => _isLoading = false);
+            ref.read(loadingProvider(_otpLoadingId).notifier).stopLoading();
             _startResendTimer();
             
             // Show message from server (includes fallback info)
@@ -217,7 +223,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        ref.read(loadingProvider(_otpLoadingId).notifier).stopLoading();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Erreur lors de l\'envoi du code'),
@@ -232,6 +238,11 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Watch UI state providers
+    final isLoading = ref.watch(loadingProvider(_otpLoadingId)).isLoading;
+    final resendTimer = ref.watch(countdownProvider(_otpCountdownId));
+    final errorMessage = ref.watch(formFieldsProvider(_otpErrorId))['otp'];
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
@@ -388,7 +399,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                             ),
                             
                             // Error message
-                            if (_errorMessage != null) ...[
+                            if (errorMessage != null) ...[
                               const SizedBox(height: 16),
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -412,7 +423,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        _errorMessage!,
+                                        errorMessage,
                                         style: const TextStyle(
                                           color: Colors.red,
                                           fontSize: 13,
@@ -427,7 +438,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                             const SizedBox(height: 32),
                             
                             // Verify Button
-                            _buildVerifyButton(),
+                            _buildVerifyButton(isLoading),
                             
                             const SizedBox(height: 24),
                             
@@ -442,9 +453,9 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                                     fontSize: 14,
                                   ),
                                 ),
-                                if (_resendTimer > 0)
+                                if (resendTimer > 0)
                                   Text(
-                                    'Renvoyer dans ${_resendTimer}s',
+                                    'Renvoyer dans ${resendTimer}s',
                                     style: TextStyle(
                                       color: AppColors.primary,
                                       fontWeight: FontWeight.bold,
@@ -545,7 +556,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
     );
   }
 
-  Widget _buildVerifyButton() {
+  Widget _buildVerifyButton(bool isLoading) {
     return Container(
       width: double.infinity,
       height: 56,
@@ -567,10 +578,10 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: _isLoading ? null : _verifyOtp,
+          onTap: isLoading ? null : _verifyOtp,
           borderRadius: BorderRadius.circular(16),
           child: Center(
-            child: _isLoading
+            child: isLoading
                 ? const SizedBox(
                     height: 24,
                     width: 24,

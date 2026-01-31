@@ -4,11 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../config/providers.dart'; // Import pour notificationService
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/errors/error_handler.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_logger.dart';
 import '../../../../core/validators/form_validators.dart';
 import '../providers/auth_provider.dart';
 import '../providers/auth_state.dart';
+
+// Provider IDs pour cette page
+const _obscurePasswordId = 'login_obscure_password';
+const _useEmailId = 'login_use_email';
+const _isRedirectingId = 'login_is_redirecting';
 
 /// Écran de connexion premium pour DR-PHARMA
 /// Design moderne, minimaliste et professionnel
@@ -27,9 +33,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
   final _phoneFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
 
-  bool _obscurePassword = true;
-  bool _useEmail = false;
-  bool _isRedirecting = false; // Track post-login operations
+  // UI state moved to Riverpod providers:
+  // - obscurePassword -> toggleProvider(_obscurePasswordId)
+  // - useEmail -> toggleProvider(_useEmailId) with initialValue: false
+  // - isRedirecting -> toggleProvider(_isRedirectingId) with initialValue: false
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -86,7 +93,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
   void _handleLogin() {
     // Prevent double-tap / multiple submissions
     final authState = ref.read(authProvider);
-    if (authState.status == AuthStatus.loading || _isRedirecting) {
+    final isRedirecting = ref.read(toggleProvider(_isRedirectingId));
+    if (authState.status == AuthStatus.loading || isRedirecting) {
       return;
     }
     
@@ -193,14 +201,18 @@ class _LoginPageState extends ConsumerState<LoginPage>
     final authState = ref.watch(authProvider);
     final size = MediaQuery.of(context).size;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Watch UI state providers
+    final obscurePassword = ref.watch(toggleProvider(_obscurePasswordId));
+    final useEmail = ref.watch(toggleProvider(_useEmailId));
+    final isRedirecting = ref.watch(toggleProvider(_isRedirectingId));
 
     // Listen to auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) async {
-      if (next.status == AuthStatus.authenticated && !_isRedirecting) {
+      if (next.status == AuthStatus.authenticated && !isRedirecting) {
         // Prevent multiple redirections and keep loader visible
-        // Use immediate setState to ensure UI updates before async operations
         if (mounted) {
-          setState(() => _isRedirecting = true);
+          ref.read(toggleProvider(_isRedirectingId).notifier).set(true);
         }
         
         // Small delay to ensure UI shows loading state
@@ -229,8 +241,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
         }
       } else if (next.status == AuthStatus.error) {
         // Reset redirecting state on error
-        if (_isRedirecting && mounted) {
-          setState(() => _isRedirecting = false);
+        if (isRedirecting && mounted) {
+          ref.read(toggleProvider(_isRedirectingId).notifier).set(false);
         }
         if (mounted) {
           // Convertir le message technique en message utilisateur explicite
@@ -373,15 +385,15 @@ class _LoginPageState extends ConsumerState<LoginPage>
                                   const SizedBox(height: 30),
 
                                   // Toggle Phone/Email
-                                  _buildToggleMethod(isDark),
+                                  _buildToggleMethod(isDark, useEmail),
                                   const SizedBox(height: 24),
 
                                   // Phone/Email Field
-                                  _buildPhoneField(isDark),
+                                  _buildPhoneField(isDark, useEmail),
                                   const SizedBox(height: 20),
 
                                   // Password Field
-                                  _buildPasswordField(isDark),
+                                  _buildPasswordField(isDark, obscurePassword),
 
                                   // Forgot Password
                                   Align(
@@ -401,7 +413,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                                   const SizedBox(height: 24),
 
                                   // Login Button
-                                  _buildLoginButton(authState, isDark),
+                                  _buildLoginButton(authState, isDark, isRedirecting),
 
                                   const SizedBox(height: 24),
 
@@ -468,7 +480,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
     );
   }
 
-  Widget _buildToggleMethod(bool isDark) {
+  Widget _buildToggleMethod(bool isDark, bool useEmail) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -480,16 +492,16 @@ class _LoginPageState extends ConsumerState<LoginPage>
           Expanded(
             child: _buildToggleButton(
               label: 'Téléphone',
-              isSelected: !_useEmail,
-              onTap: () => setState(() => _useEmail = false),
+              isSelected: !useEmail,
+              onTap: () => ref.read(toggleProvider(_useEmailId).notifier).set(false),
               isDark: isDark,
             ),
           ),
           Expanded(
             child: _buildToggleButton(
               label: 'Email',
-              isSelected: _useEmail,
-              onTap: () => setState(() => _useEmail = true),
+              isSelected: useEmail,
+              onTap: () => ref.read(toggleProvider(_useEmailId).notifier).set(true),
               isDark: isDark,
             ),
           ),
@@ -597,23 +609,23 @@ class _LoginPageState extends ConsumerState<LoginPage>
     );
   }
 
-  Widget _buildPhoneField(bool isDark) {
+  Widget _buildPhoneField(bool isDark, bool useEmail) {
     return _buildTextField(
       controller: _phoneController,
       focusNode: _phoneFocusNode,
-      label: _useEmail ? 'Adresse email' : 'Numéro de téléphone',
-      icon: _useEmail ? Icons.email_outlined : Icons.phone_android_rounded,
+      label: useEmail ? 'Adresse email' : 'Numéro de téléphone',
+      icon: useEmail ? Icons.email_outlined : Icons.phone_android_rounded,
       isDark: isDark,
-      keyboardType: _useEmail
+      keyboardType: useEmail
           ? TextInputType.emailAddress
           : TextInputType.phone,
-      inputFormatters: _useEmail
+      inputFormatters: useEmail
           ? null
           : [FilteringTextInputFormatter.allow(RegExp(r'[0-9+]'))],
       textInputAction: TextInputAction.next,
       onFieldSubmitted: (_) => _passwordFocusNode.requestFocus(),
       validator: (value) {
-        if (_useEmail) {
+        if (useEmail) {
           return FormValidators.validateEmail(value);
         }
         return FormValidators.validatePhone(value);
@@ -621,20 +633,20 @@ class _LoginPageState extends ConsumerState<LoginPage>
     );
   }
 
-  Widget _buildPasswordField(bool isDark) {
+  Widget _buildPasswordField(bool isDark, bool obscurePassword) {
     return _buildTextField(
       controller: _passwordController,
       focusNode: _passwordFocusNode,
       label: 'Mot de passe',
       icon: Icons.lock_outline_rounded,
       isDark: isDark,
-      obscureText: _obscurePassword,
+      obscureText: obscurePassword,
       textInputAction: TextInputAction.done,
       onFieldSubmitted: (_) => _handleLogin(),
       suffixIcon: IconButton(
-        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+        onPressed: () => ref.read(toggleProvider(_obscurePasswordId).notifier).toggle(),
         icon: Icon(
-          _obscurePassword
+          obscurePassword
               ? Icons.visibility_outlined
               : Icons.visibility_off_outlined,
           color: isDark ? Colors.white54 : Colors.grey[600],
@@ -647,10 +659,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
     );
   }
 
-  Widget _buildLoginButton(AuthState authState, bool isDark) {
+  Widget _buildLoginButton(AuthState authState, bool isDark, bool isRedirecting) {
     // Show loader during login AND during post-login operations (redirecting)
-    final isLoading = authState.status == AuthStatus.loading || _isRedirecting;
-    final loadingText = _isRedirecting ? 'Connexion...' : null;
+    final isLoading = authState.status == AuthStatus.loading || isRedirecting;
+    final loadingText = isRedirecting ? 'Connexion...' : null;
 
     return SizedBox(
       width: double.infinity,

@@ -4,10 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/errors/error_handler.dart';
+import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/validators/form_validators.dart';
 import '../providers/auth_provider.dart';
 import '../providers/auth_state.dart';
+
+// Provider IDs pour cette page
+const _obscurePasswordId = 'register_obscure_password';
+const _obscureConfirmId = 'register_obscure_confirm';
+const _acceptTermsId = 'register_accept_terms';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -25,9 +31,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
-  bool _acceptTerms = false;
+  // UI state moved to Riverpod providers:
+  // - _obscurePassword -> toggleProvider(_obscurePasswordId)
+  // - _obscureConfirmPassword -> toggleProvider(_obscureConfirmId)
+  // - _acceptTerms -> toggleProvider(_acceptTermsId) with initialValue: false
 
   @override
   void dispose() {
@@ -138,7 +145,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (!_acceptTerms) {
+    final acceptTerms = ref.read(toggleProvider(_acceptTermsId));
+    if (!acceptTerms) {
       ErrorHandler.showWarningSnackBar(
         context, 
         "Veuillez accepter les conditions d'utilisation",
@@ -182,6 +190,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final size = MediaQuery.of(context).size;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final passwordStrength = _getPasswordStrength();
+    
+    // Watch UI state providers
+    final obscurePassword = ref.watch(toggleProvider(_obscurePasswordId));
+    final obscureConfirm = ref.watch(toggleProvider(_obscureConfirmId));
+    final acceptTerms = ref.watch(toggleProvider(_acceptTermsId));
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
@@ -315,7 +328,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                               const SizedBox(height: 20),
                               _buildAddressField(isDark),
                               const SizedBox(height: 20),
-                              _buildPasswordField(isDark),
+                              _buildPasswordField(isDark, obscurePassword),
                               if (_passwordController.text.isNotEmpty) ...[
                                 const SizedBox(height: 10),
                                 _buildPasswordStrengthIndicator(
@@ -324,9 +337,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                 ),
                               ],
                               const SizedBox(height: 20),
-                              _buildConfirmPasswordField(isDark),
+                              _buildConfirmPasswordField(isDark, obscureConfirm),
                               const SizedBox(height: 24),
-                              _buildTermsCheckbox(isDark),
+                              _buildTermsCheckbox(isDark, acceptTerms),
                               const SizedBox(height: 32),
                               _buildRegisterButton(
                                 authState.status == AuthStatus.loading,
@@ -441,22 +454,22 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     );
   }
 
-  Widget _buildPasswordField(bool isDark) {
+  Widget _buildPasswordField(bool isDark, bool obscurePassword) {
     return _buildTextField(
       controller: _passwordController,
       label: 'Mot de passe',
       icon: Icons.lock_outline,
-      obscureText: _obscurePassword,
+      obscureText: obscurePassword,
       isDark: isDark,
-      onChanged: (_) => setState(() {}),
+      onChanged: (_) => ref.invalidate(toggleProvider(_obscurePasswordId)), // Trigger rebuild for password strength
       suffixIcon: IconButton(
         icon: Icon(
-          _obscurePassword
+          obscurePassword
               ? Icons.visibility_outlined
               : Icons.visibility_off_outlined,
           color: isDark ? Colors.white54 : AppColors.textSecondary,
         ),
-        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+        onPressed: () => ref.read(toggleProvider(_obscurePasswordId).notifier).toggle(),
       ),
       validator: (value) => FormValidators.validatePassword(
         value,
@@ -497,22 +510,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     );
   }
 
-  Widget _buildConfirmPasswordField(bool isDark) {
+  Widget _buildConfirmPasswordField(bool isDark, bool obscureConfirm) {
     return _buildTextField(
       controller: _confirmPasswordController,
       label: 'Confirmer le mot de passe',
       icon: Icons.lock_outline,
-      obscureText: _obscureConfirmPassword,
+      obscureText: obscureConfirm,
       isDark: isDark,
       suffixIcon: IconButton(
         icon: Icon(
-          _obscureConfirmPassword
+          obscureConfirm
               ? Icons.visibility_outlined
               : Icons.visibility_off_outlined,
           color: isDark ? Colors.white54 : AppColors.textSecondary,
         ),
-        onPressed: () =>
-            setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+        onPressed: () => ref.read(toggleProvider(_obscureConfirmId).notifier).toggle(),
       ),
       validator: (value) => FormValidators.validatePasswordConfirmation(
         value,
@@ -521,15 +533,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     );
   }
 
-  Widget _buildTermsCheckbox(bool isDark) {
+  Widget _buildTermsCheckbox(bool isDark, bool acceptTerms) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Transform.scale(
           scale: 1.2,
           child: Checkbox(
-            value: _acceptTerms,
-            onChanged: (value) => setState(() => _acceptTerms = value ?? false),
+            value: acceptTerms,
+            onChanged: (value) => ref.read(toggleProvider(_acceptTermsId).notifier).set(value ?? false),
             activeColor: AppColors.primary,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
@@ -538,7 +550,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ),
         Expanded(
           child: GestureDetector(
-            onTap: () => setState(() => _acceptTerms = !_acceptTerms),
+            onTap: () => ref.read(toggleProvider(_acceptTermsId).notifier).toggle(),
             child: Padding(
               padding: const EdgeInsets.only(top: 10),
               child: RichText(
