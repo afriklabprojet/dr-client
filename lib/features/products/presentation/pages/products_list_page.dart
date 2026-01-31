@@ -134,29 +134,6 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
               );
             },
           ),
-
-          // Cart button
-          Consumer(
-            builder: (context, ref, child) {
-              final cart = ref.watch(cartProvider);
-              return IconButton(
-                icon: badges.Badge(
-                  badgeContent: Text(
-                    cart.items.length.toString(),
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                  child: const Icon(Icons.shopping_cart),
-                ),
-                tooltip: 'Voir le panier',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CartPage()),
-                  );
-                },
-              );
-            },
-          ),
         ],
       ),
       body: Column(
