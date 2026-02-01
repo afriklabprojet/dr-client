@@ -265,6 +265,43 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, AuthResponseEntity>> verifyFirebaseOtp({
+    required String phone,
+    required String firebaseUid,
+  }) async {
+    try {
+      final result = await remoteDataSource.verifyFirebaseOtp(
+        phone: phone,
+        firebaseUid: firebaseUid,
+      );
+
+      // Update cached token and user
+      await localDataSource.cacheToken(result.token);
+      await localDataSource.cacheUser(result.user);
+
+      // Configure ApiClient with the new token
+      apiClient.setToken(result.token);
+
+      return Right(result.toEntity());
+    } on ValidationException catch (e) {
+      String errorMessage = 'Vérification Firebase échouée';
+      if (e.errors.isNotEmpty) {
+        final firstKey = e.errors.keys.first;
+        if (e.errors[firstKey]!.isNotEmpty) {
+          errorMessage = e.errors[firstKey]!.first;
+        }
+      }
+      return Left(ValidationFailure(message: errorMessage, errors: e.errors));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, Map<String, dynamic>>> resendOtp({
     required String identifier,
   }) async {

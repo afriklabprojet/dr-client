@@ -43,6 +43,12 @@ abstract class AuthRepository {
     required String otp,
   });
 
+  /// Verify phone via Firebase Authentication
+  Future<Either<Failure, AuthResponseEntity>> verifyFirebaseOtp({
+    required String phone,
+    required String firebaseUid,
+  });
+
   /// Resend OTP code
   /// Returns a map with 'message' and 'channel' keys
   Future<Either<Failure, Map<String, dynamic>>> resendOtp({

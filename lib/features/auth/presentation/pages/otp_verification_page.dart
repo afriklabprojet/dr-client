@@ -128,9 +128,9 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   Future<void> _linkToBackend(String firebaseUid) async {
     try {
       final authRepository = ref.read(authRepositoryProvider);
-      final result = await authRepository.verifyOtp(
-        identifier: widget.phoneNumber,
-        otp: firebaseUid,
+      final result = await authRepository.verifyFirebaseOtp(
+        phone: widget.phoneNumber,
+        firebaseUid: firebaseUid,
       );
       if (!mounted) return;
       result.fold(

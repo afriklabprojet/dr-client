@@ -32,6 +32,12 @@ abstract class AuthRemoteDataSource {
     required String otp,
   });
 
+  /// Verify phone via Firebase Authentication
+  Future<AuthResponseModel> verifyFirebaseOtp({
+    required String phone,
+    required String firebaseUid,
+  });
+
   /// Resend OTP code
   /// Returns a map with 'message' and 'channel' keys
   Future<Map<String, dynamic>> resendOtp({
@@ -139,6 +145,22 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       data: {
         'identifier': identifier,
         'otp': otp,
+      },
+    );
+
+    return AuthResponseModel.fromJson(response.data);
+  }
+
+  @override
+  Future<AuthResponseModel> verifyFirebaseOtp({
+    required String phone,
+    required String firebaseUid,
+  }) async {
+    final response = await apiClient.post(
+      ApiConstants.verifyFirebaseOtp,
+      data: {
+        'phone': phone,
+        'firebase_uid': firebaseUid,
       },
     );
 

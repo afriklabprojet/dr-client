@@ -61,6 +61,7 @@ class ApiConstants {
   static const String updatePassword = '/auth/password';
   static const String forgotPassword = '/auth/forgot-password';
   static const String verifyOtp = '/auth/verify';
+  static const String verifyFirebaseOtp = '/auth/verify-firebase';
   static const String resendOtp = '/auth/resend';
 
   // ============================================================
