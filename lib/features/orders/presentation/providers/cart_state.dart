@@ -48,8 +48,16 @@ class CartState extends Equatable {
   // Helper getters
   bool get isEmpty => items.isEmpty;
   bool get isNotEmpty => items.isNotEmpty;
-  int get itemCount => items.length;
-  int get totalQuantity => items.fold(0, (sum, item) => sum + item.quantity);
+  
+  /// Nombre total d'articles (somme des quantités) - utilisé pour le badge
+  int get itemCount => items.fold(0, (sum, item) => sum + item.quantity);
+  
+  /// Nombre de produits différents dans le panier
+  int get uniqueProductCount => items.length;
+  
+  /// Alias pour itemCount (rétrocompatibilité)
+  int get totalQuantity => itemCount;
+  
   double get subtotal => items.fold(0.0, (sum, item) => sum + item.totalPrice);
   
   // Delivery fee calculation (simplified - 500 XOF flat rate)
