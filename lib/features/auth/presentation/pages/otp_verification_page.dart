@@ -193,7 +193,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
           opacity: _fadeAnimation,
           child: SlideTransition(
             position: _slideAnimation,
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,13 +207,31 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                   const SizedBox(height: 40),
                   LayoutBuilder(
                     builder: (context, constraints) {
-                      final fieldWidth = (constraints.maxWidth - (_otpLength - 1) * 8) / _otpLength;
-                      final clampedWidth = fieldWidth.clamp(40.0, 56.0);
+                      final availableWidth = constraints.maxWidth;
+                      // Calculate optimal field width based on available space
+                      // 6 fields + 5 gaps of 8px
+                      final totalGaps = (_otpLength - 1) * 8.0;
+                      final fieldWidth = ((availableWidth - totalGaps) / _otpLength).clamp(36.0, 56.0);
+                      
+                      // If still too small, use scrollable row
+                      if (availableWidth < 280) {
+                        return SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(_otpLength, (i) => Padding(
+                              padding: EdgeInsets.only(right: i < _otpLength - 1 ? 8 : 0),
+                              child: _buildOtpField(i, 48.0),
+                            )),
+                          ),
+                        );
+                      }
+                      
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(_otpLength, (i) => Padding(
                           padding: EdgeInsets.only(right: i < _otpLength - 1 ? 8 : 0),
-                          child: _buildOtpField(i, clampedWidth),
+                          child: _buildOtpField(i, fieldWidth),
                         )),
                       );
                     },
@@ -262,7 +280,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                             child: const Text('Renvoyer le code', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary)),
                           ),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 60),
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 24),
