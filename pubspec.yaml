@@ -66,8 +66,9 @@ dependencies:
   # Image Picker (for prescription upload)
   image_picker: ^1.2.1
 
-  # Push Notifications
+  # Push Notifications & Auth
   firebase_core: ^3.8.1
+  firebase_auth: ^5.5.1
   firebase_messaging: ^15.1.5
   flutter_local_notifications: ^18.0.1
 
