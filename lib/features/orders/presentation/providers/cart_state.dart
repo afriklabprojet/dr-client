@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/cart_item_entity.dart';
-import '../../data/datasources/pricing_datasource.dart';
+import '../../domain/entities/pricing_entity.dart';
 
 enum CartStatus {
   initial,
@@ -23,7 +23,7 @@ class CartState extends Equatable {
   final double? deliveryDistanceKm;
   
   /// Configuration de tarification (frais de service et paiement)
-  final PricingConfig? pricingConfig;
+  final PricingConfigEntity? pricingConfig;
   
   /// Mode de paiement sélectionné (pour calcul des frais de paiement)
   final String paymentMode;
@@ -58,7 +58,7 @@ class CartState extends Equatable {
     double? calculatedDeliveryFee,
     double? deliveryDistanceKm,
     bool clearDeliveryFee = false,
-    PricingConfig? pricingConfig,
+    PricingConfigEntity? pricingConfig,
     String? paymentMode,
   }) {
     return CartState(

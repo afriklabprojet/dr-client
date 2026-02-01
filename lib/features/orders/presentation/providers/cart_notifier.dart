@@ -6,7 +6,7 @@ import '../../../products/data/models/product_model.dart';
 import '../../../products/data/models/pharmacy_model.dart';
 import '../../../products/data/models/category_model.dart';
 import '../../domain/entities/cart_item_entity.dart';
-import '../../data/datasources/pricing_datasource.dart';
+import '../../domain/entities/pricing_entity.dart';
 import 'cart_state.dart';
 
 class CartNotifier extends StateNotifier<CartState> {
@@ -277,7 +277,7 @@ class CartNotifier extends StateNotifier<CartState> {
 
   /// Mettre à jour la configuration de tarification
   /// Appelé au démarrage ou quand on ouvre le panier
-  void updatePricingConfig(PricingConfig config) {
+  void updatePricingConfig(PricingConfigEntity config) {
     state = state.copyWith(pricingConfig: config);
   }
 

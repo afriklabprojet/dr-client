@@ -1,17 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../config/providers.dart';
-import '../../data/datasources/pricing_datasource.dart';
+import '../../domain/entities/pricing_entity.dart';
+import '../../domain/repositories/pricing_repository.dart';
+import '../../data/repositories/pricing_repository_impl.dart';
 
-/// Provider pour le DataSource de tarification
-final pricingDataSourceProvider = Provider<PricingDataSource>((ref) {
+/// Provider pour le Repository de tarification
+final pricingRepositoryProvider = Provider<PricingRepository>((ref) {
   final apiClient = ref.watch(apiClientProvider);
-  return PricingDataSource(apiClient: apiClient);
+  return PricingRepositoryImpl(apiClient: apiClient);
 });
 
 /// État de la configuration de tarification
 class PricingState {
   final bool isLoading;
-  final PricingConfig? config;
+  final PricingConfigEntity? config;
   final String? error;
 
   const PricingState({
@@ -27,7 +29,7 @@ class PricingState {
 
   PricingState copyWith({
     bool? isLoading,
-    PricingConfig? config,
+    PricingConfigEntity? config,
     String? error,
   }) {
     return PricingState(
@@ -40,9 +42,9 @@ class PricingState {
 
 /// Notifier pour gérer la configuration de tarification
 class PricingNotifier extends StateNotifier<PricingState> {
-  final PricingDataSource _dataSource;
+  final PricingRepository _repository;
 
-  PricingNotifier(this._dataSource) : super(const PricingState.initial());
+  PricingNotifier(this._repository) : super(const PricingState.initial());
 
   /// Charger la configuration de tarification depuis l'API
   Future<void> loadPricing() async {
@@ -50,49 +52,56 @@ class PricingNotifier extends StateNotifier<PricingState> {
 
     state = state.copyWith(isLoading: true, error: null);
 
-    try {
-      final config = await _dataSource.getPricing();
-      state = state.copyWith(isLoading: false, config: config);
-    } catch (e) {
-      state = state.copyWith(
+    final result = await _repository.getPricing();
+    
+    result.fold(
+      (failure) => state = state.copyWith(
         isLoading: false,
-        error: 'Erreur lors du chargement de la tarification: $e',
-      );
-    }
+        error: failure.message,
+        // Utiliser les valeurs par défaut en cas d'erreur
+        config: const PricingConfigEntity.defaults(),
+      ),
+      (config) => state = state.copyWith(
+        isLoading: false,
+        config: config,
+      ),
+    );
   }
 
   /// Calculer les frais pour un panier
-  /// Utilise le calcul local si la config est disponible, sinon appelle l'API
-  PricingCalculation? calculateFees({
+  /// Utilise le calcul local si la config est disponible
+  PricingCalculationEntity? calculateFees({
     required int subtotal,
     required int deliveryFee,
     required String paymentMode,
   }) {
-    if (state.config == null) return null;
+    final config = state.config;
+    if (config == null) return null;
 
-    return PricingCalculation.calculate(
+    return PricingCalculationEntity.calculate(
       subtotal: subtotal,
       deliveryFee: deliveryFee,
       paymentMode: paymentMode,
-      config: state.config!,
+      config: config,
     );
   }
 
   /// Calculer les frais de livraison pour une distance
   int? calculateDeliveryFee(double distanceKm) {
-    if (state.config == null) return null;
-    return state.config!.delivery.calculateFee(distanceKm);
+    final config = state.config;
+    if (config == null) return null;
+    return config.delivery.calculateFee(distanceKm);
   }
 }
 
 /// Provider principal pour la tarification
 final pricingProvider = StateNotifierProvider<PricingNotifier, PricingState>((ref) {
-  final dataSource = ref.watch(pricingDataSourceProvider);
-  return PricingNotifier(dataSource);
+  final repository = ref.watch(pricingRepositoryProvider);
+  return PricingNotifier(repository);
 });
 
 /// Provider pour obtenir la config de tarification (auto-load)
-final pricingConfigProvider = FutureProvider<PricingConfig?>((ref) async {
+final pricingConfigProvider = FutureProvider<PricingConfigEntity?>((ref) async {
   final notifier = ref.watch(pricingProvider.notifier);
   final state = ref.watch(pricingProvider);
   
