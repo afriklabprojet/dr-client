@@ -80,6 +80,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         _emailController.text = profile.email;
         _phoneController.text = profile.phone ?? '';
       }
+      // Initialiser les toggles de mot de passe à true (obscurcir par défaut)
+      ref.read(toggleProvider(_obscureCurrentPwdId).notifier).set(true);
+      ref.read(toggleProvider(_obscureNewPwdId).notifier).set(true);
+      ref.read(toggleProvider(_obscureConfirmPwdId).notifier).set(true);
+      // isChangingPassword reste à false par défaut
     });
   }
 

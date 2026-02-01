@@ -37,6 +37,9 @@ class PrescriptionsNotifier extends StateNotifier<PrescriptionsState> {
         validatedAt: response['validated_at'] != null
             ? DateTime.parse(response['validated_at'] as String)
             : null,
+        orderId: response['order_id'] as int?,
+        orderReference: response['order_reference'] as String?,
+        source: response['source'] as String?,
       );
 
       state = state.copyWith(
@@ -87,6 +90,9 @@ class PrescriptionsNotifier extends StateNotifier<PrescriptionsState> {
           validatedAt: item['validated_at'] != null
               ? DateTime.parse(item['validated_at'] as String)
               : null,
+          orderId: item['order_id'] as int?,
+          orderReference: item['order_reference'] as String?,
+          source: item['source'] as String?,
         );
       }).toList();
 
@@ -120,6 +126,9 @@ class PrescriptionsNotifier extends StateNotifier<PrescriptionsState> {
         validatedAt: data['validated_at'] != null
             ? DateTime.parse(data['validated_at'] as String)
             : null,
+        orderId: data['order_id'] as int?,
+        orderReference: data['order_reference'] as String?,
+        source: data['source'] as String?,
       );
     } catch (e) {
       state = state.copyWith(

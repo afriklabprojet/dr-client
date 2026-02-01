@@ -141,18 +141,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // ===== Pharmacy Routes =====
+      // NOTE: Les routes statiques doivent être déclarées AVANT les routes dynamiques
+      // pour éviter que /pharmacies/map soit interprétée comme /pharmacies/:id
       GoRoute(
         path: AppRoutes.pharmacies,
         name: 'pharmacies',
         builder: (context, state) => const PharmaciesListPageV2(),
-      ),
-      GoRoute(
-        path: AppRoutes.pharmacyDetails,
-        name: 'pharmacyDetails',
-        builder: (context, state) {
-          final pharmacyId = int.parse(state.pathParameters['id']!);
-          return PharmacyDetailsPage(pharmacyId: pharmacyId);
-        },
       ),
       GoRoute(
         path: AppRoutes.pharmaciesMap,
@@ -171,6 +165,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'onDutyPharmacies',
         builder: (context, state) => const OnDutyPharmaciesMapPage(),
       ),
+      // Route dynamique en dernier pour éviter les conflits
+      GoRoute(
+        path: AppRoutes.pharmacyDetails,
+        name: 'pharmacyDetails',
+        builder: (context, state) {
+          final pharmacyId = int.tryParse(state.pathParameters['id'] ?? '');
+          if (pharmacyId == null) {
+            return _buildInvalidRouteErrorPage(context, 'ID pharmacie invalide');
+          }
+          return PharmacyDetailsPage(pharmacyId: pharmacyId);
+        },
+      ),
 
       // ===== Product Routes =====
       GoRoute(
@@ -182,7 +188,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/products/:id',
         name: 'productDetails',
         builder: (context, state) {
-          final productId = int.parse(state.pathParameters['id']!);
+          final productId = int.tryParse(state.pathParameters['id'] ?? '');
+          if (productId == null) {
+            return _buildInvalidRouteErrorPage(context, 'ID produit invalide');
+          }
           return ProductDetailsPage(productId: productId);
         },
       ),
@@ -207,7 +216,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.orderDetails,
         name: 'orderDetails',
         builder: (context, state) {
-          final orderId = int.parse(state.pathParameters['id']!);
+          final orderId = int.tryParse(state.pathParameters['id'] ?? '');
+          if (orderId == null) {
+            return _buildInvalidRouteErrorPage(context, 'ID commande invalide');
+          }
           return OrderDetailsPage(orderId: orderId);
         },
       ),
@@ -215,37 +227,53 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.orderTracking,
         name: 'orderTracking',
         builder: (context, state) {
-          final orderId = int.parse(state.pathParameters['id']!);
-          final extra = state.extra as Map<String, dynamic>;
+          final orderId = int.tryParse(state.pathParameters['id'] ?? '');
+          final extra = state.extra as Map<String, dynamic>?;
+          
+          if (orderId == null || extra == null) {
+            return _buildInvalidRouteErrorPage(context, 'Paramètres de suivi manquants');
+          }
+          
+          final deliveryAddress = extra['deliveryAddress'] as DeliveryAddressEntity?;
+          if (deliveryAddress == null) {
+            return _buildInvalidRouteErrorPage(context, 'Adresse de livraison manquante');
+          }
+          
           return TrackingPage(
             orderId: orderId,
-            deliveryAddress: extra['deliveryAddress'] as DeliveryAddressEntity,
+            deliveryAddress: deliveryAddress,
             pharmacyAddress: extra['pharmacyAddress'] as String?,
           );
         },
       ),
 
       // ===== Prescription Routes =====
+      // NOTE: Routes statiques avant routes dynamiques
       GoRoute(
         path: AppRoutes.prescriptions,
         name: 'prescriptions',
         builder: (context, state) => const PrescriptionsListPage(),
       ),
       GoRoute(
-        path: AppRoutes.prescriptionDetails,
-        name: 'prescriptionDetails',
-        builder: (context, state) {
-          final prescriptionId = int.parse(state.pathParameters['id']!);
-          return PrescriptionDetailsPage(prescriptionId: prescriptionId);
-        },
-      ),
-      GoRoute(
         path: AppRoutes.prescriptionUpload,
         name: 'prescriptionUpload',
         builder: (context, state) => const PrescriptionUploadPage(),
       ),
+      // Route dynamique en dernier
+      GoRoute(
+        path: AppRoutes.prescriptionDetails,
+        name: 'prescriptionDetails',
+        builder: (context, state) {
+          final prescriptionId = int.tryParse(state.pathParameters['id'] ?? '');
+          if (prescriptionId == null) {
+            return _buildInvalidRouteErrorPage(context, 'ID ordonnance invalide');
+          }
+          return PrescriptionDetailsPage(prescriptionId: prescriptionId);
+        },
+      ),
 
       // ===== Address Routes =====
+      // NOTE: Routes statiques avant routes dynamiques
       GoRoute(
         path: AppRoutes.addresses,
         name: 'addresses',
@@ -265,7 +293,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.editAddress,
         name: 'editAddress',
         builder: (context, state) {
-          final address = state.extra as AddressEntity;
+          final address = state.extra as AddressEntity?;
+          if (address == null) {
+            return _buildInvalidRouteErrorPage(context, 'Adresse non spécifiée');
+          }
           return EditAddressPage(address: address);
         },
       ),

@@ -38,6 +38,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   // - _acceptTerms -> toggleProvider(_acceptTermsId) with initialValue: false
 
   @override
+  void initState() {
+    super.initState();
+    // Initialiser les toggles de mot de passe à true (obscurcir par défaut)
+    // acceptTerms reste à false par défaut (comportement sécurisé)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(toggleProvider(_obscurePasswordId).notifier).set(true);
+      ref.read(toggleProvider(_obscureConfirmId).notifier).set(true);
+    });
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();

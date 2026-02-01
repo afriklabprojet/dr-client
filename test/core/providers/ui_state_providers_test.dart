@@ -40,10 +40,14 @@ void main() {
     test('different ids should have independent states', () {
       final container = ProviderContainer();
       
+      // Par défaut, les toggles commencent à false (comportement sécurisé)
+      expect(container.read(toggleProvider('a')), false);
+      expect(container.read(toggleProvider('b')), false);
+      
       container.read(toggleProvider('a').notifier).toggle();
       
-      expect(container.read(toggleProvider('a')), false);
-      expect(container.read(toggleProvider('b')), true);
+      expect(container.read(toggleProvider('a')), true);
+      expect(container.read(toggleProvider('b')), false);
       
       container.dispose();
     });

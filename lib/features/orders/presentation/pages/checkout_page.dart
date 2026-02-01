@@ -11,12 +11,15 @@ import '../../../../core/services/app_logger.dart';
 import '../../../addresses/domain/entities/address_entity.dart';
 import '../../../addresses/presentation/providers/addresses_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../prescriptions/presentation/providers/prescriptions_provider.dart';
 import '../providers/cart_provider.dart';
+import '../providers/checkout_prescription_provider.dart';
 import '../../domain/entities/order_item_entity.dart';
 import '../../domain/entities/delivery_address_entity.dart';
 import '../providers/orders_state.dart';
 import '../providers/orders_provider.dart';
 import '../widgets/widgets.dart';
+import '../widgets/prescription_requirement_section.dart';
 import 'order_confirmation_page.dart';
 
 // Provider IDs pour cette page
@@ -26,7 +29,8 @@ const _isSubmittingId = 'checkout_is_submitting';
 const _paymentModeId = 'checkout_payment_mode';
 
 // Provider spécifique pour l'adresse sélectionnée (objet nullable)
-final selectedAddressProvider = StateProvider<AddressEntity?>((ref) => null);
+// autoDispose pour éviter les fuites mémoire quand l'utilisateur quitte la page
+final selectedAddressProvider = StateProvider.autoDispose<AddressEntity?>((ref) => null);
 
 class CheckoutPage extends ConsumerStatefulWidget {
   const CheckoutPage({super.key});
@@ -135,6 +139,16 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                     ),
                     const SizedBox(height: 24),
 
+                    // Prescription Requirement Section (si nécessaire)
+                    if (cartState.hasPrescriptionRequiredItems) ...[
+                      _buildSectionTitle('Ordonnance médicale'),
+                      const SizedBox(height: 12),
+                      PrescriptionRequirementSection(
+                        requiredProductNames: cartState.prescriptionRequiredProductNames,
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+
                     // Delivery Address Section
                     DeliveryAddressSection(
                       useManualAddress: useManualAddress,
@@ -220,6 +234,20 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       return;
     }
 
+    final cartState = ref.read(cartProvider);
+
+    // Vérifier si une ordonnance est requise et si elle a été fournie
+    if (cartState.hasPrescriptionRequiredItems) {
+      final prescriptionState = ref.read(checkoutPrescriptionProvider);
+      if (!prescriptionState.hasValidPrescription) {
+        _showSnackBar(
+          'Veuillez ajouter une ordonnance pour les produits qui le nécessitent',
+          Colors.orange,
+        );
+        return;
+      }
+    }
+
     if (!useManualAddress && selectedSavedAddress == null) {
       _showSnackBar('Veuillez sélectionner une adresse de livraison', Colors.orange);
       return;
@@ -238,7 +266,6 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
     ref.read(loadingProvider(_isSubmittingId).notifier).startLoading();
 
-    final cartState = ref.read(cartProvider);
     final orderItems = _buildOrderItems(cartState);
     final deliveryAddress = _buildDeliveryAddress(useManualAddress, selectedSavedAddress);
 
@@ -246,15 +273,53 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       await _saveAddressToProfile();
     }
 
+    // Upload prescription images if required
+    String? prescriptionImage;
+    int? prescriptionId;
+    if (cartState.hasPrescriptionRequiredItems) {
+      final prescriptionState = ref.read(checkoutPrescriptionProvider);
+      if (prescriptionState.images.isNotEmpty) {
+        try {
+          AppLogger.debug('[Checkout] Uploading prescription images...');
+          await ref.read(prescriptionsProvider.notifier).uploadPrescription(
+            images: prescriptionState.images,
+            notes: prescriptionState.notes,
+          );
+          
+          // Get the uploaded prescription to extract image URL and ID
+          final uploadedPrescription = ref.read(prescriptionsProvider).uploadedPrescription;
+          if (uploadedPrescription != null) {
+            prescriptionId = uploadedPrescription.id;
+            if (uploadedPrescription.imageUrls.isNotEmpty) {
+              prescriptionImage = uploadedPrescription.imageUrls.first;
+            }
+            AppLogger.debug('[Checkout] Prescription uploaded: id=$prescriptionId, image=$prescriptionImage');
+          }
+        } catch (e) {
+          AppLogger.error('[Checkout] Failed to upload prescription', error: e);
+          ref.read(loadingProvider(_isSubmittingId).notifier).stopLoading();
+          _showSnackBar(
+            'Erreur lors de l\'envoi de l\'ordonnance. Veuillez réessayer.',
+            AppColors.error,
+          );
+          return;
+        }
+      }
+    }
+
     AppLogger.debug('[Checkout] Creating order with pharmacyId: ${cartState.selectedPharmacyId}');
     AppLogger.debug('[Checkout] Payment mode: $paymentMode');
     AppLogger.debug('[Checkout] Delivery address: ${deliveryAddress.address}');
+    AppLogger.debug('[Checkout] Prescription image: $prescriptionImage');
+    AppLogger.debug('[Checkout] Prescription ID: $prescriptionId');
 
     await ref.read(ordersProvider.notifier).createOrder(
       pharmacyId: cartState.selectedPharmacyId!,
       items: orderItems,
       deliveryAddress: deliveryAddress,
       paymentMode: paymentMode,
+      prescriptionImage: prescriptionImage,
+      prescriptionId: prescriptionId,
       customerNotes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),

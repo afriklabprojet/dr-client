@@ -33,6 +33,12 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   void initState() {
     super.initState();
     _newPasswordController.addListener(_checkPasswordStrength);
+    // Initialiser les toggles de mot de passe à true (obscurcir par défaut)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(toggleProvider(_obscureCurrentId).notifier).set(true);
+      ref.read(toggleProvider(_obscureNewId).notifier).set(true);
+      ref.read(toggleProvider(_obscureConfirmId).notifier).set(true);
+    });
   }
 
   @override

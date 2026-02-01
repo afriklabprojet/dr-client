@@ -23,6 +23,7 @@ abstract class OrdersRepository {
     required String paymentMode,
     String? prescriptionImage,
     String? customerNotes,
+    int? prescriptionId, // ID de la prescription uploadée via checkout
   });
 
   /// Cancel an order

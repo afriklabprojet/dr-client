@@ -2,17 +2,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// A simple state notifier for boolean toggle states like password visibility.
 /// This replaces setState(() => _obscurePassword = !_obscurePassword)
+/// 
+/// SECURITY NOTE: Default is FALSE (safe opt-in behavior).
+/// For password fields, explicitly initialize with TRUE to obscure by default.
 class ToggleNotifier extends StateNotifier<bool> {
-  ToggleNotifier([bool initial = true]) : super(initial);
+  ToggleNotifier([bool initial = false]) : super(initial);
 
   void toggle() => state = !state;
   void set(bool value) => state = value;
 }
 
 /// Provider factory for creating unique toggle providers
-/// Usage: final obscurePassword = toggleProvider(true);
+/// 
+/// Usage examples:
+/// - Password obscure (should be true): Initialize explicitly after first read
+/// - Accept terms (should be false): Default behavior is correct
+/// - Address default (should be false): Default behavior is correct
+/// 
+/// For password fields, call `.notifier.set(true)` on init:
+/// ```dart
+/// @override
+/// void initState() {
+///   super.initState();
+///   Future.microtask(() => ref.read(toggleProvider(_obscurePasswordId).notifier).set(true));
+/// }
+/// ```
 final toggleProvider = StateNotifierProvider.family<ToggleNotifier, bool, String>(
-  (ref, id) => ToggleNotifier(true),
+  (ref, id) => ToggleNotifier(false),
 );
 
 /// A state notifier for loading/submitting states

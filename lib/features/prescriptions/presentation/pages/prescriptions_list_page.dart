@@ -40,7 +40,7 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
       case 2:
         return prescriptions.where((p) => p.status == 'quoted').toList();
       case 3:
-        return prescriptions.where((p) => ['validated', 'paid', 'rejected'].contains(p.status)).toList();
+        return prescriptions.where((p) => ['processing', 'validated', 'paid', 'rejected'].contains(p.status)).toList();
       default:
         return prescriptions;
     }
@@ -124,7 +124,7 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
               _buildTab('Toutes', state.prescriptions.length),
               _buildTab('Attente', state.prescriptions.where((p) => p.status == 'pending').length),
               _buildTab('Devis', state.prescriptions.where((p) => p.status == 'quoted').length),
-              _buildTab('Terminées', state.prescriptions.where((p) => ['validated', 'paid', 'rejected'].contains(p.status)).length),
+              _buildTab('Terminées', state.prescriptions.where((p) => ['processing', 'validated', 'paid', 'rejected'].contains(p.status)).length),
             ],
           ),
         ),
@@ -261,7 +261,15 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Ordonnance #${prescription.id}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            Row(
+                              children: [
+                                Text('Ordonnance #${prescription.id}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                if (prescription.isLinkedToOrder) ...[
+                                  const SizedBox(width: 8),
+                                  _buildOrderBadge(prescription),
+                                ],
+                              ],
+                            ),
                             const SizedBox(height: 4),
                             Text(DateFormat('dd MMM yyyy - HH:mm').format(prescription.createdAt), style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                           ],
@@ -361,12 +369,53 @@ class _PrescriptionsListPageState extends ConsumerState<PrescriptionsListPage>
   Map<String, dynamic> _getStatusConfig(String status) {
     switch (status) {
       case 'pending': return {'color': Colors.orange, 'icon': Icons.hourglass_empty, 'label': 'En attente'};
+      case 'processing': return {'color': Colors.blue, 'icon': Icons.sync, 'label': 'En traitement'};
       case 'quoted': return {'color': Colors.blue, 'icon': Icons.receipt_long, 'label': 'Devis reçu'};
       case 'paid': return {'color': Colors.teal, 'icon': Icons.payment, 'label': 'Payé'};
       case 'validated': return {'color': Colors.green, 'icon': Icons.check_circle, 'label': 'Validée'};
       case 'rejected': return {'color': Colors.red, 'icon': Icons.cancel, 'label': 'Refusée'};
       default: return {'color': Colors.grey, 'icon': Icons.info, 'label': status};
     }
+  }
+
+  /// Badge indiquant que la prescription est liée à une commande
+  Widget _buildOrderBadge(PrescriptionEntity prescription) {
+    return Tooltip(
+      message: prescription.orderReference != null 
+          ? 'Commande ${prescription.orderReference}'
+          : 'Liée à une commande',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.green.withValues(alpha: 0.3),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.shopping_bag, size: 12, color: Colors.white),
+            const SizedBox(width: 4),
+            Text(
+              prescription.orderReference ?? 'CMD',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildEmptyState(int tabIndex) {

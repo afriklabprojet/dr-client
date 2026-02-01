@@ -1,5 +1,6 @@
 import '../../../../core/network/api_client.dart';
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/services/app_logger.dart';
 import '../models/order_model.dart';
 import '../models/order_item_model.dart';
 
@@ -33,11 +34,10 @@ class OrdersRemoteDataSource {
 
   /// Get order details by ID
   Future<OrderModel> getOrderDetails(int orderId) async {
-    print('[GetOrderDetails] Fetching order $orderId');
+    AppLogger.debug('[GetOrderDetails] Fetching order $orderId');
     final response = await apiClient.get('/customer/orders/$orderId');
-    print('[GetOrderDetails] Response: ${response.data}');
     final orderData = response.data['data'] as Map<String, dynamic>;
-    print('[GetOrderDetails] Order data: $orderData');
+    AppLogger.debug('[GetOrderDetails] Order loaded successfully');
     return OrderModel.fromJson(orderData);
   }
 
@@ -49,6 +49,7 @@ class OrdersRemoteDataSource {
     required String paymentMode,
     String? prescriptionImage,
     String? customerNotes,
+    int? prescriptionId, // ID de la prescription uploadée via checkout
   }) async {
     // Ensure customer_phone is present (required by API)
     final customerPhone = deliveryAddress['phone'] as String?;
@@ -71,19 +72,17 @@ class OrdersRemoteDataSource {
         'delivery_longitude': deliveryAddress['longitude'],
       'payment_mode': paymentMode,
       if (prescriptionImage != null) 'prescription_image': prescriptionImage,
+      if (prescriptionId != null) 'prescription_id': prescriptionId,
       if (customerNotes != null) 'customer_notes': customerNotes,
     };
 
-    print('[CreateOrder] Sending data: $data');
+    AppLogger.debug('[CreateOrder] Creating order for pharmacy $pharmacyId with ${items.length} items');
     final response = await apiClient.post('/customer/orders', data: data);
-    print('[CreateOrder] Response: ${response.data}');
 
     // API returns simplified response on creation
     final responseData = response.data['data'] as Map<String, dynamic>;
-    print('[CreateOrder] Response data: $responseData');
-    
     final orderId = responseData['order_id'] as int;
-    print('[CreateOrder] Order ID: $orderId');
+    AppLogger.info('[CreateOrder] Order created successfully with ID: $orderId');
 
     // Fetch full order details
     return await getOrderDetails(orderId);

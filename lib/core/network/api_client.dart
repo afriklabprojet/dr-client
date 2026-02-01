@@ -267,13 +267,22 @@ class ApiClient {
       AppLogger.error('[API ERROR 422] Validation échouée');
       AppLogger.debug('   URL: $path');
       AppLogger.debug('   Méthode: $method');
-      AppLogger.debug('   Data envoyée: ${error.requestOptions.data}');
-      AppLogger.debug('   Headers: ${error.requestOptions.headers}');
-      AppLogger.debug('   Response body: ${error.response?.data}');
+      // SÉCURITÉ: Ne pas logger les données sensibles (passwords, tokens, etc.)
+      AppLogger.debug('   Data envoyée: [MASQUÉ POUR SÉCURITÉ]');
+      AppLogger.debug('   Validation errors: ${_extractValidationErrors(error.response?.data)}');
     } else {
       AppLogger.warning('[API ERROR] Code: $statusCode');
       AppLogger.debug('   URL: $path');
     }
     AppLogger.debug('═══════════════════════════════════════════════════════════');
+  }
+  
+  /// Extrait uniquement les clés en erreur de validation (sans valeurs sensibles)
+  String _extractValidationErrors(dynamic data) {
+    if (data is Map && data['errors'] is Map) {
+      final errors = data['errors'] as Map;
+      return errors.keys.join(', ');
+    }
+    return 'Non disponible';
   }
 }

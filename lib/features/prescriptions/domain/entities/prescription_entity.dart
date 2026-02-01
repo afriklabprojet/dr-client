@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class PrescriptionEntity extends Equatable {
   final int id;
-  final String status; // pending, validated, rejected
+  final String status; // pending, processing, validated, rejected
   final String? notes;
   final List<String> imageUrls;
   final String? rejectionReason;
@@ -10,6 +10,9 @@ class PrescriptionEntity extends Equatable {
   final String? pharmacyNotes;
   final DateTime createdAt;
   final DateTime? validatedAt;
+  final int? orderId;
+  final String? orderReference;
+  final String? source; // 'checkout' ou 'direct'
 
   const PrescriptionEntity({
     required this.id,
@@ -21,7 +24,32 @@ class PrescriptionEntity extends Equatable {
     this.pharmacyNotes,
     required this.createdAt,
     this.validatedAt,
+    this.orderId,
+    this.orderReference,
+    this.source,
   });
+
+  /// Vérifie si cette prescription est liée à une commande
+  bool get isLinkedToOrder => orderId != null;
+
+  /// Vérifie si cette prescription vient du checkout
+  bool get isFromCheckout => source == 'checkout';
+
+  /// Retourne un label de statut plus convivial
+  String get statusLabel {
+    switch (status) {
+      case 'pending':
+        return 'En attente';
+      case 'processing':
+        return 'En traitement';
+      case 'validated':
+        return 'Validée';
+      case 'rejected':
+        return 'Rejetée';
+      default:
+        return status;
+    }
+  }
 
   PrescriptionEntity copyWith({
     int? id,
@@ -33,6 +61,9 @@ class PrescriptionEntity extends Equatable {
     String? pharmacyNotes,
     DateTime? createdAt,
     DateTime? validatedAt,
+    int? orderId,
+    String? orderReference,
+    String? source,
   }) {
     return PrescriptionEntity(
       id: id ?? this.id,
@@ -44,6 +75,9 @@ class PrescriptionEntity extends Equatable {
       pharmacyNotes: pharmacyNotes ?? this.pharmacyNotes,
       createdAt: createdAt ?? this.createdAt,
       validatedAt: validatedAt ?? this.validatedAt,
+      orderId: orderId ?? this.orderId,
+      orderReference: orderReference ?? this.orderReference,
+      source: source ?? this.source,
     );
   }
 
@@ -58,5 +92,8 @@ class PrescriptionEntity extends Equatable {
         pharmacyNotes,
         createdAt,
         validatedAt,
+        orderId,
+        orderReference,
+        source,
       ];
 }

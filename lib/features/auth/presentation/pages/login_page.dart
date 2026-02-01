@@ -77,6 +77,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
           context.goToHome();
         }
       }
+      
+      // Initialiser les toggles de mot de passe à true (obscurcir par défaut)
+      ref.read(toggleProvider(_obscurePasswordId).notifier).set(true);
     });
 
     _animationController.forward();

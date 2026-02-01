@@ -70,4 +70,19 @@ class CartState extends Equatable {
       return null;
     }
   }
+
+  /// Vérifie si le panier contient des produits nécessitant une ordonnance
+  bool get hasPrescriptionRequiredItems {
+    return items.any((item) => item.product.requiresPrescription);
+  }
+
+  /// Retourne la liste des produits nécessitant une ordonnance
+  List<CartItemEntity> get prescriptionRequiredItems {
+    return items.where((item) => item.product.requiresPrescription).toList();
+  }
+
+  /// Retourne les noms des produits nécessitant une ordonnance
+  List<String> get prescriptionRequiredProductNames {
+    return prescriptionRequiredItems.map((item) => item.product.name).toList();
+  }
 }

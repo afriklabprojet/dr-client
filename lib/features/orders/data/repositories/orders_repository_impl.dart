@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/app_logger.dart';
 import '../../domain/entities/order_entity.dart';
 import '../../domain/entities/order_item_entity.dart';
 import '../../domain/entities/delivery_address_entity.dart';
@@ -75,8 +76,7 @@ class OrdersRepositoryImpl implements OrdersRepository {
       }
       return Left(NetworkFailure(message: e.message));
     } catch (e, stackTrace) {
-      print('[OrdersRepository] GetOrderDetails unexpected error: $e');
-      print('[OrdersRepository] StackTrace: $stackTrace');
+      AppLogger.error('[OrdersRepository] GetOrderDetails unexpected error', error: e, stackTrace: stackTrace);
       return Left(ServerFailure(message: 'An unexpected error occurred: $e'));
     }
   }
@@ -89,6 +89,7 @@ class OrdersRepositoryImpl implements OrdersRepository {
     required String paymentMode,
     String? prescriptionImage,
     String? customerNotes,
+    int? prescriptionId,
   }) async {
     try {
       final itemModels = items
@@ -104,6 +105,7 @@ class OrdersRepositoryImpl implements OrdersRepository {
         paymentMode: paymentMode,
         prescriptionImage: prescriptionImage,
         customerNotes: customerNotes,
+        prescriptionId: prescriptionId,
       );
 
       // Cache the created order
@@ -123,8 +125,7 @@ class OrdersRepositoryImpl implements OrdersRepository {
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } catch (e, stackTrace) {
-      print('[OrdersRepository] CreateOrder unexpected error: $e');
-      print('[OrdersRepository] StackTrace: $stackTrace');
+      AppLogger.error('[OrdersRepository] CreateOrder unexpected error', error: e, stackTrace: stackTrace);
       return Left(ServerFailure(message: 'An unexpected error occurred: $e'));
     }
   }

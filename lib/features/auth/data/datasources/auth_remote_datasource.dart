@@ -1,5 +1,6 @@
 import '../../../../core/network/api_client.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/services/app_logger.dart';
 import '../models/auth_response_model.dart';
 import '../models/user_model.dart';
 
@@ -166,8 +167,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     // Le backend peut retourner directement {user, token} ou {data: {user, token}}
     final responseData = response.data;
-    print('[verifyFirebaseOtp] Response type: ${responseData.runtimeType}');
-    print('[verifyFirebaseOtp] Response: $responseData');
+    AppLogger.debug('[verifyFirebaseOtp] Processing response');
     
     if (responseData is Map<String, dynamic>) {
       // Si la réponse contient 'data', l'utiliser
@@ -178,8 +178,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         jsonData = responseData;
       }
       
-      print('[verifyFirebaseOtp] Parsing jsonData: $jsonData');
-      print('[verifyFirebaseOtp] user type: ${jsonData['user'].runtimeType}');
+      AppLogger.debug('[verifyFirebaseOtp] Response parsed successfully');
       
       return AuthResponseModel.fromJson(jsonData);
     }

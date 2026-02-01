@@ -77,6 +77,7 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
     required String paymentMode,
     String? prescriptionImage,
     String? customerNotes,
+    int? prescriptionId, // ID de la prescription uploadée via checkout
   }) async {
     state = state.copyWith(status: OrdersStatus.loading);
 
@@ -87,6 +88,7 @@ class OrdersNotifier extends StateNotifier<OrdersState> {
       paymentMode: paymentMode,
       prescriptionImage: prescriptionImage,
       customerNotes: customerNotes,
+      prescriptionId: prescriptionId,
     );
 
     result.fold(

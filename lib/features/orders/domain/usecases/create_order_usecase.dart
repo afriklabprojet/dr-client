@@ -17,6 +17,7 @@ class CreateOrderUseCase {
     required String paymentMode,
     String? prescriptionImage,
     String? customerNotes,
+    int? prescriptionId, // ID de la prescription uploadée via checkout
   }) async {
     // Validation
     if (pharmacyId <= 0) {
@@ -103,6 +104,7 @@ class CreateOrderUseCase {
       paymentMode: paymentMode,
       prescriptionImage: prescriptionImage,
       customerNotes: customerNotes,
+      prescriptionId: prescriptionId,
     );
   }
 }

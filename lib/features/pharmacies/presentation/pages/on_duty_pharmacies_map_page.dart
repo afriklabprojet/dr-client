@@ -48,6 +48,12 @@ class _OnDutyPharmaciesMapPageState
     });
 
     try {
+      // Sur le web, on saute la géolocalisation et on affiche directement la liste
+      if (kIsWeb) {
+        await _fetchOnDutyPharmacies(null, null);
+        return;
+      }
+      
       // Vérifier si les services de localisation sont activés
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
