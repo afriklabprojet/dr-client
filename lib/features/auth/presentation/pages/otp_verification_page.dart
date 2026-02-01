@@ -52,8 +52,10 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
       _focusNodes.add(FocusNode());
     }
 
-    // Start timer
-    _startResendTimer();
+    // Start timer after build is complete to avoid modifying provider during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startResendTimer();
+    });
 
     // Animations
     _animationController = AnimationController(

@@ -378,29 +378,30 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   Widget _buildHeader(bool isDark) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
           IconButton(
             onPressed: () => context.go(AppRoutes.login),
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
             style: IconButton.styleFrom(
               backgroundColor: Colors.white.withValues(alpha: 0.2),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
             ),
           ),
-          const Spacer(),
-          const Text(
-            'DR-PHARMA',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
+          Expanded(
+            child: Text(
+              'DR-PHARMA',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0,
+              ),
             ),
           ),
-          const Spacer(),
-          const SizedBox(width: 48),
+          const SizedBox(width: 40),
         ],
       ),
     );
