@@ -2,8 +2,6 @@
 /// Protège contre les injections XSS, SQL et autres attaques
 library;
 
-import 'dart:convert';
-
 /// Classe utilitaire pour la sanitisation des entrées
 class InputSanitizer {
   InputSanitizer._();
@@ -28,7 +26,7 @@ class InputSanitizer {
 
   /// Patterns d'injection SQL
   static final List<RegExp> _sqlPatterns = [
-    RegExp(r"('|\")\s*(or|and)\s*('|\")?1\s*=\s*1", caseSensitive: false),
+    RegExp(r'''['"]?\s*(or|and)\s*['"]?1\s*=\s*1''', caseSensitive: false),
     RegExp(r';\s*(drop|delete|truncate|alter|update|insert)', caseSensitive: false),
     RegExp(r'union\s+(all\s+)?select', caseSensitive: false),
     RegExp(r'--\s*$', multiLine: true),
@@ -132,7 +130,8 @@ class InputSanitizer {
     sanitized = _removeXssPatterns(sanitized);
 
     // Autoriser lettres, chiffres, espaces et ponctuation basique
-    sanitized = sanitized.replaceAll(RegExp(r'[<>"\'\\\[\]{}|^`]'), '');
+    // Supprimer: < > " ' \ [ ] { } | ^ `
+    sanitized = sanitized.replaceAll(RegExp(r'''[<>"'\\{}\[\]|^`]'''), '');
 
     return _normalizeWhitespace(sanitized);
   }

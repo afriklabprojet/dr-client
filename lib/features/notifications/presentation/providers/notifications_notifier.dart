@@ -1,18 +1,31 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/app_logger.dart';
-import '../../../notifications/data/datasources/notifications_remote_datasource.dart';
+import '../../data/datasources/notifications_remote_datasource.dart';
 import '../../domain/entities/notification_entity.dart';
+import '../../domain/usecases/get_notifications_usecase.dart';
+import '../../domain/usecases/mark_notification_read_usecase.dart';
+import '../../domain/usecases/mark_all_notifications_read_usecase.dart';
 import 'notifications_state.dart';
 
+/// Notifier pour la gestion des notifications (Clean Architecture)
+/// Utilise les UseCases pour les opérations principales
+/// Note: FCM token update reste direct car pas de logique métier
 class NotificationsNotifier extends StateNotifier<NotificationsState> {
-  final NotificationsRemoteDataSource remoteDataSource;
+  final GetNotificationsUseCase getNotificationsUseCase;
+  final MarkNotificationAsReadUseCase markNotificationAsReadUseCase;
+  final MarkAllNotificationsReadUseCase markAllNotificationsReadUseCase;
+  final NotificationsRemoteDataSource remoteDataSource; // Pour FCM token uniquement
 
-  NotificationsNotifier(this.remoteDataSource)
-      : super(const NotificationsState.initial());
+  NotificationsNotifier({
+    required this.getNotificationsUseCase,
+    required this.markNotificationAsReadUseCase,
+    required this.markAllNotificationsReadUseCase,
+    required this.remoteDataSource,
+  }) : super(const NotificationsState.initial());
 
   /// Convertit les erreurs techniques en messages lisibles
-  String _getReadableErrorMessage(dynamic error) {
-    final errorStr = error.toString().toLowerCase();
+  String _getReadableErrorMessage(String error) {
+    final errorStr = error.toLowerCase();
     
     if (errorStr.contains('network') || 
         errorStr.contains('connexion') ||
@@ -32,122 +45,104 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     return 'Une erreur est survenue. Veuillez réessayer.';
   }
 
-  // Load all notifications
+  /// Charge toutes les notifications
   Future<void> loadNotifications() async {
     state = state.copyWith(status: NotificationsStatus.loading);
 
-    try {
-      final notificationModels = await remoteDataSource.getNotifications();
-      final notifications =
-          notificationModels.map((model) => model.toEntity()).toList();
+    final result = await getNotificationsUseCase();
 
-      final unreadCount =
-          notifications.where((n) => !n.isRead).length;
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: NotificationsStatus.error,
+          errorMessage: _getReadableErrorMessage(failure.message),
+        );
+      },
+      (notifications) {
+        final unreadCount = notifications.where((n) => !n.isRead).length;
 
-      state = state.copyWith(
-        status: NotificationsStatus.loaded,
-        notifications: notifications,
-        unreadCount: unreadCount,
-        errorMessage: null,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        status: NotificationsStatus.error,
-        errorMessage: _getReadableErrorMessage(e),
-      );
-    }
+        state = state.copyWith(
+          status: NotificationsStatus.loaded,
+          notifications: notifications,
+          unreadCount: unreadCount,
+          errorMessage: null,
+        );
+      },
+    );
   }
 
-  // Load only unread notifications
-  Future<void> loadUnreadNotifications() async {
-    state = state.copyWith(status: NotificationsStatus.loading);
-
-    try {
-      final notificationModels =
-          await remoteDataSource.getUnreadNotifications();
-      final notifications =
-          notificationModels.map((model) => model.toEntity()).toList();
-
-      state = state.copyWith(
-        status: NotificationsStatus.loaded,
-        notifications: notifications,
-        unreadCount: notifications.length,
-        errorMessage: null,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        status: NotificationsStatus.error,
-        errorMessage: _getReadableErrorMessage(e),
-      );
-    }
-  }
-
-  // Mark single notification as read
+  /// Marque une notification comme lue
   Future<void> markAsRead(String notificationId) async {
-    try {
-      await remoteDataSource.markAsRead(notificationId);
+    final result = await markNotificationAsReadUseCase(notificationId);
 
-      // Update local state
-      final updatedNotifications = state.notifications.map((notification) {
-        if (notification.id == notificationId) {
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: NotificationsStatus.error,
+          errorMessage: _getReadableErrorMessage(failure.message),
+        );
+      },
+      (_) {
+        // Update local state
+        final updatedNotifications = state.notifications.map((notification) {
+          if (notification.id == notificationId) {
+            return NotificationEntity(
+              id: notification.id,
+              type: notification.type,
+              title: notification.title,
+              body: notification.body,
+              data: notification.data,
+              isRead: true,
+              createdAt: notification.createdAt,
+            );
+          }
+          return notification;
+        }).toList();
+
+        final unreadCount = updatedNotifications.where((n) => !n.isRead).length;
+
+        state = state.copyWith(
+          notifications: updatedNotifications,
+          unreadCount: unreadCount,
+        );
+      },
+    );
+  }
+
+  /// Marque toutes les notifications comme lues
+  Future<void> markAllAsRead() async {
+    final result = await markAllNotificationsReadUseCase();
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: NotificationsStatus.error,
+          errorMessage: _getReadableErrorMessage(failure.message),
+        );
+      },
+      (_) {
+        // Update all notifications to read
+        final updatedNotifications = state.notifications.map((notification) {
           return NotificationEntity(
             id: notification.id,
             type: notification.type,
             title: notification.title,
             body: notification.body,
             data: notification.data,
-            isRead: true, // Mark as read
+            isRead: true,
             createdAt: notification.createdAt,
           );
-        }
-        return notification;
-      }).toList();
+        }).toList();
 
-      final unreadCount = updatedNotifications.where((n) => !n.isRead).length;
-
-      state = state.copyWith(
-        notifications: updatedNotifications,
-        unreadCount: unreadCount,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        status: NotificationsStatus.error,
-        errorMessage: _getReadableErrorMessage(e),
-      );
-    }
-  }
-
-  // Mark all notifications as read
-  Future<void> markAllAsRead() async {
-    try {
-      await remoteDataSource.markAllAsRead();
-
-      // Update all notifications to read
-      final updatedNotifications = state.notifications.map((notification) {
-        return NotificationEntity(
-          id: notification.id,
-          type: notification.type,
-          title: notification.title,
-          body: notification.body,
-          data: notification.data,
-          isRead: true,
-          createdAt: notification.createdAt,
+        state = state.copyWith(
+          notifications: updatedNotifications,
+          unreadCount: 0,
         );
-      }).toList();
-
-      state = state.copyWith(
-        notifications: updatedNotifications,
-        unreadCount: 0,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        status: NotificationsStatus.error,
-        errorMessage: _getReadableErrorMessage(e),
-      );
-    }
+      },
+    );
   }
 
-  // Delete notification
+  /// Supprime une notification (accès direct DataSource car pas de UseCase créé)
   Future<void> deleteNotification(String notificationId) async {
     try {
       await remoteDataSource.deleteNotification(notificationId);
@@ -166,22 +161,22 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     } catch (e) {
       state = state.copyWith(
         status: NotificationsStatus.error,
-        errorMessage: _getReadableErrorMessage(e),
+        errorMessage: _getReadableErrorMessage(e.toString()),
       );
     }
   }
 
-  // Update FCM token
+  /// Update FCM token (pas de logique métier, accès direct)
   Future<void> updateFcmToken(String fcmToken) async {
     try {
       await remoteDataSource.updateFcmToken(fcmToken);
     } catch (e) {
-      // Silent fail for FCM token update - pas besoin d'afficher d'erreur
+      // Silent fail for FCM token update
       AppLogger.warning('FCM token update failed: $e');
     }
   }
 
-  // Remove FCM token
+  /// Remove FCM token
   Future<void> removeFcmToken() async {
     try {
       await remoteDataSource.removeFcmToken();
@@ -190,7 +185,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     }
   }
 
-  // Clear error
+  /// Clear error
   void clearError() {
     if (state.errorMessage != null) {
       state = state.copyWith(errorMessage: null);

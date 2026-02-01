@@ -79,7 +79,7 @@ class AccessibleThemes {
           color: Colors.white,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -134,7 +134,7 @@ class AccessibleThemes {
           color: colors.textOnDark,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         color: colors.surfaceDark,
         shape: RoundedRectangleBorder(

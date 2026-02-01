@@ -82,6 +82,10 @@ class _PromoCard extends StatelessWidget {
     this.onTap,
   });
 
+  /// Convertit les valeurs int en Color (dans la couche Presentation)
+  List<Color> get _gradientColors =>
+      promo.gradientColorValues.map((v) => Color(v)).toList();
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -91,14 +95,14 @@ class _PromoCard extends StatelessWidget {
         height: 160,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: promo.gradientColors,
+            colors: _gradientColors,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: promo.gradientColors[0].withValues(alpha: 0.3),
+              color: _gradientColors[0].withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),

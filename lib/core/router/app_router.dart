@@ -35,6 +35,54 @@ import '../../features/profile/presentation/pages/notification_settings_page.dar
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../services/navigation_service.dart';
 
+/// Helper pour afficher une page d'erreur quand un paramètre de route est invalide
+Widget _buildInvalidRouteErrorPage(BuildContext context, String message) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Erreur'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+      ),
+    ),
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.orange,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Paramètre invalide',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => context.go('/home'),
+              icon: const Icon(Icons.home),
+              label: const Text('Retour à l\'accueil'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 /// Routes de l'application - Constantes type-safe
 abstract class AppRoutes {
   // Auth

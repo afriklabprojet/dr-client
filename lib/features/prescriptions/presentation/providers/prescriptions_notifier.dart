@@ -1,176 +1,146 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../core/errors/exceptions.dart';
-import '../../data/datasources/prescriptions_remote_datasource.dart';
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/prescription_entity.dart';
+import '../../domain/usecases/upload_prescription_usecase.dart';
+import '../../domain/usecases/get_prescriptions_usecase.dart';
+import '../../domain/usecases/get_prescription_details_usecase.dart';
+import '../../domain/usecases/pay_prescription_usecase.dart';
 import 'prescriptions_state.dart';
 
+/// Notifier pour la gestion des ordonnances (Clean Architecture)
+/// Utilise les UseCases au lieu d'accéder directement au DataSource
 class PrescriptionsNotifier extends StateNotifier<PrescriptionsState> {
-  final PrescriptionsRemoteDataSource remoteDataSource;
+  final UploadPrescriptionUseCase uploadPrescriptionUseCase;
+  final GetPrescriptionsUseCase getPrescriptionsUseCase;
+  final GetPrescriptionDetailsUseCase getPrescriptionDetailsUseCase;
+  final PayPrescriptionUseCase payPrescriptionUseCase;
 
-  PrescriptionsNotifier(this.remoteDataSource)
-      : super(const PrescriptionsState.initial());
+  PrescriptionsNotifier({
+    required this.uploadPrescriptionUseCase,
+    required this.getPrescriptionsUseCase,
+    required this.getPrescriptionDetailsUseCase,
+    required this.payPrescriptionUseCase,
+  }) : super(const PrescriptionsState.initial());
 
-  // Upload prescription
+  /// Upload une ordonnance
   Future<void> uploadPrescription({
     required List<XFile> images,
     String? notes,
   }) async {
     state = state.copyWith(status: PrescriptionsStatus.uploading);
 
-    try {
-      final response = await remoteDataSource.uploadPrescription(
-        images: images,
-        notes: notes,
-      );
+    final result = await uploadPrescriptionUseCase(
+      images: images,
+      notes: notes,
+    );
 
-      // Parse response to entity
-      final prescription = PrescriptionEntity(
-        id: response['id'] as int,
-        status: response['status'] as String,
-        notes: response['notes'] as String?,
-        imageUrls: List<String>.from(response['images'] ?? []), // Backend key is 'images' not 'image_urls'
-        rejectionReason: response['rejection_reason'] as String?,
-        quoteAmount: response['quote_amount'] != null ? double.tryParse(response['quote_amount'].toString()) : null,
-        pharmacyNotes: response['pharmacy_notes'] as String?,
-        createdAt: DateTime.parse(response['created_at'] as String),
-        validatedAt: response['validated_at'] != null
-            ? DateTime.parse(response['validated_at'] as String)
-            : null,
-        orderId: response['order_id'] as int?,
-        orderReference: response['order_reference'] as String?,
-        source: response['source'] as String?,
-      );
-
-      state = state.copyWith(
-        status: PrescriptionsStatus.uploaded,
-        uploadedPrescription: prescription,
-        errorMessage: null,
-      );
-    } on UnauthorizedException catch (_) {
-      state = state.copyWith(
-        status: PrescriptionsStatus.unauthorized,
-        errorMessage: 'Veuillez vous reconnecter pour envoyer une ordonnance',
-      );
-      rethrow;
-    } catch (e) {
-      String errorMessage = 'Erreur lors de l\'envoi';
-      if (e.toString().contains('403') || e.toString().contains('PHONE_NOT_VERIFIED')) {
-        errorMessage = 'Veuillez vérifier votre numéro de téléphone pour envoyer une ordonnance';
-      } else if (e.toString().contains('401')) {
-        errorMessage = 'Session expirée. Veuillez vous reconnecter.';
-      } else {
-        errorMessage = 'Erreur lors de l\'envoi: ${e.toString()}';
-      }
-      state = state.copyWith(
-        status: PrescriptionsStatus.error,
-        errorMessage: errorMessage,
-      );
-      rethrow;
-    }
+    result.fold(
+      (failure) {
+        String errorMessage = failure.message;
+        PrescriptionsStatus status = PrescriptionsStatus.error;
+        
+        if (failure is UnauthorizedFailure) {
+          errorMessage = 'Veuillez vous reconnecter pour envoyer une ordonnance';
+          status = PrescriptionsStatus.unauthorized;
+        } else if (errorMessage.contains('403') || errorMessage.contains('PHONE_NOT_VERIFIED')) {
+          errorMessage = 'Veuillez vérifier votre numéro de téléphone pour envoyer une ordonnance';
+        }
+        
+        state = state.copyWith(
+          status: status,
+          errorMessage: errorMessage,
+        );
+      },
+      (prescription) {
+        state = state.copyWith(
+          status: PrescriptionsStatus.uploaded,
+          uploadedPrescription: prescription,
+          errorMessage: null,
+        );
+      },
+    );
   }
 
-  // Load prescriptions list
+  /// Charge la liste des ordonnances
   Future<void> loadPrescriptions() async {
     state = state.copyWith(status: PrescriptionsStatus.loading);
 
-    try {
-      final data = await remoteDataSource.getPrescriptions();
-      
-      final prescriptions = data.map((item) {
-        return PrescriptionEntity(
-          id: item['id'] as int,
-          status: item['status'] as String,
-          notes: item['notes'] as String?,
-          imageUrls: List<String>.from(item['images'] ?? []), // 'images' from backend
-          rejectionReason: item['rejection_reason'] as String?,
-          quoteAmount: item['quote_amount'] != null ? double.tryParse(item['quote_amount'].toString()) : null,
-          pharmacyNotes: item['pharmacy_notes'] as String?,
-          createdAt: DateTime.parse(item['created_at'] as String),
-          validatedAt: item['validated_at'] != null
-              ? DateTime.parse(item['validated_at'] as String)
-              : null,
-          orderId: item['order_id'] as int?,
-          orderReference: item['order_reference'] as String?,
-          source: item['source'] as String?,
+    final result = await getPrescriptionsUseCase();
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: PrescriptionsStatus.error,
+          errorMessage: failure.message,
         );
-      }).toList();
-
-      state = state.copyWith(
-        status: PrescriptionsStatus.loaded,
-        prescriptions: prescriptions,
-        errorMessage: null,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        status: PrescriptionsStatus.error,
-        errorMessage: 'Erreur lors du chargement: ${e.toString()}',
-      );
-    }
+      },
+      (prescriptions) {
+        state = state.copyWith(
+          status: PrescriptionsStatus.loaded,
+          prescriptions: prescriptions,
+          errorMessage: null,
+        );
+      },
+    );
   }
 
-  // Get prescription details
+  /// Récupère les détails d'une ordonnance
   Future<PrescriptionEntity?> getPrescriptionDetails(int prescriptionId) async {
-    try {
-      final data = await remoteDataSource.getPrescriptionDetails(prescriptionId);
-      
-      return PrescriptionEntity(
-        id: data['id'] as int,
-        status: data['status'] as String,
-        notes: data['notes'] as String?,
-        imageUrls: List<String>.from(data['images'] ?? []), // 'images'
-        rejectionReason: data['rejection_reason'] as String?,
-        quoteAmount: data['quote_amount'] != null ? double.tryParse(data['quote_amount'].toString()) : null,
-        pharmacyNotes: data['pharmacy_notes'] as String?,
-        createdAt: DateTime.parse(data['created_at'] as String),
-        validatedAt: data['validated_at'] != null
-            ? DateTime.parse(data['validated_at'] as String)
-            : null,
-        orderId: data['order_id'] as int?,
-        orderReference: data['order_reference'] as String?,
-        source: data['source'] as String?,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        status: PrescriptionsStatus.error,
-        errorMessage: 'Erreur lors du chargement: ${e.toString()}',
-      );
-      return null;
-    }
+    final result = await getPrescriptionDetailsUseCase(prescriptionId);
+
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: PrescriptionsStatus.error,
+          errorMessage: failure.message,
+        );
+        return null;
+      },
+      (prescription) => prescription,
+    );
   }
 
-  // Pay Prescription
-  Future<void> payPrescription(int prescriptionId, {String method = 'mobile_money'}) async {
-    state = state.copyWith(status: PrescriptionsStatus.loading); // Or a specific payment status
-    try {
-      await remoteDataSource.payPrescription(prescriptionId, method);
-      
-      // Update local state to Paid
-      final updatedList = state.prescriptions.map((p) {
-        if (p.id == prescriptionId) {
-          return p.copyWith(status: 'paid');
-        }
-        return p;
-      }).toList();
+  /// Payer une ordonnance validée
+  Future<bool> payPrescription(int prescriptionId, {String method = 'mobile_money'}) async {
+    state = state.copyWith(status: PrescriptionsStatus.loading);
 
-      state = state.copyWith(
-        status: PrescriptionsStatus.loaded,
-        prescriptions: updatedList,
-      );
-      
-      // Refresh details if needed or just update local
-    } catch (e) {
-      state = state.copyWith(
-        status: PrescriptionsStatus.error,
-        errorMessage: e.toString(),
-      );
-    }
+    final result = await payPrescriptionUseCase(
+      prescriptionId: prescriptionId,
+      paymentMethod: method,
+    );
+
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: PrescriptionsStatus.error,
+          errorMessage: failure.message,
+        );
+        return false;
+      },
+      (_) {
+        // Update local state
+        final updatedList = state.prescriptions.map((p) {
+          if (p.id == prescriptionId) {
+            return p.copyWith(status: 'paid');
+          }
+          return p;
+        }).toList();
+
+        state = state.copyWith(
+          status: PrescriptionsStatus.loaded,
+          prescriptions: updatedList,
+        );
+        return true;
+      },
+    );
   }
 
-  // Clear error
+  /// Clear error state
   void clearError() {
     if (state.errorMessage != null) {
       state = state.copyWith(errorMessage: null);
     }
   }
 }
+

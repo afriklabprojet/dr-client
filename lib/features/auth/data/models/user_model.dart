@@ -10,6 +10,7 @@ class UserModel {
   final String email;
   final String phone;
   final String? role;
+  final String? address; // Champ address ajouté
   final String? avatar;
   @JsonKey(name: 'email_verified_at')
   final String? emailVerifiedAt;
@@ -24,6 +25,7 @@ class UserModel {
     required this.email,
     required this.phone,
     this.role,
+    this.address,
     this.avatar,
     this.emailVerifiedAt,
     this.phoneVerifiedAt,
@@ -41,7 +43,7 @@ class UserModel {
       name: name,
       email: email,
       phone: phone,
-      address: role, // Using role as address for now
+      address: address, // Mapping correct: address → address
       profilePicture: avatar,
       emailVerifiedAt: emailVerifiedAt != null
           ? DateTime.parse(emailVerifiedAt!)

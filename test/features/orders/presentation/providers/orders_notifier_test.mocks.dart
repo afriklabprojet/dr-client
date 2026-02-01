@@ -97,6 +97,7 @@ class MockOrdersRepository extends _i1.Mock implements _i3.OrdersRepository {
     required String? paymentMode,
     String? prescriptionImage,
     String? customerNotes,
+    int? prescriptionId,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#createOrder, [], {
@@ -106,6 +107,7 @@ class MockOrdersRepository extends _i1.Mock implements _i3.OrdersRepository {
               #paymentMode: paymentMode,
               #prescriptionImage: prescriptionImage,
               #customerNotes: customerNotes,
+              #prescriptionId: prescriptionId,
             }),
             returnValue:
                 _i4.Future<_i2.Either<_i5.Failure, _i6.OrderEntity>>.value(
@@ -118,6 +120,7 @@ class MockOrdersRepository extends _i1.Mock implements _i3.OrdersRepository {
                       #paymentMode: paymentMode,
                       #prescriptionImage: prescriptionImage,
                       #customerNotes: customerNotes,
+                      #prescriptionId: prescriptionId,
                     }),
                   ),
                 ),
