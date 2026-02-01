@@ -8,7 +8,6 @@ import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/firebase_otp_service.dart';
 import '../../../../config/providers.dart';
-import '../../../../home_page.dart';
 import '../../providers/firebase_otp_provider.dart';
 
 const _otpCountdownId = 'otp_countdown';
@@ -153,10 +152,8 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
         (failure) => _showError(failure.message),
         (success) {
           if (context.mounted) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const HomePage()),
-              (route) => false,
-            );
+            // Utiliser go_router pour la navigation
+            context.go(AppRoutes.home);
           }
         },
       );
