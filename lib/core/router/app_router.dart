@@ -320,20 +320,20 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 /// Extension pour faciliter la navigation type-safe
 extension GoRouterExtension on BuildContext {
-  // Auth navigation
+  // Auth navigation - utilise go() car on ne veut pas revenir en arrière
   void goToLogin() => go(AppRoutes.login);
   void goToRegister() => go(AppRoutes.register);
-  void goToForgotPassword() => go(AppRoutes.forgotPassword);
+  void goToForgotPassword() => push(AppRoutes.forgotPassword); // push pour permettre retour
   void goToHome() => go(AppRoutes.home);
   void goToOnboarding() => go(AppRoutes.onboarding);
   void goToOtpVerification(String phoneNumber) =>
       go(AppRoutes.otpVerification, extra: phoneNumber);
 
-  // Pharmacy navigation
-  void goToPharmacies() => go(AppRoutes.pharmacies);
-  void goToPharmacy({required int pharmacyId}) => go('/pharmacies/$pharmacyId');
-  void goToPharmacyDetails(int pharmacyId) => go('/pharmacies/$pharmacyId');
-  void goToOnDutyPharmacies() => go(AppRoutes.onDutyPharmacies);
+  // Pharmacy navigation - utilise push() pour garder home dans la stack
+  void goToPharmacies() => push(AppRoutes.pharmacies);
+  void goToPharmacy({required int pharmacyId}) => push('/pharmacies/$pharmacyId');
+  void goToPharmacyDetails(int pharmacyId) => push('/pharmacies/$pharmacyId');
+  void goToOnDutyPharmacies() => push(AppRoutes.onDutyPharmacies);
   void goToPharmaciesMap({
     required List pharmacies,
     double? userLatitude,
@@ -347,14 +347,14 @@ extension GoRouterExtension on BuildContext {
     },
   );
 
-  // Product navigation
-  void goToProductDetails(int productId) => go('/products/$productId');
+  // Product navigation - utilise push()
+  void goToProductDetails(int productId) => push('/products/$productId');
 
-  // Order navigation
-  void goToCart() => go(AppRoutes.cart);
-  void goToCheckout() => go(AppRoutes.checkout);
-  void goToOrders() => go(AppRoutes.orders);
-  void goToOrderDetails(int orderId) => go('/orders/$orderId');
+  // Order navigation - utilise push() sauf pour orders list
+  void goToCart() => push(AppRoutes.cart);
+  void goToCheckout() => push(AppRoutes.checkout);
+  void goToOrders() => push(AppRoutes.orders);
+  void goToOrderDetails(int orderId) => push('/orders/$orderId');
   void goToOrderTracking({
     required int orderId,
     required DeliveryAddressEntity deliveryAddress,
@@ -367,26 +367,26 @@ extension GoRouterExtension on BuildContext {
     },
   );
 
-  // Prescription navigation
-  void goToPrescriptions() => go(AppRoutes.prescriptions);
+  // Prescription navigation - utilise push()
+  void goToPrescriptions() => push(AppRoutes.prescriptions);
   void goToPrescriptionDetails(int prescriptionId) =>
-      go('/prescriptions/$prescriptionId');
-  void goToPrescriptionUpload() => go(AppRoutes.prescriptionUpload);
+      push('/prescriptions/$prescriptionId');
+  void goToPrescriptionUpload() => push(AppRoutes.prescriptionUpload);
 
-  // Address navigation
-  void goToAddresses() => go(AppRoutes.addresses);
-  void goToAddAddress() => go(AppRoutes.addAddress);
+  // Address navigation - utilise push()
+  void goToAddresses() => push(AppRoutes.addresses);
+  void goToAddAddress() => push(AppRoutes.addAddress);
   void goToEditAddress(AddressEntity address) => push(AppRoutes.editAddress, extra: address);
 
-  // Profile navigation
-  void goToProfile() => go(AppRoutes.profile);
-  void goToEditProfile() => go(AppRoutes.editProfile);
-  void goToNotificationSettings() => go(AppRoutes.notificationSettings);
+  // Profile navigation - utilise push()
+  void goToProfile() => push(AppRoutes.profile);
+  void goToEditProfile() => push(AppRoutes.editProfile);
+  void goToNotificationSettings() => push(AppRoutes.notificationSettings);
 
-  // Notifications
-  void goToNotifications() => go(AppRoutes.notifications);
+  // Notifications - utilise push()
+  void goToNotifications() => push(AppRoutes.notifications);
 
-  // Push navigation (keeps stack)
+  // Alias explicites pour push (backwards compatibility)
   void pushToPharmacyDetails(int pharmacyId) => push('/pharmacies/$pharmacyId');
   void pushToProductDetails(int productId) => push('/products/$productId');
   void pushToOrderDetails(int orderId) => push('/orders/$orderId');
