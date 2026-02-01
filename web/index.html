@@ -35,9 +35,26 @@
 
   <!-- Google Maps API for Web -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDtkPE0r8OdZePsCgpzUVvMTgC8BzpigSQ"></script>
+  
+  <style>
+    /* Style pour le conteneur reCAPTCHA Firebase */
+    #recaptcha-container {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+    }
+    #recaptcha-container.hidden {
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
+  <!-- Conteneur pour Firebase reCAPTCHA -->
+  <div id="recaptcha-container"></div>
+  
   <script src="flutter_bootstrap.js" async></script>
 </body>
 

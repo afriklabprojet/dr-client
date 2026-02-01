@@ -88,23 +88,47 @@ class FirebaseOtpService {
     }
   }
   
+  RecaptchaVerifier? _recaptchaVerifier;
+  
   /// Envoi OTP pour le web avec reCAPTCHA
   Future<void> _sendOtpWeb(String normalizedPhone) async {
     try {
-      // Sur le web, Firebase gère automatiquement le reCAPTCHA
-      final confirmationResult = await _auth.signInWithPhoneNumber(normalizedPhone);
+      debugPrint('[FirebaseOTP] Web: Tentative envoi SMS à $normalizedPhone');
+      
+      // Créer le RecaptchaVerifier avec le conteneur HTML
+      _recaptchaVerifier?.clear();
+      _recaptchaVerifier = RecaptchaVerifier(
+        auth: _auth,
+        container: 'recaptcha-container',
+        size: RecaptchaVerifierSize.compact,
+        theme: RecaptchaVerifierTheme.light,
+        onSuccess: () {
+          debugPrint('[FirebaseOTP] reCAPTCHA validé avec succès');
+        },
+        onError: (FirebaseAuthException e) {
+          debugPrint('[FirebaseOTP] reCAPTCHA erreur: ${e.code} - ${e.message}');
+        },
+        onExpired: () {
+          debugPrint('[FirebaseOTP] reCAPTCHA expiré');
+        },
+      );
+      
+      final confirmationResult = await _auth.signInWithPhoneNumber(
+        normalizedPhone,
+        _recaptchaVerifier!,
+      );
       
       _verificationId = confirmationResult.verificationId;
       _webConfirmationResult = confirmationResult;
       debugPrint('[FirebaseOTP] Code envoyé (web) à $normalizedPhone');
       onStateChanged?.call(FirebaseOtpState.codeSent);
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
+      debugPrint('[FirebaseOTP] FirebaseAuthException web: code=${e.code}, message=${e.message}');
+      onStateChanged?.call(FirebaseOtpState.error, error: _getErrorMessage(e));
+    } catch (e, stackTrace) {
       debugPrint('[FirebaseOTP] Erreur web sendOtp: $e');
-      if (e is FirebaseAuthException) {
-        onStateChanged?.call(FirebaseOtpState.error, error: _getErrorMessage(e));
-      } else {
-        onStateChanged?.call(FirebaseOtpState.error, error: e.toString());
-      }
+      debugPrint('[FirebaseOTP] StackTrace: $stackTrace');
+      onStateChanged?.call(FirebaseOtpState.error, error: 'Erreur: ${e.runtimeType} - $e');
     }
   }
   
