@@ -14,7 +14,6 @@ import '../providers/auth_state.dart';
 // Provider IDs pour cette page
 const _obscurePasswordId = 'login_obscure_password';
 const _useEmailId = 'login_use_email';
-const _isRedirectingId = 'login_is_redirecting';
 
 /// Écran de connexion premium pour DR-PHARMA
 /// Design moderne, minimaliste et professionnel
@@ -33,14 +32,17 @@ class _LoginPageState extends ConsumerState<LoginPage>
   final _phoneFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
 
-  // UI state moved to Riverpod providers:
+  // UI state:
   // - obscurePassword -> toggleProvider(_obscurePasswordId)
-  // - useEmail -> toggleProvider(_useEmailId) with initialValue: false
-  // - isRedirecting -> toggleProvider(_isRedirectingId) with initialValue: false
+  // - useEmail -> toggleProvider(_useEmailId)
+  // - isRedirecting -> local state (toggleProvider defaults to true, causing loader to show on init)
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  
+  // Local state for redirecting - not using toggleProvider to avoid default true issue
+  bool _isRedirecting = false;
 
   @override
   void initState() {
@@ -93,8 +95,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
   void _handleLogin() {
     // Prevent double-tap / multiple submissions
     final authState = ref.read(authProvider);
-    final isRedirecting = ref.read(toggleProvider(_isRedirectingId));
-    if (authState.status == AuthStatus.loading || isRedirecting) {
+    if (authState.status == AuthStatus.loading || _isRedirecting) {
       return;
     }
     
@@ -205,14 +206,14 @@ class _LoginPageState extends ConsumerState<LoginPage>
     // Watch UI state providers
     final obscurePassword = ref.watch(toggleProvider(_obscurePasswordId));
     final useEmail = ref.watch(toggleProvider(_useEmailId));
-    final isRedirecting = ref.watch(toggleProvider(_isRedirectingId));
+    // Use local state for isRedirecting instead of provider (to avoid default true issue)
 
     // Listen to auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) async {
-      if (next.status == AuthStatus.authenticated && !isRedirecting) {
+      if (next.status == AuthStatus.authenticated && !_isRedirecting) {
         // Prevent multiple redirections and keep loader visible
         if (mounted) {
-          ref.read(toggleProvider(_isRedirectingId).notifier).set(true);
+          setState(() => _isRedirecting = true);
         }
         
         // Small delay to ensure UI shows loading state
@@ -241,8 +242,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
         }
       } else if (next.status == AuthStatus.error) {
         // Reset redirecting state on error
-        if (isRedirecting && mounted) {
-          ref.read(toggleProvider(_isRedirectingId).notifier).set(false);
+        if (_isRedirecting && mounted) {
+          setState(() => _isRedirecting = false);
         }
         if (mounted) {
           // Convertir le message technique en message utilisateur explicite
@@ -413,7 +414,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                                   const SizedBox(height: 24),
 
                                   // Login Button
-                                  _buildLoginButton(authState, isDark, isRedirecting),
+                                  _buildLoginButton(authState, isDark, _isRedirecting),
 
                                   const SizedBox(height: 24),
 
