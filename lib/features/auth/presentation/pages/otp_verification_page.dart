@@ -205,9 +205,18 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                   const SizedBox(height: 4),
                   Text(widget.phoneNumber, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.primary)),
                   const SizedBox(height: 40),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(_otpLength, (i) => _buildOtpField(i)),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final fieldWidth = (constraints.maxWidth - (_otpLength - 1) * 8) / _otpLength;
+                      final clampedWidth = fieldWidth.clamp(40.0, 56.0);
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(_otpLength, (i) => Padding(
+                          padding: EdgeInsets.only(right: i < _otpLength - 1 ? 8 : 0),
+                          child: _buildOtpField(i, clampedWidth),
+                        )),
+                      );
+                    },
                   ),
                   if (errorMessage != null) ...[
                     const SizedBox(height: 16),
@@ -304,9 +313,9 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
     return Text(message, style: TextStyle(fontSize: 16, color: color));
   }
 
-  Widget _buildOtpField(int index) {
+  Widget _buildOtpField(int index, double width) {
     return SizedBox(
-      width: 48,
+      width: width,
       height: 56,
       child: KeyboardListener(
         focusNode: FocusNode(),
@@ -317,7 +326,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
           textAlign: TextAlign.center,
           keyboardType: TextInputType.number,
           maxLength: 1,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: width > 45 ? 24 : 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           decoration: InputDecoration(
             counterText: '',
             filled: true,
