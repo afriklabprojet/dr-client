@@ -119,86 +119,142 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
   Widget _buildAddToCartFAB(dynamic product, int quantity) {
     final cartItem = ref.watch(cartProvider).getItem(product.id);
     final currentQuantity = cartItem?.quantity ?? 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      width: double.infinity,
-      child: Row(
-        children: [
-          // Quantity selector
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  onPressed: quantity > 1
-                      ? () => ref.read(countdownProvider(_quantityId).notifier).decrement()
-                      : null,
-                  icon: const Icon(Icons.remove),
-                  color: AppColors.primary,
-                ),
-                Text(
-                  '$quantity',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  onPressed: quantity < product.stockQuantity
-                      ? () => ref.read(countdownProvider(_quantityId).notifier).setValue(quantity + 1)
-                      : null,
-                  icon: const Icon(Icons.add),
-                  color: AppColors.primary,
-                ),
-              ],
-            ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
-          const SizedBox(width: 12),
-          // Add to cart button
-          Expanded(
-            child: FloatingActionButton.extended(
-              onPressed: () {
-                ref
-                    .read(cartProvider.notifier)
-                    .addItem(product, quantity: quantity);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      currentQuantity > 0
-                          ? 'Quantité mise à jour: ${currentQuantity + quantity}'
-                          : 'Ajouté au panier',
+        ],
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            // Quantity selector - compact design
+            Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2D2D2D) : Colors.grey[100],
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Minus button
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: quantity > 1
+                          ? () => ref.read(countdownProvider(_quantityId).notifier).decrement()
+                          : null,
+                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(24)),
+                      child: Container(
+                        width: 44,
+                        height: 48,
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.remove,
+                          size: 20,
+                          color: quantity > 1 
+                              ? AppColors.primary 
+                              : (isDark ? Colors.grey[600] : Colors.grey[400]),
+                        ),
+                      ),
                     ),
-                    backgroundColor: AppColors.success,
-                    duration: const Duration(seconds: 2),
                   ),
-                );
-              },
-              backgroundColor: AppColors.primary,
-              icon: const Icon(Icons.shopping_cart),
-              label: Text(
-                currentQuantity > 0
-                    ? 'Mettre à jour ($currentQuantity)'
-                    : 'Ajouter au panier',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  // Quantity display
+                  Container(
+                    width: 36,
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$quantity',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  // Plus button
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: quantity < product.stockQuantity
+                          ? () => ref.read(countdownProvider(_quantityId).notifier).setValue(quantity + 1)
+                          : null,
+                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(24)),
+                      child: Container(
+                        width: 44,
+                        height: 48,
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.add,
+                          size: 20,
+                          color: quantity < product.stockQuantity 
+                              ? AppColors.primary 
+                              : (isDark ? Colors.grey[600] : Colors.grey[400]),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Add to cart button - sleek design
+            Expanded(
+              child: SizedBox(
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    ref
+                        .read(cartProvider.notifier)
+                        .addItem(product, quantity: quantity);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          currentQuantity > 0
+                              ? 'Quantité mise à jour: ${currentQuantity + quantity}'
+                              : 'Ajouté au panier',
+                        ),
+                        backgroundColor: AppColors.success,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                  icon: const Icon(Icons.shopping_cart_outlined, size: 20),
+                  label: Text(
+                    currentQuantity > 0
+                        ? 'Mettre à jour ($currentQuantity)'
+                        : 'Ajouter au panier',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -226,6 +282,12 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
   }
 
   Widget _buildProductDetails(dynamic product) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final secondaryTextColor = isDark ? Colors.grey[400] : AppColors.textSecondary;
+    final cardColor = isDark ? const Color(0xFF2D2D2D) : Colors.white;
+    final backgroundColor = isDark ? const Color(0xFF1E1E1E) : Colors.grey[50];
+    
     return CustomScrollView(
       slivers: [
         // App Bar with Image
@@ -253,113 +315,128 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
 
         // Product Details
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Product Name
-                Text(
-                  product.name,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // Manufacturer
-                if (product.manufacturer != null)
+          child: Container(
+            color: backgroundColor,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Product Name
                   Text(
-                    product.manufacturer!,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
+                    product.name,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
-                  ),
-                const SizedBox(height: 16),
-
-                // Price
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Prix:',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        _currencyFormat.format(product.price),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Stock Status
-                _buildInfoRow(
-                  'Stock',
-                  product.isAvailable
-                      ? '${product.stockQuantity} disponible(s)'
-                      : 'Rupture de stock',
-                  product.isAvailable ? AppColors.success : AppColors.error,
-                ),
-                const SizedBox(height: 8),
-
-                // Prescription Required
-                _buildInfoRow(
-                  'Ordonnance',
-                  product.requiresPrescription ? 'Requise' : 'Non requise',
-                  product.requiresPrescription
-                      ? AppColors.warning
-                      : AppColors.success,
-                ),
-                const SizedBox(height: 16),
-
-                // Description
-                if (product.description != null) ...[
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Description',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    product.description!,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      height: 1.5,
-                      color: AppColors.textSecondary,
+
+                  // Manufacturer
+                  if (product.manufacturer != null)
+                    Text(
+                      product.manufacturer!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: secondaryTextColor,
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+
+                  // Price
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Prix:',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: textColor,
+                          ),
+                        ),
+                        Text(
+                          _currencyFormat.format(product.price),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                  const SizedBox(height: 16),
 
-                // Pharmacy Info
-                const SizedBox(height: 24),
-                const Divider(),
-                const SizedBox(height: 16),
-                const Text(
-                  'Pharmacie',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                _buildPharmacyCard(product.pharmacy),
-                const SizedBox(height: 100), // Space for FAB
-              ],
+                  // Stock Status
+                  _buildInfoRow(
+                    'Stock',
+                    product.isAvailable
+                        ? '${product.stockQuantity} disponible(s)'
+                        : 'Rupture de stock',
+                    product.isAvailable ? AppColors.success : AppColors.error,
+                    isDark,
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Prescription Required
+                  _buildInfoRow(
+                    'Ordonnance',
+                    product.requiresPrescription ? 'Requise' : 'Non requise',
+                    product.requiresPrescription
+                        ? AppColors.warning
+                        : AppColors.success,
+                    isDark,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Description
+                  if (product.description != null) ...[
+                    Divider(color: isDark ? Colors.grey[700] : Colors.grey[300]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Description',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      product.description!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        height: 1.5,
+                        color: secondaryTextColor,
+                      ),
+                    ),
+                  ],
+
+                  // Pharmacy Info
+                  const SizedBox(height: 24),
+                  Divider(color: isDark ? Colors.grey[700] : Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Pharmacie',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildPharmacyCard(product.pharmacy, isDark, cardColor, textColor, secondaryTextColor),
+                  const SizedBox(height: 100), // Space for FAB
+                ],
+              ),
             ),
           ),
         ),
@@ -367,18 +444,19 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, Color color) {
+  Widget _buildInfoRow(String label, String value, Color color, bool isDark) {
+    final labelColor = isDark ? Colors.grey[400] : AppColors.textSecondary;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 16, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 16, color: labelColor),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withValues(alpha: isDark ? 0.2 : 0.1),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -394,9 +472,22 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     );
   }
 
-  Widget _buildPharmacyCard(dynamic pharmacy) {
+  Widget _buildPharmacyCard(
+    dynamic pharmacy, 
+    bool isDark, 
+    Color cardColor, 
+    Color textColor, 
+    Color? secondaryTextColor,
+  ) {
     return Card(
-      elevation: 2,
+      elevation: isDark ? 0 : 2,
+      color: cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: isDark 
+            ? BorderSide(color: Colors.grey[700]!, width: 1)
+            : BorderSide.none,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -409,9 +500,10 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                 Expanded(
                   child: Text(
                     pharmacy.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
                 ),
@@ -420,16 +512,16 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.location_on,
                   size: 16,
-                  color: AppColors.textSecondary,
+                  color: secondaryTextColor,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     pharmacy.address,
-                    style: const TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: secondaryTextColor),
                   ),
                 ),
               ],
@@ -437,15 +529,15 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.phone,
                   size: 16,
-                  color: AppColors.textSecondary,
+                  color: secondaryTextColor,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   pharmacy.phone,
-                  style: const TextStyle(color: AppColors.textSecondary),
+                  style: TextStyle(color: secondaryTextColor),
                 ),
               ],
             ),

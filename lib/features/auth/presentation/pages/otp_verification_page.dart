@@ -7,8 +7,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/firebase_otp_service.dart';
-import '../../../../config/providers.dart';
 import '../../providers/firebase_otp_provider.dart';
+import '../providers/auth_provider.dart';
 
 const _otpCountdownId = 'otp_countdown';
 
@@ -142,8 +142,9 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
 
   Future<void> _linkToBackend(String firebaseUid) async {
     try {
-      final authRepository = ref.read(authRepositoryProvider);
-      final result = await authRepository.verifyFirebaseOtp(
+      // Utiliser le AuthNotifier pour mettre à jour l'état global
+      final authNotifier = ref.read(authProvider.notifier);
+      final result = await authNotifier.verifyFirebaseOtp(
         phone: widget.phoneNumber,
         firebaseUid: firebaseUid,
       );

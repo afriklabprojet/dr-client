@@ -49,22 +49,32 @@ class _AddressSelectorState extends ConsumerState<AddressSelector> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.location_on, color: AppColors.primary),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Adresse de livraison',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(Icons.location_on, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'Adresse de livraison',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 if (state.addresses.isNotEmpty)
                   TextButton(
                     onPressed: () => _selectAddress(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     child: const Text('Changer'),
                   ),
               ],
@@ -122,11 +132,14 @@ class _AddressSelectorState extends ConsumerState<AddressSelector> {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        address.label,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                      Flexible(
+                        child: Text(
+                          address.label,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (address.isDefault) ...[
@@ -170,11 +183,14 @@ class _AddressSelectorState extends ConsumerState<AddressSelector> {
                           color: AppColors.textHint,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          address.phone!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textHint,
+                        Flexible(
+                          child: Text(
+                            address.phone!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textHint,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

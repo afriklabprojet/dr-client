@@ -206,6 +206,29 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
           as _i4.Future<_i2.Either<_i5.Failure, _i6.AuthResponseEntity>>);
 
   @override
+  _i4.Future<_i2.Either<_i5.Failure, _i6.AuthResponseEntity>>
+  verifyFirebaseOtp({required String? phone, required String? firebaseUid}) =>
+      (super.noSuchMethod(
+            Invocation.method(#verifyFirebaseOtp, [], {
+              #phone: phone,
+              #firebaseUid: firebaseUid,
+            }),
+            returnValue:
+                _i4.Future<
+                  _i2.Either<_i5.Failure, _i6.AuthResponseEntity>
+                >.value(
+                  _FakeEither_0<_i5.Failure, _i6.AuthResponseEntity>(
+                    this,
+                    Invocation.method(#verifyFirebaseOtp, [], {
+                      #phone: phone,
+                      #firebaseUid: firebaseUid,
+                    }),
+                  ),
+                ),
+          )
+          as _i4.Future<_i2.Either<_i5.Failure, _i6.AuthResponseEntity>>);
+
+  @override
   _i4.Future<_i2.Either<_i5.Failure, Map<String, dynamic>>> resendOtp({
     required String? identifier,
   }) =>

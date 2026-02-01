@@ -52,8 +52,11 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('SharedPreferences not initialized');
 });
 
+// Singleton ApiClient instance to ensure token is shared across all services
+final _apiClientInstance = ApiClient();
+
 final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient();
+  return _apiClientInstance;
 });
 
 // Data Source Providers

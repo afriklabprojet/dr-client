@@ -10,18 +10,10 @@ OrderItemModel _$OrderItemModelFromJson(Map<String, dynamic> json) =>
     OrderItemModel(
       productId: (json['product_id'] as num?)?.toInt(),
       id: (json['id'] as num?)?.toInt(),
-      name: json['name'] as String,
+      name: OrderItemModel._readName(json, 'name') as String,
       quantity: (json['quantity'] as num).toInt(),
-      unitPrice: (json['unit_price'] as num).toDouble(),
-      totalPrice: (json['total_price'] as num).toDouble(),
+      unitPrice: (OrderItemModel._readUnitPrice(json, 'unit_price') as num)
+          .toDouble(),
+      totalPrice: (OrderItemModel._readTotalPrice(json, 'total_price') as num)
+          .toDouble(),
     );
-
-Map<String, dynamic> _$OrderItemModelToJson(OrderItemModel instance) =>
-    <String, dynamic>{
-      'product_id': instance.productId,
-      'id': instance.id,
-      'name': instance.name,
-      'quantity': instance.quantity,
-      'unit_price': instance.unitPrice,
-      'total_price': instance.totalPrice,
-    };

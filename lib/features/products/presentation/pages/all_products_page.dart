@@ -95,22 +95,45 @@ class _AllProductsPageState extends ConsumerState<AllProductsPage> {
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Tous les Médicaments'),
+        title: Text(
+          'Tous les Médicaments',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        iconTheme: IconThemeData(
+          color: isDark ? Colors.white : Colors.black87,
+        ),
         actions: [
           badges.Badge(
             position: badges.BadgePosition.topEnd(top: 5, end: 5),
             showBadge: cartState.itemCount > 0,
+            badgeStyle: const badges.BadgeStyle(
+              badgeColor: AppColors.primary,
+            ),
             badgeContent: Text(
               '${cartState.itemCount}',
               style: const TextStyle(color: Colors.white, fontSize: 10),
             ),
             child: IconButton(
-              icon: const Icon(Icons.shopping_cart_outlined),
+              icon: Icon(
+                Icons.shopping_cart_outlined,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
               onPressed: () => context.goToCart(),
             ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
@@ -329,18 +352,18 @@ class _ProductCard extends StatelessWidget {
                       ),
                     ),
                     // Stock indicator
-                    if (product.stock != null && product.stock <= 5)
+                    if (product.isLowStock || product.isOutOfStock)
                       Positioned(
                         top: 8,
                         right: 8,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: product.stock == 0 ? Colors.red : Colors.orange,
+                            color: product.isOutOfStock ? Colors.red : Colors.orange,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            product.stock == 0 ? 'Rupture' : 'Stock faible',
+                            product.isOutOfStock ? 'Rupture' : 'Stock faible',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -350,8 +373,7 @@ class _ProductCard extends StatelessWidget {
                         ),
                       ),
                     // Pharmacy badge
-                    if (product.pharmacyName != null)
-                      Positioned(
+                    Positioned(
                         bottom: 0,
                         left: 0,
                         right: 0,
@@ -368,7 +390,7 @@ class _ProductCard extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            product.pharmacyName!,
+                            product.pharmacy.name,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,

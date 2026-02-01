@@ -338,7 +338,7 @@ void main() {
         // Act
         final result = await notifier.initiatePayment(
           orderId: 1,
-          provider: 'cinetpay', // Supported provider
+          provider: 'jeko', // Supported provider
         );
 
         // Assert
@@ -349,7 +349,7 @@ void main() {
         // Act - Use unsupported provider, UseCase will reject it before calling repository
         final result = await notifier.initiatePayment(
           orderId: 1,
-          provider: 'kkiapay', // Not supported
+          provider: 'cinetpay', // Not supported anymore
         );
 
         // Assert
@@ -368,7 +368,7 @@ void main() {
         // Act
         final result = await notifier.initiatePayment(
           orderId: 1,
-          provider: 'cinetpay',
+          provider: 'jeko',
         );
 
         // Assert

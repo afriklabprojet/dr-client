@@ -74,8 +74,10 @@ class OrdersRepositoryImpl implements OrdersRepository {
         return Right(cachedOrder.toEntity());
       }
       return Left(NetworkFailure(message: e.message));
-    } catch (e) {
-      return Left(ServerFailure(message: 'An unexpected error occurred'));
+    } catch (e, stackTrace) {
+      print('[OrdersRepository] GetOrderDetails unexpected error: $e');
+      print('[OrdersRepository] StackTrace: $stackTrace');
+      return Left(ServerFailure(message: 'An unexpected error occurred: $e'));
     }
   }
 
@@ -120,8 +122,10 @@ class OrdersRepositoryImpl implements OrdersRepository {
       return Left(UnauthorizedFailure(message: e.message));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
-    } catch (e) {
-      return Left(ServerFailure(message: 'An unexpected error occurred'));
+    } catch (e, stackTrace) {
+      print('[OrdersRepository] CreateOrder unexpected error: $e');
+      print('[OrdersRepository] StackTrace: $stackTrace');
+      return Left(ServerFailure(message: 'An unexpected error occurred: $e'));
     }
   }
 

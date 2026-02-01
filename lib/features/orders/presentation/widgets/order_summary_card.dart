@@ -50,17 +50,24 @@ class OrderSummaryCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
+            flex: 3,
             child: Text(
               '${item.product.name} x${item.quantity}',
               style: const TextStyle(fontSize: 14),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
             ),
           ),
-          Text(
-            currencyFormat.format(item.totalPrice),
-            style: const TextStyle(fontWeight: FontWeight.w500),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: Text(
+              currencyFormat.format(item.totalPrice),
+              style: const TextStyle(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.end,
+            ),
           ),
         ],
       ),
@@ -69,10 +76,16 @@ class OrderSummaryCard extends StatelessWidget {
 
   Widget _buildSummaryRow(String label, double amount) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Flexible(child: Text(label)),
-        Flexible(
+        Expanded(
+          flex: 2,
+          child: Text(
+            label,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
           child: Text(
             currencyFormat.format(amount),
             textAlign: TextAlign.end,
@@ -84,15 +97,16 @@ class OrderSummaryCard extends StatelessWidget {
 
   Widget _buildTotalRow() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Flexible(
+        const Expanded(
+          flex: 2,
           child: Text(
             'Total',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-        Flexible(
+        const SizedBox(width: 8),
+        Expanded(
           child: Text(
             currencyFormat.format(total),
             textAlign: TextAlign.end,

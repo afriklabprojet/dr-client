@@ -246,9 +246,38 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Statut',
-                    style: TextStyle(color: textColor, fontSize: 12),
+                  Row(
+                    children: [
+                      Text(
+                        'Statut',
+                        style: TextStyle(color: textColor, fontSize: 12),
+                      ),
+                      if (order.isPaid) ...[
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.success,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.check_circle, size: 12, color: Colors.white),
+                              SizedBox(width: 4),
+                              Text(
+                                'Payé',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -536,84 +565,9 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
   }
 
   Future<void> _initiatePayment(int orderId) async {
-    // Show provider selection
-    final provider = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => SimpleDialog(
-        title: const Text('Choisir le moyen de paiement'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        children: [
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(context, 'cinetpay'),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12.0),
-              child: Row(
-                children: [
-                  Icon(Icons.payment, color: Colors.orange, size: 28),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'CinetPay',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          'Orange Money, MTN, Moov, Visa',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Divider(),
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(context, 'jeko'),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12.0),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.account_balance_wallet,
-                    color: Colors.blue,
-                    size: 28,
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Jèko',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          'Paiement agrégé',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    // Utiliser directement Jeko comme seul provider
+    const provider = 'jeko';
 
-    if (provider == null) return;
     if (!mounted) return;
 
     // Show loading

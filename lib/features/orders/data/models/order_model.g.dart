@@ -11,17 +11,20 @@ OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => OrderModel(
   reference: json['reference'] as String,
   deliveryCode: json['delivery_code'] as String?,
   status: json['status'] as String,
+  paymentStatus: json['payment_status'] as String? ?? 'pending',
   paymentMode: json['payment_mode'] as String,
   pharmacyId: (json['pharmacy_id'] as num?)?.toInt(),
   pharmacy: json['pharmacy'] == null
       ? null
       : PharmacyBasicModel.fromJson(json['pharmacy'] as Map<String, dynamic>),
-  items: (json['items'] as List<dynamic>)
-      .map((e) => OrderItemModel.fromJson(e as Map<String, dynamic>))
-      .toList(),
-  subtotal: (json['subtotal'] as num).toDouble(),
-  deliveryFee: (json['delivery_fee'] as num).toDouble(),
-  totalAmount: (json['total_amount'] as num).toDouble(),
+  items:
+      (json['items'] as List<dynamic>?)
+          ?.map((e) => OrderItemModel.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      [],
+  subtotal: _toDoubleNullable(json['subtotal']),
+  deliveryFee: _toDoubleNullable(json['delivery_fee']),
+  totalAmount: _toDouble(json['total_amount']),
   currency: json['currency'] as String? ?? 'XOF',
   deliveryAddress: json['delivery_address'] as String,
   deliveryCity: json['delivery_city'] as String?,
@@ -43,6 +46,7 @@ Map<String, dynamic> _$OrderModelToJson(OrderModel instance) =>
       'id': instance.id,
       'reference': instance.reference,
       'status': instance.status,
+      'payment_status': instance.paymentStatus,
       'delivery_code': instance.deliveryCode,
       'payment_mode': instance.paymentMode,
       'pharmacy_id': instance.pharmacyId,

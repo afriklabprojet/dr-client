@@ -116,8 +116,8 @@ class _PrescriptionDetailsPageState extends ConsumerState<PrescriptionDetailsPag
               const SizedBox(height: 16),
               const Text('Mode de paiement:'),
               const ListTile(
-                leading: Icon(Icons.phone_android, color: Colors.orange),
-                title: Text('Mobile Money (CinetPay/Orange/MTN)'),
+                leading: Icon(Icons.account_balance_wallet, color: Colors.blue),
+                title: Text('Jèko (Wave, Orange, MTN, Moov)'),
                 trailing: Icon(Icons.check_circle, color: Colors.green),
               ),
               const Spacer(),

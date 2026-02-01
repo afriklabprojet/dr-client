@@ -43,6 +43,11 @@ class MockApiClient extends _i1.Mock implements _i3.ApiClient {
   }
 
   @override
+  bool get hasToken =>
+      (super.noSuchMethod(Invocation.getter(#hasToken), returnValue: false)
+          as bool);
+
+  @override
   void setToken(String? token) => super.noSuchMethod(
     Invocation.method(#setToken, [token]),
     returnValueForMissingStub: null,

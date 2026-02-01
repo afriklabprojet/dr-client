@@ -7,7 +7,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/error_handler.dart';
 import '../../../../core/providers/ui_state_providers.dart';
-import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_logger.dart';
 import '../../../addresses/domain/entities/address_entity.dart';
 import '../../../addresses/presentation/providers/addresses_provider.dart';
@@ -18,6 +17,7 @@ import '../../domain/entities/delivery_address_entity.dart';
 import '../providers/orders_state.dart';
 import '../providers/orders_provider.dart';
 import '../widgets/widgets.dart';
+import 'order_confirmation_page.dart';
 
 // Provider IDs pour cette page
 const _useManualAddressId = 'checkout_use_manual_address';
@@ -42,6 +42,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
   final _addressLabelController = TextEditingController();
+  
+  // Flag to prevent pop when navigating to confirmation
+  bool _isNavigatingToConfirmation = false;
 
   @override
   void initState() {
@@ -100,9 +103,11 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       decimalDigits: 0,
     );
 
-    if (cartState.isEmpty) {
+    if (cartState.isEmpty && !_isNavigatingToConfirmation) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pop();
+        if (mounted && !_isNavigatingToConfirmation) {
+          Navigator.of(context).pop();
+        }
       });
     }
 
@@ -224,6 +229,13 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       return;
     }
 
+    // Validate phone number is present
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty || phone.length < 8) {
+      _showSnackBar('Veuillez entrer un numéro de téléphone valide', Colors.orange);
+      return;
+    }
+
     ref.read(loadingProvider(_isSubmittingId).notifier).startLoading();
 
     final cartState = ref.read(cartProvider);
@@ -233,6 +245,10 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     if (useManualAddress && saveNewAddress) {
       await _saveAddressToProfile();
     }
+
+    AppLogger.debug('[Checkout] Creating order with pharmacyId: ${cartState.selectedPharmacyId}');
+    AppLogger.debug('[Checkout] Payment mode: $paymentMode');
+    AppLogger.debug('[Checkout] Delivery address: ${deliveryAddress.address}');
 
     await ref.read(ordersProvider.notifier).createOrder(
       pharmacyId: cartState.selectedPharmacyId!,
@@ -245,20 +261,36 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     );
 
     final ordersState = ref.read(ordersProvider);
+    AppLogger.debug('[Checkout] Order state after create: ${ordersState.status}');
+    AppLogger.debug('[Checkout] Created order: ${ordersState.createdOrder?.id}');
+    AppLogger.debug('[Checkout] Error message: ${ordersState.errorMessage}');
+    AppLogger.debug('[Checkout] Payment mode selected: $paymentMode');
 
     if (ordersState.status == OrdersStatus.loaded &&
         ordersState.createdOrder != null) {
-      await ref.read(cartProvider.notifier).clearCart();
+      AppLogger.debug('[Checkout] SUCCESS - Order created with id: ${ordersState.createdOrder!.id}');
+      
+      final orderId = ordersState.createdOrder!.id;
 
       if (mounted) {
+        AppLogger.debug('[Checkout] Widget still mounted, processing payment mode: $paymentMode');
         if (paymentMode == 'platform') {
-          await _processPayment(ordersState.createdOrder!.id);
+          // Stop loading before payment process
+          ref.read(loadingProvider(_isSubmittingId).notifier).stopLoading();
+          AppLogger.debug('[Checkout] Calling _processPayment for order $orderId');
+          await _processPayment(orderId);
+          // Note: clearCart is called in _navigateToConfirmation to avoid premature rebuild
         } else {
+          // For cash payment, navigate directly (clearCart will be called in _navigateToConfirmation)
+          AppLogger.debug('[Checkout] Cash payment - navigating to confirmation');
           _showSnackBar('Commande créée avec succès!', AppColors.success);
-          _navigateToOrders();
+          _navigateToConfirmation(orderId, isPaid: false);
         }
+      } else {
+        AppLogger.debug('[Checkout] Widget NOT mounted after order creation!');
       }
     } else if (ordersState.status == OrdersStatus.error) {
+      AppLogger.debug('[Checkout] ERROR - ${ordersState.errorMessage}');
       if (mounted) {
         ref.read(loadingProvider(_isSubmittingId).notifier).stopLoading();
         _showSnackBar(
@@ -267,6 +299,10 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
           duration: const Duration(seconds: 4),
         );
       }
+    } else {
+      AppLogger.debug('[Checkout] UNEXPECTED STATE - status: ${ordersState.status}');
+      // In case of unexpected state, stop loading
+      ref.read(loadingProvider(_isSubmittingId).notifier).stopLoading();
     }
   }
 
@@ -283,17 +319,23 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   DeliveryAddressEntity _buildDeliveryAddress(bool useManualAddress, AddressEntity? selectedSavedAddress) {
+    // Always use phone from controller (prefilled with user's phone or manual input)
+    final phone = _phoneController.text.trim();
+    
     if (useManualAddress) {
       return DeliveryAddressEntity(
         address: _addressController.text.trim(),
         city: _cityController.text.trim(),
-        phone: _phoneController.text.trim(),
+        phone: phone,
       );
     }
     return DeliveryAddressEntity(
       address: selectedSavedAddress!.fullAddress,
       city: selectedSavedAddress.city,
-      phone: selectedSavedAddress.phone,
+      // Use saved address phone if available, otherwise use the phone from controller
+      phone: selectedSavedAddress.phone?.isNotEmpty == true 
+          ? selectedSavedAddress.phone! 
+          : phone,
       latitude: selectedSavedAddress.latitude,
       longitude: selectedSavedAddress.longitude,
     );
@@ -323,45 +365,150 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   Future<void> _processPayment(int orderId) async {
-    if (!mounted) return;
+    AppLogger.debug('[Payment] Starting _processPayment for order $orderId');
+    if (!mounted) {
+      AppLogger.debug('[Payment] Widget not mounted, returning');
+      return;
+    }
 
+    AppLogger.debug('[Payment] Showing PaymentProviderDialog');
     final provider = await PaymentProviderDialog.show(context);
+    AppLogger.debug('[Payment] Provider selected: $provider');
 
     if (provider == null) {
-      if (mounted) _navigateToOrders();
+      AppLogger.debug('[Payment] Provider is null, navigating to confirmation without payment');
+      if (mounted) _navigateToConfirmation(orderId, isPaid: false);
       return;
     }
 
     if (!mounted) return;
 
+    AppLogger.debug('[Payment] Showing loading dialog');
     PaymentLoadingDialog.show(context);
 
+    AppLogger.debug('[Payment] Initiating payment with provider: $provider');
     final result = await ref
         .read(ordersProvider.notifier)
         .initiatePayment(orderId: orderId, provider: provider);
+
+    AppLogger.debug('[Payment] Payment initiation result: $result');
 
     if (!mounted) return;
     PaymentLoadingDialog.hide(context);
 
     if (result != null && result.containsKey('payment_url')) {
-      final url = Uri.parse(result['payment_url']);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
+      final paymentUrl = result['payment_url'] as String;
+      AppLogger.debug('[Payment] Payment URL received: $paymentUrl');
+      
+      // Check if it's a sandbox URL (local development)
+      if (paymentUrl.contains('sandbox/confirm') || paymentUrl.contains('localhost')) {
+        AppLogger.debug('[Payment] Sandbox mode detected, showing sandbox dialog');
+        // For sandbox mode, open in a dialog or directly confirm
+        final confirmed = await _showSandboxPaymentDialog(paymentUrl);
+        AppLogger.debug('[Payment] Sandbox dialog result: $confirmed');
         if (mounted) {
-          _showSnackBar('Impossible d\'ouvrir le lien de paiement', AppColors.error);
+          _navigateToConfirmation(orderId, isPaid: confirmed);
+        }
+      } else {
+        // Production: Open external browser for real payment
+        AppLogger.debug('[Payment] Production mode, opening external browser');
+        final url = Uri.parse(paymentUrl);
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+          // After returning from payment, show confirmation
+          // Note: We assume payment succeeded, the actual status will be fetched from API
+          if (mounted) _navigateToConfirmation(orderId, isPaid: true);
+        } else {
+          if (mounted) {
+            _showSnackBar('Impossible d\'ouvrir le lien de paiement', AppColors.error);
+            _navigateToConfirmation(orderId, isPaid: false);
+          }
         }
       }
     } else {
+      AppLogger.debug('[Payment] No payment_url in result, showing error');
       if (mounted) {
         _showSnackBar(
           'Erreur lors de l\'initialisation du paiement',
           AppColors.error,
         );
+        _navigateToConfirmation(orderId, isPaid: false);
       }
     }
+  }
 
-    if (mounted) _navigateToOrders();
+  /// Show sandbox payment confirmation dialog for local development
+  Future<bool> _showSandboxPaymentDialog(String sandboxUrl) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.developer_mode, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Mode Sandbox'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Vous êtes en mode développement.\n\n'
+              'Dans la version production, vous seriez redirigé vers la page de paiement Jèko.',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Le paiement sera automatiquement confirmé',
+                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              // Call sandbox URL to confirm payment
+              try {
+                final uri = Uri.parse(sandboxUrl);
+                await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+                // Wait a bit for the payment to be confirmed
+                await Future.delayed(const Duration(milliseconds: 500));
+              } catch (e) {
+                // Ignore errors, sandbox might auto-confirm
+              }
+              if (context.mounted) {
+                Navigator.pop(context, true);
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text('Simuler le paiement'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 
   Future<void> _saveAddressToProfile() async {
@@ -400,7 +547,26 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     }
   }
 
-  void _navigateToOrders() {
-    context.goToOrders();
+  void _navigateToConfirmation(int orderId, {required bool isPaid}) {
+    // Set flag to prevent empty cart pop during navigation
+    _isNavigatingToConfirmation = true;
+    
+    // Stop loading before navigation
+    ref.read(loadingProvider(_isSubmittingId).notifier).stopLoading();
+    
+    // Clear cart - the flag prevents the empty cart check from triggering a pop
+    ref.read(cartProvider.notifier).clearCart();
+    
+    // Use pushAndRemoveUntil to clear the entire navigation stack
+    // This prevents going back to checkout/cart after order is created
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => OrderConfirmationPage(
+          orderId: orderId,
+          isPaid: isPaid,
+        ),
+      ),
+      (route) => route.isFirst, // Keep only the home route
+    );
   }
 }

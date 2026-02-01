@@ -8,11 +8,13 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final registerUseCase = ref.watch(registerUseCaseProvider);
   final logoutUseCase = ref.watch(logoutUseCaseProvider);
   final getCurrentUserUseCase = ref.watch(getCurrentUserUseCaseProvider);
+  final authRepository = ref.watch(authRepositoryProvider);
 
   return AuthNotifier(
     loginUseCase: loginUseCase,
     registerUseCase: registerUseCase,
     logoutUseCase: logoutUseCase,
     getCurrentUserUseCase: getCurrentUserUseCase,
+    authRepository: authRepository,
   );
 });

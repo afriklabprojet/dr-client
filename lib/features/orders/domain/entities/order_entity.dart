@@ -50,6 +50,7 @@ class OrderEntity extends Equatable {
   final String reference;
   final String? deliveryCode;
   final OrderStatus status;
+  final String paymentStatus; // 'pending', 'paid', 'failed'
   final PaymentMode paymentMode;
   final int pharmacyId;
   final String pharmacyName;
@@ -75,6 +76,7 @@ class OrderEntity extends Equatable {
     required this.reference,
     this.deliveryCode,
     required this.status,
+    this.paymentStatus = 'pending',
     required this.paymentMode,
     required this.pharmacyId,
     required this.pharmacyName,
@@ -101,6 +103,7 @@ class OrderEntity extends Equatable {
     id,
     reference,
     status,
+    paymentStatus,
     paymentMode,
     pharmacyId,
     items,
@@ -109,7 +112,7 @@ class OrderEntity extends Equatable {
   ];
 
   // Helper methods
-  bool get isPaid => paidAt != null;
+  bool get isPaid => paymentStatus == 'paid' || paidAt != null;
   bool get isDelivered => deliveredAt != null;
   bool get isCancelled => status == OrderStatus.cancelled;
   bool get canBeCancelled =>

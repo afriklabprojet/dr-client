@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 
+/// Labels d'adresse valides (doivent correspondre au backend)
+const List<String> _validAddressLabels = ['Maison', 'Bureau', 'Famille', 'Autre'];
+
 /// Formulaire d'adresse de livraison manuelle
 class DeliveryAddressForm extends StatelessWidget {
   final TextEditingController addressController;
@@ -171,21 +174,46 @@ class DeliveryAddressForm extends StatelessWidget {
           ),
           if (saveAddress) ...[
             const SizedBox(height: 12),
-            TextFormField(
-              controller: labelController,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+            DropdownButtonFormField<String>(
+              value: labelController.text.isEmpty ? null : 
+                (_validAddressLabels.contains(labelController.text) ? labelController.text : null),
               decoration: InputDecoration(
                 labelText: 'Nom de l\'adresse',
-                hintText: 'Ex: Maison, Bureau, Chez maman...',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
                 prefixIcon: const Icon(Icons.label_outline),
                 isDense: true,
               ),
+              dropdownColor: isDark ? Colors.grey.shade800 : Colors.white,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black,
+                fontSize: 14,
+              ),
+              items: _validAddressLabels.map((label) {
+                return DropdownMenuItem<String>(
+                  value: label,
+                  child: Row(
+                    children: [
+                      Icon(
+                        _getLabelIcon(label),
+                        size: 18,
+                        color: isDark ? Colors.white70 : Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(label),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  labelController.text = value;
+                }
+              },
               validator: (value) {
-                if (saveAddress && (value == null || value.trim().isEmpty)) {
-                  return 'Donnez un nom à cette adresse';
+                if (saveAddress && (value == null || value.isEmpty)) {
+                  return 'Choisissez un type d\'adresse';
                 }
                 return null;
               },
@@ -194,5 +222,21 @@ class DeliveryAddressForm extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Obtenir l'icône correspondant au label
+  IconData _getLabelIcon(String label) {
+    switch (label.toLowerCase()) {
+      case 'maison':
+        return Icons.home;
+      case 'bureau':
+        return Icons.business;
+      case 'famille':
+        return Icons.family_restroom;
+      case 'autre':
+        return Icons.place;
+      default:
+        return Icons.location_on;
+    }
   }
 }

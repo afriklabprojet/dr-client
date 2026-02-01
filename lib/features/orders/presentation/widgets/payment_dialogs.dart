@@ -20,18 +20,9 @@ class PaymentProviderDialog extends StatelessWidget {
       children: [
         _buildProviderOption(
           context: context,
-          provider: 'cinetpay',
-          name: 'CinetPay',
-          description: 'Orange Money, MTN, Moov, Visa',
-          icon: Icons.payment,
-          iconColor: Colors.orange,
-        ),
-        const Divider(),
-        _buildProviderOption(
-          context: context,
           provider: 'jeko',
           name: 'Jèko',
-          description: 'Paiement agrégé',
+          description: 'Wave, Orange Money, MTN, Moov, Djamo',
           icon: Icons.account_balance_wallet,
           iconColor: Colors.blue,
         ),

@@ -26,6 +26,9 @@ class ApiClient {
           // Add auth token if available
           if (_accessToken != null) {
             options.headers['Authorization'] = 'Bearer $_accessToken';
+            print('[ApiClient] Request to ${options.path} with token');
+          } else {
+            print('[ApiClient] Request to ${options.path} WITHOUT token!');
           }
           return handler.next(options);
         },
@@ -45,11 +48,15 @@ class ApiClient {
 
   void setToken(String token) {
     _accessToken = token;
+    print('[ApiClient] Token set: ${token.substring(0, 20)}...');
   }
 
   void clearToken() {
     _accessToken = null;
+    print('[ApiClient] Token cleared');
   }
+
+  bool get hasToken => _accessToken != null;
 
   Options authorizedOptions(String token) {
     return Options(headers: {'Authorization': 'Bearer $token'});
@@ -255,6 +262,13 @@ class ApiClient {
       AppLogger.error('[API ERROR] Impossible de se connecter');
       AppLogger.debug('   URL tentée: $baseUrl');
       AppLogger.info('   Conseil: Vérifiez que le serveur Laravel est démarré');
+    } else if (statusCode == 422) {
+      AppLogger.error('[API ERROR 422] Validation échouée');
+      AppLogger.debug('   URL: $path');
+      AppLogger.debug('   Méthode: $method');
+      AppLogger.debug('   Data envoyée: ${error.requestOptions.data}');
+      AppLogger.debug('   Headers: ${error.requestOptions.headers}');
+      AppLogger.debug('   Response body: ${error.response?.data}');
     } else {
       AppLogger.warning('[API ERROR] Code: $statusCode');
       AppLogger.debug('   URL: $path');

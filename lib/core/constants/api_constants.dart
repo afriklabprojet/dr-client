@@ -68,15 +68,15 @@ class ApiConstants {
   // ENDPOINTS - Products
   // ============================================================
   static const String products = '/products';
-  static String productDetails(int id) => '/products/\$id';
+  static String productDetails(int id) => '/products/$id';
   static const String searchProducts = '/products';
 
   // ============================================================
   // ENDPOINTS - Orders
   // ============================================================
   static const String orders = '/customer/orders';
-  static String orderDetails(int id) => '/customer/orders/\$id';
-  static String cancelOrder(int id) => '/customer/orders/\$id/cancel';
+  static String orderDetails(int id) => '/customer/orders/$id';
+  static String cancelOrder(int id) => '/customer/orders/$id/cancel';
 
   // ============================================================
   // ENDPOINTS - Pharmacies
@@ -85,21 +85,21 @@ class ApiConstants {
   static const String featuredPharmacies = '/customer/pharmacies/featured';
   static const String nearbyPharmacies = '/customer/pharmacies/nearby';
   static const String onDutyPharmacies = '/customer/pharmacies/on-duty';
-  static String pharmacyDetails(int id) => '/customer/pharmacies/\$id';
+  static String pharmacyDetails(int id) => '/customer/pharmacies/$id';
 
   // ============================================================
   // ENDPOINTS - Addresses
   // ============================================================
   static const String addresses = '/customer/addresses';
-  static String addressDetails(int id) => '/customer/addresses/\$id';
-  static String setDefaultAddress(int id) => '/customer/addresses/\$id/default';
+  static String addressDetails(int id) => '/customer/addresses/$id';
+  static String setDefaultAddress(int id) => '/customer/addresses/$id/default';
 
   // ============================================================
   // ENDPOINTS - Notifications
   // ============================================================
   static const String notifications = '/notifications';
   static const String updateFcmToken = '/notifications/fcm-token';
-  static String markNotificationRead(int id) => '/notifications/\$id/read';
+  static String markNotificationRead(int id) => '/notifications/$id/read';
   static const String markAllNotificationsRead = '/notifications/read-all';
 
   // ============================================================

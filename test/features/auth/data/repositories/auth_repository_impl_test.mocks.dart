@@ -172,6 +172,28 @@ class MockAuthRemoteDataSource extends _i1.Mock
           as _i6.Future<_i2.AuthResponseModel>);
 
   @override
+  _i6.Future<_i2.AuthResponseModel> verifyFirebaseOtp({
+    required String? phone,
+    required String? firebaseUid,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#verifyFirebaseOtp, [], {
+              #phone: phone,
+              #firebaseUid: firebaseUid,
+            }),
+            returnValue: _i6.Future<_i2.AuthResponseModel>.value(
+              _FakeAuthResponseModel_0(
+                this,
+                Invocation.method(#verifyFirebaseOtp, [], {
+                  #phone: phone,
+                  #firebaseUid: firebaseUid,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i2.AuthResponseModel>);
+
+  @override
   _i6.Future<Map<String, dynamic>> resendOtp({required String? identifier}) =>
       (super.noSuchMethod(
             Invocation.method(#resendOtp, [], {#identifier: identifier}),
@@ -269,6 +291,11 @@ class MockApiClient extends _i1.Mock implements _i8.ApiClient {
   MockApiClient() {
     _i1.throwOnMissingStub(this);
   }
+
+  @override
+  bool get hasToken =>
+      (super.noSuchMethod(Invocation.getter(#hasToken), returnValue: false)
+          as bool);
 
   @override
   void setToken(String? token) => super.noSuchMethod(

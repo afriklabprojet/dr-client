@@ -1,4 +1,5 @@
 import '../../../../core/network/api_client.dart';
+import '../../../../core/errors/exceptions.dart';
 import '../models/order_model.dart';
 import '../models/order_item_model.dart';
 
@@ -32,8 +33,12 @@ class OrdersRemoteDataSource {
 
   /// Get order details by ID
   Future<OrderModel> getOrderDetails(int orderId) async {
+    print('[GetOrderDetails] Fetching order $orderId');
     final response = await apiClient.get('/customer/orders/$orderId');
-    return OrderModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    print('[GetOrderDetails] Response: ${response.data}');
+    final orderData = response.data['data'] as Map<String, dynamic>;
+    print('[GetOrderDetails] Order data: $orderData');
+    return OrderModel.fromJson(orderData);
   }
 
   /// Create a new order
@@ -45,30 +50,43 @@ class OrdersRemoteDataSource {
     String? prescriptionImage,
     String? customerNotes,
   }) async {
+    // Ensure customer_phone is present (required by API)
+    final customerPhone = deliveryAddress['phone'] as String?;
+    if (customerPhone == null || customerPhone.isEmpty) {
+      throw ValidationException(
+        errors: {'customer_phone': ['Le numéro de téléphone est requis']},
+      );
+    }
+
     final data = {
       'pharmacy_id': pharmacyId,
       'items': items.map((item) => item.toJson()).toList(),
       'delivery_address': deliveryAddress['address'],
+      'customer_phone': customerPhone,
       if (deliveryAddress['city'] != null)
         'delivery_city': deliveryAddress['city'],
       if (deliveryAddress['latitude'] != null)
         'delivery_latitude': deliveryAddress['latitude'],
       if (deliveryAddress['longitude'] != null)
         'delivery_longitude': deliveryAddress['longitude'],
-      if (deliveryAddress['phone'] != null)
-        'customer_phone': deliveryAddress['phone'],
       'payment_mode': paymentMode,
       if (prescriptionImage != null) 'prescription_image': prescriptionImage,
       if (customerNotes != null) 'customer_notes': customerNotes,
     };
 
+    print('[CreateOrder] Sending data: $data');
     final response = await apiClient.post('/customer/orders', data: data);
+    print('[CreateOrder] Response: ${response.data}');
 
     // API returns simplified response on creation
     final responseData = response.data['data'] as Map<String, dynamic>;
+    print('[CreateOrder] Response data: $responseData');
+    
+    final orderId = responseData['order_id'] as int;
+    print('[CreateOrder] Order ID: $orderId');
 
     // Fetch full order details
-    return await getOrderDetails(responseData['order_id'] as int);
+    return await getOrderDetails(orderId);
   }
 
   /// Cancel an order

@@ -5,12 +5,30 @@ import 'order_item_model.dart';
 
 part 'order_model.g.dart';
 
+/// Helper to convert String or num to double (API returns "2500.00" as String)
+double _toDouble(dynamic value) {
+  if (value == null) return 0.0;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0.0;
+  return 0.0;
+}
+
+/// Helper to convert nullable String or num to double
+double? _toDoubleNullable(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
 @JsonSerializable()
 class OrderModel {
   final int id;
   final String reference;
   @JsonKey(name: 'status')
   final String status;
+  @JsonKey(name: 'payment_status', defaultValue: 'pending')
+  final String paymentStatus;
   @JsonKey(name: 'delivery_code')
   final String? deliveryCode;
   @JsonKey(name: 'payment_mode')
@@ -19,12 +37,15 @@ class OrderModel {
   final int? pharmacyId;
   @JsonKey(name: 'pharmacy')
   final PharmacyBasicModel? pharmacy;
+  @JsonKey(defaultValue: [])
   final List<OrderItemModel> items;
-  final double subtotal;
-  @JsonKey(name: 'delivery_fee')
-  final double deliveryFee;
-  @JsonKey(name: 'total_amount')
+  @JsonKey(fromJson: _toDoubleNullable)
+  final double? subtotal;
+  @JsonKey(name: 'delivery_fee', fromJson: _toDoubleNullable)
+  final double? deliveryFee;
+  @JsonKey(name: 'total_amount', fromJson: _toDouble)
   final double totalAmount;
+  @JsonKey(defaultValue: 'XOF')
   final String currency;
   @JsonKey(name: 'delivery_address')
   final String deliveryAddress;
@@ -58,12 +79,13 @@ class OrderModel {
     required this.reference,
     this.deliveryCode,
     required this.status,
+    this.paymentStatus = 'pending',
     required this.paymentMode,
     this.pharmacyId,
     this.pharmacy,
-    required this.items,
-    required this.subtotal,
-    required this.deliveryFee,
+    this.items = const [],
+    this.subtotal,
+    this.deliveryFee,
     required this.totalAmount,
     this.currency = 'XOF',
     required this.deliveryAddress,
@@ -92,14 +114,15 @@ class OrderModel {
       reference: reference,
       deliveryCode: deliveryCode,
       status: _parseOrderStatus(status),
+      paymentStatus: paymentStatus,
       paymentMode: _parsePaymentMode(paymentMode),
       pharmacyId: pharmacyId ?? pharmacy?.id ?? 0,
       pharmacyName: pharmacy?.name ?? '',
       pharmacyPhone: pharmacy?.phone,
       pharmacyAddress: pharmacy?.address,
       items: items.map((item) => item.toEntity()).toList(),
-      subtotal: subtotal,
-      deliveryFee: deliveryFee,
+      subtotal: subtotal ?? 0.0,
+      deliveryFee: deliveryFee ?? 0.0,
       totalAmount: totalAmount,
       currency: currency,
       deliveryAddress: DeliveryAddressEntity(

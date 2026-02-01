@@ -142,14 +142,51 @@ class _OrdersListPageState extends ConsumerState<OrdersListPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    order.reference,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                  Flexible(
+                    child: Text(
+                      order.reference,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  _buildStatusBadge(order.status),
+                  const SizedBox(width: 8),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (order.isPaid)
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: 14,
+                                color: AppColors.success,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Payé',
+                                style: TextStyle(
+                                  color: AppColors.success,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      _buildStatusBadge(order.status),
+                    ],
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -178,9 +215,12 @@ class _OrdersListPageState extends ConsumerState<OrdersListPage> {
                     color: AppColors.textSecondary,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    '${order.itemCount} article(s)',
-                    style: const TextStyle(color: AppColors.textSecondary),
+                  Flexible(
+                    child: Text(
+                      '${order.itemCount} article(s)',
+                      style: const TextStyle(color: AppColors.textSecondary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -193,12 +233,15 @@ class _OrdersListPageState extends ConsumerState<OrdersListPage> {
                     color: AppColors.textSecondary,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    DateFormat(
-                      'dd/MM/yyyy à HH:mm',
-                      'fr_FR',
-                    ).format(order.createdAt),
-                    style: const TextStyle(color: AppColors.textSecondary),
+                  Flexible(
+                    child: Text(
+                      DateFormat(
+                        'dd/MM/yyyy à HH:mm',
+                        'fr_FR',
+                      ).format(order.createdAt),
+                      style: const TextStyle(color: AppColors.textSecondary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
