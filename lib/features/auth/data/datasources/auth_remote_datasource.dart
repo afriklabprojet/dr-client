@@ -164,7 +164,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       },
     );
 
-    return AuthResponseModel.fromJson(response.data);
+    // Le backend peut retourner directement {user, token} ou {data: {user, token}}
+    final responseData = response.data;
+    print('[verifyFirebaseOtp] Response type: ${responseData.runtimeType}');
+    print('[verifyFirebaseOtp] Response: $responseData');
+    
+    if (responseData is Map<String, dynamic>) {
+      // Si la réponse contient 'data', l'utiliser
+      Map<String, dynamic> jsonData;
+      if (responseData.containsKey('data') && responseData['data'] is Map<String, dynamic>) {
+        jsonData = responseData['data'] as Map<String, dynamic>;
+      } else {
+        jsonData = responseData;
+      }
+      
+      print('[verifyFirebaseOtp] Parsing jsonData: $jsonData');
+      print('[verifyFirebaseOtp] user type: ${jsonData['user'].runtimeType}');
+      
+      return AuthResponseModel.fromJson(jsonData);
+    }
+    
+    throw FormatException('Invalid response format: ${responseData.runtimeType}');
   }
 
   @override
