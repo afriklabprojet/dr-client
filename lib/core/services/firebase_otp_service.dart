@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import '../extensions/extensions.dart';
 
 /// États possibles de la vérification OTP Firebase
 enum FirebaseOtpState {
@@ -62,7 +63,7 @@ class FirebaseOtpService {
   String? get currentUserId => _auth.currentUser?.uid;
 
   /// Envoie un code OTP au numéro de téléphone
-  /// Le numéro doit être au format international (+225XXXXXXXXX)
+  /// Le numéro sera automatiquement normalisé au format international E.164
   Future<void> sendOtp({
     required String phoneNumber,
     Duration timeout = const Duration(seconds: 60),
@@ -70,13 +71,17 @@ class FirebaseOtpService {
     try {
       onStateChanged?.call(FirebaseOtpState.initial);
       
+      // Normaliser le numéro au format international E.164
+      final normalizedPhone = phoneNumber.toInternationalPhone;
+      debugPrint('[FirebaseOTP] Numéro normalisé: $normalizedPhone (original: $phoneNumber)');
+      
       await _auth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
+        phoneNumber: normalizedPhone,
         timeout: timeout,
         
         // Appelé quand le code est envoyé avec succès
         codeSent: (String verificationId, int? resendToken) {
-          debugPrint('[FirebaseOTP] Code envoyé à $phoneNumber');
+          debugPrint('[FirebaseOTP] Code envoyé à $normalizedPhone');
           _verificationId = verificationId;
           _resendToken = resendToken;
           onStateChanged?.call(FirebaseOtpState.codeSent);

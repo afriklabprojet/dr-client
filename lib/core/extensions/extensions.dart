@@ -55,6 +55,35 @@ extension StringExtensions on String {
     }
     return this;
   }
+  
+  /// Normalise le numéro au format international E.164 (+225XXXXXXXXXX)
+  /// Requis pour Firebase Phone Auth
+  String get toInternationalPhone {
+    String cleaned = replaceAll(' ', '').replaceAll('-', '').replaceAll('(', '').replaceAll(')', '');
+    
+    // Déjà au bon format
+    if (cleaned.startsWith('+225')) {
+      return cleaned;
+    }
+    
+    // Format 00225...
+    if (cleaned.startsWith('00225')) {
+      return '+${cleaned.substring(2)}';
+    }
+    
+    // Format 225... (sans +)
+    if (cleaned.startsWith('225') && cleaned.length == 13) {
+      return '+$cleaned';
+    }
+    
+    // Format local 10 chiffres (0X XX XX XX XX)
+    if (cleaned.length == 10) {
+      return '+225$cleaned';
+    }
+    
+    // Retourner tel quel si format inconnu
+    return cleaned;
+  }
 }
 
 /// Extensions pour DateTime
