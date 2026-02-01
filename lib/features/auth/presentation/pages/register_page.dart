@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/errors/error_handler.dart';
@@ -362,7 +363,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             top: MediaQuery.of(context).padding.top + 10,
             left: 16,
             child: IconButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => context.go(AppRoutes.login),
               icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
               style: IconButton.styleFrom(
                 backgroundColor: Colors.white.withValues(alpha: 0.2),
@@ -381,7 +382,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       child: Row(
         children: [
           IconButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.go(AppRoutes.login),
             icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
             style: IconButton.styleFrom(
               backgroundColor: Colors.white.withValues(alpha: 0.2),
@@ -658,7 +659,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           ),
         ),
         GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
+          onTap: () => context.go(AppRoutes.login),
           child: Text(
             'Se connecter',
             style: TextStyle(

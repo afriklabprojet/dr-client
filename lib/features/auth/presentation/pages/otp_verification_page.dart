@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/ui_state_providers.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../config/providers.dart';
 import '../../../../home_page.dart';
 
@@ -495,7 +497,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
             top: MediaQuery.of(context).padding.top + 10,
             left: 16,
             child: IconButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => context.go(AppRoutes.register),
               icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
               style: IconButton.styleFrom(
                 backgroundColor: Colors.white.withValues(alpha: 0.2),
