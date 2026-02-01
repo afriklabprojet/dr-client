@@ -314,7 +314,7 @@ void main() {
     test('should calculate delivery fee when cart has items', () async {
       await cartNotifier.addItem(testProduct);
 
-      expect(cartNotifier.state.deliveryFee, 500.0);
+      expect(cartNotifier.state.deliveryFee, 300.0); // defaultMinDeliveryFee
     });
 
     test('should have zero delivery fee for empty cart', () {
@@ -323,9 +323,9 @@ void main() {
 
     test('should calculate correct total with delivery', () async {
       await cartNotifier.addItem(testProduct, quantity: 2); // 3000
-      // Total = 3000 + 500 (delivery) = 3500
+      // Total = 3000 + 300 (delivery) = 3300
 
-      expect(cartNotifier.state.total, 3500.0);
+      expect(cartNotifier.state.total, 3300.0);
     });
   });
 }

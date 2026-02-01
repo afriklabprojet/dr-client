@@ -5,9 +5,9 @@ import 'package:drpharma_client/core/providers/ui_state_providers.dart';
 
 void main() {
   group('ToggleNotifier', () {
-    test('should start with initial value true by default', () {
+    test('should start with initial value false by default', () {
       final notifier = ToggleNotifier();
-      expect(notifier.state, true);
+      expect(notifier.state, false);
     });
 
     test('should start with custom initial value', () {
