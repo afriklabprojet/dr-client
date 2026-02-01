@@ -6,7 +6,6 @@ import '../../../../config/providers.dart';
 
 // Provider IDs pour cette page
 const _forgotPwdLoadingId = 'forgot_pwd_loading';
-const _emailSentId = 'forgot_pwd_email_sent';
 const _errorFormId = 'forgot_pwd_error';
 
 /// Page de récupération de mot de passe
@@ -24,12 +23,14 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
   
   // UI state moved to Riverpod providers:
   // - _isLoading -> loadingProvider(_forgotPwdLoadingId)
-  // - _emailSent -> toggleProvider(_emailSentId) initialValue: false
   // - _errorMessage -> formFieldsProvider(_errorFormId)
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  
+  // Local state for emailSent - toggleProvider defaults to true which causes blank page
+  bool _emailSent = false;
 
   @override
   void initState() {
@@ -81,7 +82,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
             },
             (success) {
               ref.read(loadingProvider(_forgotPwdLoadingId).notifier).stopLoading();
-              ref.read(toggleProvider(_emailSentId).notifier).set(true);
+              setState(() => _emailSent = true);
             },
           );
         }
@@ -131,7 +132,6 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
     
     // Watch UI state providers
     final isLoading = ref.watch(loadingProvider(_forgotPwdLoadingId)).isLoading;
-    final emailSent = ref.watch(toggleProvider(_emailSentId));
     final errorMessage = ref.watch(formFieldsProvider(_errorFormId))['general'];
 
     return Scaffold(
@@ -265,7 +265,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (!emailSent) ...[
+                            if (!_emailSent) ...[
                               Text(
                                 'Réinitialisation',
                                 style: TextStyle(
@@ -592,7 +592,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
         const SizedBox(height: 16),
         TextButton(
           onPressed: () {
-            ref.read(toggleProvider(_emailSentId).notifier).set(false);
+            setState(() => _emailSent = false);
           },
           child: Text(
             'Renvoyer l\'email',
