@@ -15,6 +15,7 @@ import '../../features/pharmacies/presentation/pages/pharmacy_details_page.dart'
 import '../../features/pharmacies/presentation/pages/pharmacies_map_page.dart';
 import '../../features/pharmacies/presentation/pages/on_duty_pharmacies_map_page.dart';
 import '../../features/products/presentation/pages/product_details_page.dart';
+import '../../features/products/presentation/pages/all_products_page.dart';
 import '../../features/orders/presentation/pages/cart_page.dart';
 import '../../features/orders/presentation/pages/checkout_page.dart';
 import '../../features/orders/presentation/pages/orders_list_page.dart';
@@ -55,6 +56,7 @@ abstract class AppRoutes {
   static const onDutyPharmacies = '/on-duty-pharmacies';
 
   // Products
+  static const products = '/products';
   static const productDetails = '/products/:id';
 
   // Orders
@@ -171,6 +173,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // ===== Product Routes =====
+      GoRoute(
+        path: AppRoutes.products,
+        name: 'products',
+        builder: (context, state) => const AllProductsPage(),
+      ),
       GoRoute(
         path: AppRoutes.productDetails,
         name: 'productDetails',
@@ -348,6 +355,7 @@ extension GoRouterExtension on BuildContext {
   );
 
   // Product navigation - utilise push()
+  void goToProducts() => push(AppRoutes.products);
   void goToProductDetails(int productId) => push('/products/$productId');
 
   // Order navigation - utilise push() sauf pour orders list

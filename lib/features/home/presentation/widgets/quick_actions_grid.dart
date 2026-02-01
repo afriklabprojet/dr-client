@@ -23,11 +23,11 @@ class QuickActionsGrid extends StatelessWidget {
       children: [
         QuickActionCard(
           icon: Icons.medication_outlined,
-          title: 'Produits',
-          subtitle: 'Parcourir le catalogue',
+          title: 'Médicaments',
+          subtitle: 'Tous les produits',
           color: AppColors.primary,
           isDark: isDark,
-          onTap: () => context.goToPharmacies(), // ProductsListPage requires pharmacy
+          onTap: () => context.goToProducts(), // Navigate to all products page
         ),
         QuickActionCard(
           icon: Icons.emergency_outlined,
