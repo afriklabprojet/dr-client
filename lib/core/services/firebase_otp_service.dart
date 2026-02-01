@@ -88,35 +88,14 @@ class FirebaseOtpService {
     }
   }
   
-  RecaptchaVerifier? _recaptchaVerifier;
-  
   /// Envoi OTP pour le web avec reCAPTCHA
   Future<void> _sendOtpWeb(String normalizedPhone) async {
     try {
       debugPrint('[FirebaseOTP] Web: Tentative envoi SMS à $normalizedPhone');
       
-      // Créer le RecaptchaVerifier avec le conteneur HTML
-      _recaptchaVerifier?.clear();
-      _recaptchaVerifier = RecaptchaVerifier(
-        auth: _auth,
-        container: 'recaptcha-container',
-        size: RecaptchaVerifierSize.compact,
-        theme: RecaptchaVerifierTheme.light,
-        onSuccess: () {
-          debugPrint('[FirebaseOTP] reCAPTCHA validé avec succès');
-        },
-        onError: (FirebaseAuthException e) {
-          debugPrint('[FirebaseOTP] reCAPTCHA erreur: ${e.code} - ${e.message}');
-        },
-        onExpired: () {
-          debugPrint('[FirebaseOTP] reCAPTCHA expiré');
-        },
-      );
-      
-      final confirmationResult = await _auth.signInWithPhoneNumber(
-        normalizedPhone,
-        _recaptchaVerifier!,
-      );
+      // Sur le web, signInWithPhoneNumber gère automatiquement le reCAPTCHA
+      // Le reCAPTCHA s'affichera dans le conteneur 'recaptcha-container' si présent
+      final confirmationResult = await _auth.signInWithPhoneNumber(normalizedPhone);
       
       _verificationId = confirmationResult.verificationId;
       _webConfirmationResult = confirmationResult;
