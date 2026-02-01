@@ -215,3 +215,214 @@ class MockGetCurrentUserUseCase extends _i1.Mock
           )
           as _i5.Future<_i3.Either<_i6.Failure, _i11.UserEntity>>);
 }
+
+/// A class which mocks [AuthRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockAuthRepository extends _i1.Mock implements _i2.AuthRepository {
+  MockAuthRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, _i7.AuthResponseEntity>> login({
+    required String? email,
+    required String? password,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#login, [], {#email: email, #password: password}),
+            returnValue:
+                _i5.Future<
+                  _i3.Either<_i6.Failure, _i7.AuthResponseEntity>
+                >.value(
+                  _FakeEither_1<_i6.Failure, _i7.AuthResponseEntity>(
+                    this,
+                    Invocation.method(#login, [], {
+                      #email: email,
+                      #password: password,
+                    }),
+                  ),
+                ),
+          )
+          as _i5.Future<_i3.Either<_i6.Failure, _i7.AuthResponseEntity>>);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, _i7.AuthResponseEntity>> register({
+    required String? name,
+    required String? email,
+    required String? phone,
+    required String? password,
+    String? address,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#register, [], {
+              #name: name,
+              #email: email,
+              #phone: phone,
+              #password: password,
+              #address: address,
+            }),
+            returnValue:
+                _i5.Future<
+                  _i3.Either<_i6.Failure, _i7.AuthResponseEntity>
+                >.value(
+                  _FakeEither_1<_i6.Failure, _i7.AuthResponseEntity>(
+                    this,
+                    Invocation.method(#register, [], {
+                      #name: name,
+                      #email: email,
+                      #phone: phone,
+                      #password: password,
+                      #address: address,
+                    }),
+                  ),
+                ),
+          )
+          as _i5.Future<_i3.Either<_i6.Failure, _i7.AuthResponseEntity>>);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, void>> logout() =>
+      (super.noSuchMethod(
+            Invocation.method(#logout, []),
+            returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
+              _FakeEither_1<_i6.Failure, void>(
+                this,
+                Invocation.method(#logout, []),
+              ),
+            ),
+          )
+          as _i5.Future<_i3.Either<_i6.Failure, void>>);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, _i11.UserEntity>> getCurrentUser() =>
+      (super.noSuchMethod(
+            Invocation.method(#getCurrentUser, []),
+            returnValue:
+                _i5.Future<_i3.Either<_i6.Failure, _i11.UserEntity>>.value(
+                  _FakeEither_1<_i6.Failure, _i11.UserEntity>(
+                    this,
+                    Invocation.method(#getCurrentUser, []),
+                  ),
+                ),
+          )
+          as _i5.Future<_i3.Either<_i6.Failure, _i11.UserEntity>>);
+
+  @override
+  _i5.Future<bool> isLoggedIn() =>
+      (super.noSuchMethod(
+            Invocation.method(#isLoggedIn, []),
+            returnValue: _i5.Future<bool>.value(false),
+          )
+          as _i5.Future<bool>);
+
+  @override
+  _i5.Future<String?> getToken() =>
+      (super.noSuchMethod(
+            Invocation.method(#getToken, []),
+            returnValue: _i5.Future<String?>.value(),
+          )
+          as _i5.Future<String?>);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, void>> updatePassword({
+    required String? currentPassword,
+    required String? newPassword,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#updatePassword, [], {
+              #currentPassword: currentPassword,
+              #newPassword: newPassword,
+            }),
+            returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
+              _FakeEither_1<_i6.Failure, void>(
+                this,
+                Invocation.method(#updatePassword, [], {
+                  #currentPassword: currentPassword,
+                  #newPassword: newPassword,
+                }),
+              ),
+            ),
+          )
+          as _i5.Future<_i3.Either<_i6.Failure, void>>);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, _i7.AuthResponseEntity>> verifyOtp({
+    required String? identifier,
+    required String? otp,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#verifyOtp, [], {
+              #identifier: identifier,
+              #otp: otp,
+            }),
+            returnValue:
+                _i5.Future<
+                  _i3.Either<_i6.Failure, _i7.AuthResponseEntity>
+                >.value(
+                  _FakeEither_1<_i6.Failure, _i7.AuthResponseEntity>(
+                    this,
+                    Invocation.method(#verifyOtp, [], {
+                      #identifier: identifier,
+                      #otp: otp,
+                    }),
+                  ),
+                ),
+          )
+          as _i5.Future<_i3.Either<_i6.Failure, _i7.AuthResponseEntity>>);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, _i7.AuthResponseEntity>>
+  verifyFirebaseOtp({required String? phone, required String? firebaseUid}) =>
+      (super.noSuchMethod(
+            Invocation.method(#verifyFirebaseOtp, [], {
+              #phone: phone,
+              #firebaseUid: firebaseUid,
+            }),
+            returnValue:
+                _i5.Future<
+                  _i3.Either<_i6.Failure, _i7.AuthResponseEntity>
+                >.value(
+                  _FakeEither_1<_i6.Failure, _i7.AuthResponseEntity>(
+                    this,
+                    Invocation.method(#verifyFirebaseOtp, [], {
+                      #phone: phone,
+                      #firebaseUid: firebaseUid,
+                    }),
+                  ),
+                ),
+          )
+          as _i5.Future<_i3.Either<_i6.Failure, _i7.AuthResponseEntity>>);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, Map<String, dynamic>>> resendOtp({
+    required String? identifier,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#resendOtp, [], {#identifier: identifier}),
+            returnValue:
+                _i5.Future<_i3.Either<_i6.Failure, Map<String, dynamic>>>.value(
+                  _FakeEither_1<_i6.Failure, Map<String, dynamic>>(
+                    this,
+                    Invocation.method(#resendOtp, [], {
+                      #identifier: identifier,
+                    }),
+                  ),
+                ),
+          )
+          as _i5.Future<_i3.Either<_i6.Failure, Map<String, dynamic>>>);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, void>> forgotPassword({
+    required String? email,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#forgotPassword, [], {#email: email}),
+            returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
+              _FakeEither_1<_i6.Failure, void>(
+                this,
+                Invocation.method(#forgotPassword, [], {#email: email}),
+              ),
+            ),
+          )
+          as _i5.Future<_i3.Either<_i6.Failure, void>>);
+}

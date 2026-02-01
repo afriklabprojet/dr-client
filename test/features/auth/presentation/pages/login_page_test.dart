@@ -49,6 +49,7 @@ void main() {
   late MockLogoutUseCase mockLogoutUseCase;
   late MockGetCurrentUserUseCase mockGetCurrentUserUseCase;
   late MockNotificationService mockNotificationService;
+  late MockAuthRepository mockAuthRepository;
   late SharedPreferences sharedPreferences;
 
   setUp(() async {
@@ -57,6 +58,7 @@ void main() {
     mockLogoutUseCase = MockLogoutUseCase();
     mockGetCurrentUserUseCase = MockGetCurrentUserUseCase();
     mockNotificationService = MockNotificationService();
+    mockAuthRepository = MockAuthRepository();
     
     // Mock SharedPreferences
     SharedPreferences.setMockInitialValues({});
@@ -76,6 +78,7 @@ void main() {
       registerUseCase: mockRegisterUseCase,
       logoutUseCase: mockLogoutUseCase,
       getCurrentUserUseCase: mockGetCurrentUserUseCase,
+      authRepository: mockAuthRepository,
     );
     
     // Create a simple router for testing

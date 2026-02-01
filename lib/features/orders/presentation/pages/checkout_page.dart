@@ -14,6 +14,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../prescriptions/presentation/providers/prescriptions_provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/checkout_prescription_provider.dart';
+import '../providers/delivery_fee_provider.dart';
 import '../../domain/entities/order_item_entity.dart';
 import '../../domain/entities/delivery_address_entity.dart';
 import '../providers/orders_state.dart';
@@ -65,9 +66,16 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     if (state.defaultAddress != null) {
       ref.read(selectedAddressProvider.notifier).state = state.defaultAddress;
       ref.read(toggleProvider(_useManualAddressId).notifier).set(false);
+      // Calculer les frais de livraison pour l'adresse par défaut
+      _calculateDeliveryFee(state.defaultAddress!);
     } else if (state.addresses.isEmpty) {
       ref.read(toggleProvider(_useManualAddressId).notifier).set(true);
     }
+  }
+
+  /// Calculer les frais de livraison pour une adresse
+  void _calculateDeliveryFee(AddressEntity address) {
+    ref.read(deliveryFeeProvider.notifier).estimateDeliveryFee(address: address);
   }
 
   void _prefillUserPhone() {
@@ -115,6 +123,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       });
     }
 
+    // État des frais de livraison
+    final deliveryFeeState = ref.watch(deliveryFeeProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Validation de la commande'),
@@ -129,12 +140,14 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Order Summary
+                    // Order Summary avec frais de livraison dynamiques
                     OrderSummaryCard(
                       items: cartState.items,
                       subtotal: cartState.subtotal,
                       deliveryFee: cartState.deliveryFee,
                       total: cartState.total,
+                      distanceKm: cartState.deliveryDistanceKm,
+                      isLoadingDeliveryFee: deliveryFeeState.isLoading,
                       currencyFormat: currencyFormat,
                     ),
                     const SizedBox(height: 24),
@@ -156,9 +169,19 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                       selectedAddress: selectedSavedAddress,
                       onToggleManualAddress: (manual) {
                         ref.read(toggleProvider(_useManualAddressId).notifier).set(manual);
+                        if (manual) {
+                          // Réinitialiser les frais si adresse manuelle
+                          ref.read(deliveryFeeProvider.notifier).reset();
+                        }
                       },
                       onAddressSelected: (address) {
                         ref.read(selectedAddressProvider.notifier).state = address;
+                        // Calculer les frais pour la nouvelle adresse
+                        if (address != null) {
+                          _calculateDeliveryFee(address);
+                        } else {
+                          ref.read(deliveryFeeProvider.notifier).reset();
+                        }
                       },
                       addressController: _addressController,
                       cityController: _cityController,

@@ -10,6 +10,8 @@ class OrderSummaryCard extends StatelessWidget {
   final double deliveryFee;
   final double total;
   final NumberFormat currencyFormat;
+  final double? distanceKm;
+  final bool isLoadingDeliveryFee;
 
   const OrderSummaryCard({
     super.key,
@@ -18,6 +20,8 @@ class OrderSummaryCard extends StatelessWidget {
     required this.deliveryFee,
     required this.total,
     required this.currencyFormat,
+    this.distanceKm,
+    this.isLoadingDeliveryFee = false,
   });
 
   @override
@@ -37,12 +41,54 @@ class OrderSummaryCard extends StatelessWidget {
             const Divider(height: 24),
             _buildSummaryRow('Sous-total', subtotal),
             const SizedBox(height: 8),
-            _buildSummaryRow('Frais de livraison', deliveryFee),
+            _buildDeliveryFeeRow(),
             const SizedBox(height: 8),
             _buildTotalRow(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDeliveryFeeRow() {
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Frais de livraison'),
+              if (distanceKm != null)
+                Text(
+                  '${distanceKm!.toStringAsFixed(1)} km',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: isLoadingDeliveryFee
+              ? const Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ],
+                )
+              : Text(
+                  currencyFormat.format(deliveryFee),
+                  textAlign: TextAlign.end,
+                ),
+        ),
+      ],
     );
   }
 
