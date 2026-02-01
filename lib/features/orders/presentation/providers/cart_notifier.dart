@@ -254,4 +254,23 @@ class CartNotifier extends StateNotifier<CartState> {
       );
     }
   }
+
+  /// Mettre à jour les frais de livraison calculés dynamiquement
+  /// Appelé depuis le checkout quand l'adresse de livraison est sélectionnée
+  void updateDeliveryFee({
+    required double deliveryFee,
+    double? distanceKm,
+  }) {
+    state = state.copyWith(
+      calculatedDeliveryFee: deliveryFee,
+      deliveryDistanceKm: distanceKm,
+    );
+  }
+
+  /// Réinitialiser les frais de livraison (quand l'adresse change)
+  void clearDeliveryFee() {
+    state = state.copyWith(
+      clearDeliveryFee: true,
+    );
+  }
 }

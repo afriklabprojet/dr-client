@@ -13,19 +13,30 @@ class CartState extends Equatable {
   final List<CartItemEntity> items;
   final String? errorMessage;
   final int? selectedPharmacyId;
+  
+  /// Frais de livraison calculés dynamiquement selon la distance
+  /// null = pas encore calculé (utiliser le minimum par défaut)
+  final double? calculatedDeliveryFee;
+  
+  /// Distance en km pour la livraison (pour affichage)
+  final double? deliveryDistanceKm;
 
   const CartState({
     required this.status,
     required this.items,
     this.errorMessage,
     this.selectedPharmacyId,
+    this.calculatedDeliveryFee,
+    this.deliveryDistanceKm,
   });
 
   const CartState.initial()
       : status = CartStatus.initial,
         items = const [],
         errorMessage = null,
-        selectedPharmacyId = null;
+        selectedPharmacyId = null,
+        calculatedDeliveryFee = null,
+        deliveryDistanceKm = null;
 
   CartState copyWith({
     CartStatus? status,
@@ -33,17 +44,22 @@ class CartState extends Equatable {
     String? errorMessage,
     int? selectedPharmacyId,
     bool clearPharmacyId = false,
+    double? calculatedDeliveryFee,
+    double? deliveryDistanceKm,
+    bool clearDeliveryFee = false,
   }) {
     return CartState(
       status: status ?? this.status,
       items: items ?? this.items,
       errorMessage: errorMessage,
       selectedPharmacyId: clearPharmacyId ? null : (selectedPharmacyId ?? this.selectedPharmacyId),
+      calculatedDeliveryFee: clearDeliveryFee ? null : (calculatedDeliveryFee ?? this.calculatedDeliveryFee),
+      deliveryDistanceKm: clearDeliveryFee ? null : (deliveryDistanceKm ?? this.deliveryDistanceKm),
     );
   }
 
   @override
-  List<Object?> get props => [status, items, errorMessage, selectedPharmacyId];
+  List<Object?> get props => [status, items, errorMessage, selectedPharmacyId, calculatedDeliveryFee, deliveryDistanceKm];
 
   // Helper getters
   bool get isEmpty => items.isEmpty;
@@ -60,8 +76,20 @@ class CartState extends Equatable {
   
   double get subtotal => items.fold(0.0, (sum, item) => sum + item.totalPrice);
   
-  // Delivery fee calculation (simplified - 500 XOF flat rate)
-  double get deliveryFee => isNotEmpty ? 500.0 : 0.0;
+  /// Frais de livraison minimum par défaut (utilisé avant calcul)
+  static const double defaultMinDeliveryFee = 300.0;
+  
+  /// Frais de livraison:
+  /// - Si calculés dynamiquement: utilise calculatedDeliveryFee
+  /// - Sinon: utilise le minimum par défaut (300 FCFA)
+  /// - Si panier vide: 0
+  double get deliveryFee {
+    if (isEmpty) return 0.0;
+    return calculatedDeliveryFee ?? defaultMinDeliveryFee;
+  }
+  
+  /// Indique si les frais ont été calculés dynamiquement
+  bool get hasCalculatedDeliveryFee => calculatedDeliveryFee != null;
   
   double get total => subtotal + deliveryFee;
 
