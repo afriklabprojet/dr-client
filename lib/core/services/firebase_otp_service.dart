@@ -75,72 +75,110 @@ class FirebaseOtpService {
       final normalizedPhone = phoneNumber.toInternationalPhone;
       debugPrint('[FirebaseOTP] Numéro normalisé: $normalizedPhone (original: $phoneNumber)');
       
-      await _auth.verifyPhoneNumber(
-        phoneNumber: normalizedPhone,
-        timeout: timeout,
-        
-        // Appelé quand le code est envoyé avec succès
-        codeSent: (String verificationId, int? resendToken) {
-          debugPrint('[FirebaseOTP] Code envoyé à $normalizedPhone');
-          _verificationId = verificationId;
-          _resendToken = resendToken;
-          onStateChanged?.call(FirebaseOtpState.codeSent);
-        },
-        
-        // Appelé si le code est automatiquement récupéré (Android uniquement)
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          debugPrint('[FirebaseOTP] Vérification automatique complétée');
-          onCodeAutoRetrieved?.call();
-          // Auto-sign in
-          try {
-            await _auth.signInWithCredential(credential);
-            onStateChanged?.call(FirebaseOtpState.verified);
-          } catch (e) {
-            debugPrint('[FirebaseOTP] Erreur auto-sign in: $e');
-            onStateChanged?.call(FirebaseOtpState.error, error: e.toString());
-          }
-        },
-        
-        // Appelé en cas d'échec
-        verificationFailed: (FirebaseAuthException e) {
-          debugPrint('[FirebaseOTP] Échec de vérification: ${e.message}');
-          String errorMessage = _getErrorMessage(e);
-          onStateChanged?.call(FirebaseOtpState.error, error: errorMessage);
-        },
-        
-        // Appelé quand le timeout est atteint
-        codeAutoRetrievalTimeout: (String verificationId) {
-          debugPrint('[FirebaseOTP] Timeout auto-retrieval');
-          _verificationId = verificationId;
-          onStateChanged?.call(FirebaseOtpState.timeout);
-        },
-        
-        // Token pour renvoyer le code
-        forceResendingToken: _resendToken,
-      );
+      if (kIsWeb) {
+        // Sur le web, utiliser signInWithPhoneNumber avec reCAPTCHA
+        await _sendOtpWeb(normalizedPhone);
+      } else {
+        // Sur mobile, utiliser verifyPhoneNumber
+        await _sendOtpMobile(normalizedPhone, timeout);
+      }
     } catch (e) {
       debugPrint('[FirebaseOTP] Erreur sendOtp: $e');
       onStateChanged?.call(FirebaseOtpState.error, error: e.toString());
     }
   }
+  
+  /// Envoi OTP pour le web avec reCAPTCHA
+  Future<void> _sendOtpWeb(String normalizedPhone) async {
+    try {
+      // Sur le web, Firebase gère automatiquement le reCAPTCHA
+      final confirmationResult = await _auth.signInWithPhoneNumber(normalizedPhone);
+      
+      _verificationId = confirmationResult.verificationId;
+      _webConfirmationResult = confirmationResult;
+      debugPrint('[FirebaseOTP] Code envoyé (web) à $normalizedPhone');
+      onStateChanged?.call(FirebaseOtpState.codeSent);
+    } catch (e) {
+      debugPrint('[FirebaseOTP] Erreur web sendOtp: $e');
+      if (e is FirebaseAuthException) {
+        onStateChanged?.call(FirebaseOtpState.error, error: _getErrorMessage(e));
+      } else {
+        onStateChanged?.call(FirebaseOtpState.error, error: e.toString());
+      }
+    }
+  }
+  
+  ConfirmationResult? _webConfirmationResult;
+  
+  /// Envoi OTP pour mobile
+  Future<void> _sendOtpMobile(String normalizedPhone, Duration timeout) async {
+    await _auth.verifyPhoneNumber(
+      phoneNumber: normalizedPhone,
+      timeout: timeout,
+      
+      // Appelé quand le code est envoyé avec succès
+      codeSent: (String verificationId, int? resendToken) {
+        debugPrint('[FirebaseOTP] Code envoyé à $normalizedPhone');
+        _verificationId = verificationId;
+        _resendToken = resendToken;
+        onStateChanged?.call(FirebaseOtpState.codeSent);
+      },
+      
+      // Appelé si le code est automatiquement récupéré (Android uniquement)
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        debugPrint('[FirebaseOTP] Vérification automatique complétée');
+        onCodeAutoRetrieved?.call();
+        // Auto-sign in
+        try {
+          await _auth.signInWithCredential(credential);
+          onStateChanged?.call(FirebaseOtpState.verified);
+        } catch (e) {
+          debugPrint('[FirebaseOTP] Erreur auto-sign in: $e');
+          onStateChanged?.call(FirebaseOtpState.error, error: e.toString());
+        }
+      },
+      
+      // Appelé en cas d'échec
+      verificationFailed: (FirebaseAuthException e) {
+        debugPrint('[FirebaseOTP] Échec de vérification: ${e.message}');
+        String errorMessage = _getErrorMessage(e);
+        onStateChanged?.call(FirebaseOtpState.error, error: errorMessage);
+      },
+      
+      // Appelé quand le timeout est atteint
+      codeAutoRetrievalTimeout: (String verificationId) {
+        debugPrint('[FirebaseOTP] Timeout auto-retrieval');
+        _verificationId = verificationId;
+        onStateChanged?.call(FirebaseOtpState.timeout);
+      },
+      
+      // Token pour renvoyer le code
+      forceResendingToken: _resendToken,
+    );
+  }
 
   /// Vérifie le code OTP entré par l'utilisateur
   Future<FirebaseOtpResult> verifyOtp(String smsCode) async {
-    if (_verificationId == null) {
+    if (_verificationId == null && _webConfirmationResult == null) {
       return FirebaseOtpResult.error('Aucun code n\'a été envoyé. Veuillez réessayer.');
     }
 
     try {
       onStateChanged?.call(FirebaseOtpState.verifying);
       
-      // Créer le credential avec le code SMS
-      final credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId!,
-        smsCode: smsCode,
-      );
+      UserCredential userCredential;
       
-      // Se connecter avec le credential
-      final userCredential = await _auth.signInWithCredential(credential);
+      if (kIsWeb && _webConfirmationResult != null) {
+        // Sur le web, utiliser confirmationResult.confirm()
+        userCredential = await _webConfirmationResult!.confirm(smsCode);
+      } else {
+        // Sur mobile, utiliser le credential classique
+        final credential = PhoneAuthProvider.credential(
+          verificationId: _verificationId!,
+          smsCode: smsCode,
+        );
+        userCredential = await _auth.signInWithCredential(credential);
+      }
       
       debugPrint('[FirebaseOTP] Vérification réussie: ${userCredential.user?.uid}');
       onStateChanged?.call(FirebaseOtpState.verified);
@@ -166,6 +204,8 @@ class FirebaseOtpService {
     required String phoneNumber,
     Duration timeout = const Duration(seconds: 60),
   }) async {
+    // Réinitialiser pour le web
+    _webConfirmationResult = null;
     // Réinitialiser et renvoyer
     await sendOtp(phoneNumber: phoneNumber, timeout: timeout);
   }
