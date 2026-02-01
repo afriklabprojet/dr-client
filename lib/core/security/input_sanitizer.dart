@@ -26,7 +26,8 @@ class InputSanitizer {
 
   /// Patterns d'injection SQL
   static final List<RegExp> _sqlPatterns = [
-    RegExp(r'''['"]?\s*(or|and)\s*['"]?1\s*=\s*1''', caseSensitive: false),
+    // Pattern: ['"]? (or|and) ['"]? 1=1
+    RegExp(r'[\x27\x22]?\s*(or|and)\s*[\x27\x22]?1\s*=\s*1', caseSensitive: false),
     RegExp(r';\s*(drop|delete|truncate|alter|update|insert)', caseSensitive: false),
     RegExp(r'union\s+(all\s+)?select', caseSensitive: false),
     RegExp(r'--\s*$', multiLine: true),
@@ -131,7 +132,7 @@ class InputSanitizer {
 
     // Autoriser lettres, chiffres, espaces et ponctuation basique
     // Supprimer: < > " ' \ [ ] { } | ^ `
-    sanitized = sanitized.replaceAll(RegExp(r'''[<>"'\\{}\[\]|^`]'''), '');
+    sanitized = sanitized.replaceAll(RegExp(r'[<>\x22\x27\\{}\[\]|^`]'), '');
 
     return _normalizeWhitespace(sanitized);
   }
