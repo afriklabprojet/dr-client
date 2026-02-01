@@ -7,6 +7,7 @@ import '../../domain/entities/update_profile_entity.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_local_datasource.dart';
 import '../datasources/profile_remote_datasource.dart';
+import '../models/update_profile_model.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource remoteDataSource;
@@ -42,8 +43,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
     UpdateProfileEntity updateProfile,
   ) async {
     try {
+      // Convertir Entity → Model pour la sérialisation
+      final updateModel = UpdateProfileModel.fromEntity(updateProfile);
       final profileModel = await remoteDataSource.updateProfile(
-        updateProfile.toJson(),
+        updateModel.toJson(),
       );
       await localDataSource.cacheProfile(profileModel);
       return Right(profileModel.toEntity());

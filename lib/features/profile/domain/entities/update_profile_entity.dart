@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+/// Entité représentant les données de mise à jour du profil
+/// Note: La sérialisation est gérée par UpdateProfileModel dans le layer Data
 class UpdateProfileEntity extends Equatable {
   final String? name;
   final String? email;
@@ -19,21 +21,6 @@ class UpdateProfileEntity extends Equatable {
 
   bool get hasPasswordChange =>
       currentPassword != null && newPassword != null;
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = {};
-
-    if (name != null) json['name'] = name;
-    if (email != null) json['email'] = email;
-    if (phone != null) json['phone'] = phone;
-    if (currentPassword != null) json['current_password'] = currentPassword;
-    if (newPassword != null) json['password'] = newPassword;
-    if (newPasswordConfirmation != null) {
-      json['password_confirmation'] = newPasswordConfirmation;
-    }
-
-    return json;
-  }
 
   @override
   List<Object?> get props => [

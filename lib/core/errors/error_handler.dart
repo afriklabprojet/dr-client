@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../services/app_logger.dart';
@@ -21,7 +21,8 @@ class ErrorHandler {
       return _handleDioError(error);
     }
 
-    if (error is SocketException) {
+    // SocketException n'existe pas sur Web - vérifier le type par nom
+    if (!kIsWeb && error.runtimeType.toString() == 'SocketException') {
       return 'Pas de connexion internet';
     }
 
@@ -59,7 +60,8 @@ class ErrorHandler {
         return 'Certificat de sécurité invalide';
 
       case DioExceptionType.unknown:
-        if (error.error is SocketException) {
+        // SocketException n'existe pas sur Web
+        if (!kIsWeb && error.error?.runtimeType.toString() == 'SocketException') {
           return 'Pas de connexion internet';
         }
         return 'Erreur de connexion';
