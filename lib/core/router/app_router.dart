@@ -174,12 +174,12 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ===== Product Routes =====
       GoRoute(
-        path: AppRoutes.products,
-        name: 'products',
+        path: '/products',
+        name: 'productsList',
         builder: (context, state) => const AllProductsPage(),
       ),
       GoRoute(
-        path: AppRoutes.productDetails,
+        path: '/products/:id',
         name: 'productDetails',
         builder: (context, state) {
           final productId = int.parse(state.pathParameters['id']!);
@@ -355,7 +355,7 @@ extension GoRouterExtension on BuildContext {
   );
 
   // Product navigation - utilise push()
-  void goToProducts() => push(AppRoutes.products);
+  void goToProducts() => pushNamed('productsList');
   void goToProductDetails(int productId) => push('/products/$productId');
 
   // Order navigation - utilise push() sauf pour orders list
