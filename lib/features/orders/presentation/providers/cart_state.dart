@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/cart_item_entity.dart';
+import '../../data/datasources/pricing_datasource.dart';
 
 enum CartStatus {
   initial,
@@ -20,6 +21,12 @@ class CartState extends Equatable {
   
   /// Distance en km pour la livraison (pour affichage)
   final double? deliveryDistanceKm;
+  
+  /// Configuration de tarification (frais de service et paiement)
+  final PricingConfig? pricingConfig;
+  
+  /// Mode de paiement sélectionné (pour calcul des frais de paiement)
+  final String paymentMode;
 
   const CartState({
     required this.status,
@@ -28,6 +35,8 @@ class CartState extends Equatable {
     this.selectedPharmacyId,
     this.calculatedDeliveryFee,
     this.deliveryDistanceKm,
+    this.pricingConfig,
+    this.paymentMode = 'cash',
   });
 
   const CartState.initial()
@@ -36,7 +45,9 @@ class CartState extends Equatable {
         errorMessage = null,
         selectedPharmacyId = null,
         calculatedDeliveryFee = null,
-        deliveryDistanceKm = null;
+        deliveryDistanceKm = null,
+        pricingConfig = null,
+        paymentMode = 'cash';
 
   CartState copyWith({
     CartStatus? status,
@@ -47,6 +58,8 @@ class CartState extends Equatable {
     double? calculatedDeliveryFee,
     double? deliveryDistanceKm,
     bool clearDeliveryFee = false,
+    PricingConfig? pricingConfig,
+    String? paymentMode,
   }) {
     return CartState(
       status: status ?? this.status,
@@ -55,11 +68,13 @@ class CartState extends Equatable {
       selectedPharmacyId: clearPharmacyId ? null : (selectedPharmacyId ?? this.selectedPharmacyId),
       calculatedDeliveryFee: clearDeliveryFee ? null : (calculatedDeliveryFee ?? this.calculatedDeliveryFee),
       deliveryDistanceKm: clearDeliveryFee ? null : (deliveryDistanceKm ?? this.deliveryDistanceKm),
+      pricingConfig: pricingConfig ?? this.pricingConfig,
+      paymentMode: paymentMode ?? this.paymentMode,
     );
   }
 
   @override
-  List<Object?> get props => [status, items, errorMessage, selectedPharmacyId, calculatedDeliveryFee, deliveryDistanceKm];
+  List<Object?> get props => [status, items, errorMessage, selectedPharmacyId, calculatedDeliveryFee, deliveryDistanceKm, pricingConfig, paymentMode];
 
   // Helper getters
   bool get isEmpty => items.isEmpty;
@@ -91,7 +106,26 @@ class CartState extends Equatable {
   /// Indique si les frais ont été calculés dynamiquement
   bool get hasCalculatedDeliveryFee => calculatedDeliveryFee != null;
   
-  double get total => subtotal + deliveryFee;
+  /// Frais de service (pourcentage sur le subtotal)
+  /// Calculés depuis la config si disponible, sinon 0
+  double get serviceFee {
+    if (isEmpty || pricingConfig == null) return 0.0;
+    return pricingConfig!.service.serviceFee.calculateFee(subtotal.toInt()).toDouble();
+  }
+  
+  /// Frais de paiement (pour paiement en ligne uniquement)
+  /// 0 pour paiement en espèces
+  double get paymentFee {
+    if (isEmpty || pricingConfig == null) return 0.0;
+    final amountBeforePayment = subtotal + deliveryFee + serviceFee;
+    return pricingConfig!.service.paymentFee.calculateFee(amountBeforePayment.toInt(), paymentMode).toDouble();
+  }
+  
+  /// Indique si la config de tarification est chargée
+  bool get hasPricingConfig => pricingConfig != null;
+  
+  /// Total incluant tous les frais
+  double get total => subtotal + deliveryFee + serviceFee + paymentFee;
 
   // Check if cart has items from a specific pharmacy
   bool hasPharmacyItems(int pharmacyId) {

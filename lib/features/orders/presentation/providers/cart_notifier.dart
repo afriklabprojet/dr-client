@@ -6,6 +6,7 @@ import '../../../products/data/models/product_model.dart';
 import '../../../products/data/models/pharmacy_model.dart';
 import '../../../products/data/models/category_model.dart';
 import '../../domain/entities/cart_item_entity.dart';
+import '../../data/datasources/pricing_datasource.dart';
 import 'cart_state.dart';
 
 class CartNotifier extends StateNotifier<CartState> {
@@ -272,5 +273,17 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(
       clearDeliveryFee: true,
     );
+  }
+
+  /// Mettre à jour la configuration de tarification
+  /// Appelé au démarrage ou quand on ouvre le panier
+  void updatePricingConfig(PricingConfig config) {
+    state = state.copyWith(pricingConfig: config);
+  }
+
+  /// Mettre à jour le mode de paiement sélectionné
+  /// Affecte le calcul des frais de paiement
+  void updatePaymentMode(String paymentMode) {
+    state = state.copyWith(paymentMode: paymentMode);
   }
 }

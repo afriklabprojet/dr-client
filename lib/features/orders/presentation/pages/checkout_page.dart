@@ -15,6 +15,7 @@ import '../../../prescriptions/presentation/providers/prescriptions_provider.dar
 import '../providers/cart_provider.dart';
 import '../providers/checkout_prescription_provider.dart';
 import '../providers/delivery_fee_provider.dart';
+import '../providers/pricing_provider.dart';
 import '../../domain/entities/order_item_entity.dart';
 import '../../domain/entities/delivery_address_entity.dart';
 import '../providers/orders_state.dart';
@@ -57,7 +58,17 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAndSelectDefaultAddress();
       _prefillUserPhone();
+      _loadPricingConfig();
     });
+  }
+
+  /// Charger la configuration de tarification (frais de service et paiement)
+  Future<void> _loadPricingConfig() async {
+    await ref.read(pricingProvider.notifier).loadPricing();
+    final pricingState = ref.read(pricingProvider);
+    if (pricingState.config != null) {
+      ref.read(cartProvider.notifier).updatePricingConfig(pricingState.config!);
+    }
   }
 
   Future<void> _loadAndSelectDefaultAddress() async {
@@ -140,15 +151,18 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Order Summary avec frais de livraison dynamiques
+                    // Order Summary avec frais de livraison, service et paiement
                     OrderSummaryCard(
                       items: cartState.items,
                       subtotal: cartState.subtotal,
                       deliveryFee: cartState.deliveryFee,
+                      serviceFee: cartState.serviceFee,
+                      paymentFee: cartState.paymentFee,
                       total: cartState.total,
                       distanceKm: cartState.deliveryDistanceKm,
                       isLoadingDeliveryFee: deliveryFeeState.isLoading,
                       currencyFormat: currencyFormat,
+                      paymentMode: paymentMode,
                     ),
                     const SizedBox(height: 24),
 
@@ -202,6 +216,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                       selectedMode: paymentMode,
                       onModeChanged: (mode) {
                         ref.read(formFieldsProvider(_paymentModeId).notifier).setField('mode', mode);
+                        // Mettre à jour le mode de paiement dans le cart pour recalculer les frais
+                        ref.read(cartProvider.notifier).updatePaymentMode(mode);
                       },
                     ),
                     const SizedBox(height: 24),
