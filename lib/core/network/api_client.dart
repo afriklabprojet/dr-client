@@ -26,9 +26,9 @@ class ApiClient {
           // Add auth token if available
           if (_accessToken != null) {
             options.headers['Authorization'] = 'Bearer $_accessToken';
-            print('[ApiClient] Request to ${options.path} with token');
+            AppLogger.debug('[ApiClient] Request to ${options.path} with token');
           } else {
-            print('[ApiClient] Request to ${options.path} WITHOUT token!');
+            AppLogger.warning('[ApiClient] Request to ${options.path} WITHOUT token!');
           }
           return handler.next(options);
         },
@@ -48,12 +48,13 @@ class ApiClient {
 
   void setToken(String token) {
     _accessToken = token;
-    print('[ApiClient] Token set: ${token.substring(0, 20)}...');
+    // Ne PAS logger le token, même partiellement - risque de sécurité
+    AppLogger.debug('[ApiClient] Token configured');
   }
 
   void clearToken() {
     _accessToken = null;
-    print('[ApiClient] Token cleared');
+    AppLogger.debug('[ApiClient] Token cleared');
   }
 
   bool get hasToken => _accessToken != null;
