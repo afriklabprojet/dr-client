@@ -63,7 +63,9 @@ class AccessibilityService {
   }
 
   /// Annonce un message au lecteur d'écran
+  // ignore: deprecated_member_use
   static void announce(String message, {TextDirection textDirection = TextDirection.ltr}) {
+    // ignore: deprecated_member_use
     SemanticsService.announce(message, textDirection);
   }
 

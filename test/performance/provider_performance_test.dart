@@ -232,7 +232,6 @@ void main() {
 
     group('Concurrent Access Simulation', () {
       test('should handle simulated concurrent reads and writes', () {
-        const readIterations = 1000;
         const writeIterations = 500;
         const maxDurationMs = 150;
         
@@ -245,7 +244,7 @@ void main() {
           container.read(formFieldsProvider('concurrent').notifier)
               .setField('field', 'value_$i');
           
-          // Read twice per write
+          // Read twice per write (simulating 1000 reads)
           container.read(toggleProvider('concurrent'));
           container.read(formFieldsProvider('concurrent'));
         }

@@ -2,12 +2,13 @@ import 'package:dio/dio.dart';
 import '../constants/api_constants.dart';
 import '../errors/exceptions.dart';
 import '../services/app_logger.dart';
+import '../security/certificate_pinning.dart';
 
 class ApiClient {
   late final Dio _dio;
   String? _accessToken;
 
-  ApiClient() {
+  ApiClient({bool enableCertificatePinning = true}) {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
@@ -19,6 +20,12 @@ class ApiClient {
         },
       ),
     );
+
+    // Configurer le Certificate Pinning pour la sécurité
+    if (enableCertificatePinning) {
+      _dio.enableCertificatePinning();
+      _dio.interceptors.add(CertificatePinningInterceptor());
+    }
 
     _dio.interceptors.add(
       InterceptorsWrapper(

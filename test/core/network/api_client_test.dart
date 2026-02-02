@@ -1,13 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
 
 import 'package:drpharma_client/core/network/api_client.dart';
 import 'package:drpharma_client/core/errors/exceptions.dart';
 import 'package:drpharma_client/core/config/env_config.dart';
-
-import 'api_client_test.mocks.dart';
 
 // We need to test ApiClient behavior without actual network calls
 // We'll use a custom approach by extending ApiClient for testing

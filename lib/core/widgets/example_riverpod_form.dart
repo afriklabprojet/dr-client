@@ -197,11 +197,12 @@ class _ExampleHybridFormWidgetState
     ref.read(loadingProvider('hybrid_form').notifier).startLoading();
 
     try {
-      // Utiliser les valeurs des controllers
-      final email = _emailController.text;
+      // Utiliser les valeurs des controllers pour l'appel API
+      final email = _emailController.text.trim();
       final password = _passwordController.text;
 
-      // Appel API...
+      // Appel API avec les credentials
+      debugPrint('Submitting form with email: $email, password length: ${password.length}');
       await Future.delayed(const Duration(seconds: 1));
 
       ref.read(loadingProvider('hybrid_form').notifier).stopLoading();
