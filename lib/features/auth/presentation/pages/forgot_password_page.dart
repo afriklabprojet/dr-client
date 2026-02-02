@@ -136,9 +136,11 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
     final isLoading = ref.watch(loadingProvider(_forgotPwdLoadingId)).isLoading;
     final errorMessage = ref.watch(formFieldsProvider(_errorFormId))['general'];
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
-      body: Stack(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
+        body: Stack(
         children: [
           // Background Design
           Positioned(
@@ -376,8 +378,9 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage>
             ),
           ),
         ],
-      ),
-    );
+      ), // Closing Stack
+      ), // Closing Scaffold
+    ); // Closing PopScope
   }
 
   Widget _buildTextField({

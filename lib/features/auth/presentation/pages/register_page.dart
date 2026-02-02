@@ -208,9 +208,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final obscureConfirm = ref.watch(toggleProvider(_obscureConfirmId));
     final acceptTerms = ref.watch(toggleProvider(_acceptTermsId));
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
-      body: Stack(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.grey[50],
+        body: Stack(
         children: [
           // Background Design
           Positioned(
@@ -383,8 +385,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             ),
           ),
         ],
-      ),
-    );
+      ), // Closing Stack
+      ), // Closing Scaffold
+    ); // Closing PopScope
   }
 
   Widget _buildHeader(bool isDark) {

@@ -58,31 +58,43 @@ extension StringExtensions on String {
   
   /// Normalise le numéro au format international E.164 (+225XXXXXXXXXX)
   /// Requis pour Firebase Phone Auth
+  /// IMPORTANT: Valide strictement le format pour éviter les bypass
   String get toInternationalPhone {
     String cleaned = replaceAll(' ', '').replaceAll('-', '').replaceAll('(', '').replaceAll(')', '');
     
-    // Déjà au bon format
-    if (cleaned.startsWith('+225')) {
-      return cleaned;
+    // Déjà au bon format +225 suivi de exactement 10 chiffres
+    if (cleaned.startsWith('+225') && cleaned.length == 14) {
+      // Vérifier que les 10 chiffres commencent par 0
+      final localPart = cleaned.substring(4); // Retire +225
+      if (localPart.length == 10 && localPart.startsWith('0')) {
+        return cleaned;
+      }
+      // Format invalide - ne pas accepter
+      throw FormatException('Format de numéro invalide: doit être +225 suivi de 10 chiffres commençant par 0');
     }
     
-    // Format 00225...
-    if (cleaned.startsWith('00225')) {
-      return '+${cleaned.substring(2)}';
+    // Format 00225... (14 caractères)
+    if (cleaned.startsWith('00225') && cleaned.length == 15) {
+      final localPart = cleaned.substring(5); // Retire 00225
+      if (localPart.length == 10 && localPart.startsWith('0')) {
+        return '+${cleaned.substring(2)}';
+      }
+      throw FormatException('Format de numéro invalide: doit être 00225 suivi de 10 chiffres commençant par 0');
     }
     
-    // Format 225... (sans +)
-    if (cleaned.startsWith('225') && cleaned.length == 13) {
-      return '+$cleaned';
+    // Format 225... (sans +) - REJETER ce format pour éviter les bypass
+    // Auparavant, ce format permettait de contourner la validation
+    if (cleaned.startsWith('225') && !cleaned.startsWith('2250')) {
+      throw FormatException('Format de numéro invalide: utilisez le format local (0X XX XX XX XX) ou international (+225...)');
     }
     
-    // Format local 10 chiffres (0X XX XX XX XX)
-    if (cleaned.length == 10) {
+    // Format local 10 chiffres (0X XX XX XX XX) - SEUL FORMAT LOCAL ACCEPTÉ
+    if (cleaned.length == 10 && cleaned.startsWith('0')) {
       return '+225$cleaned';
     }
     
-    // Retourner tel quel si format inconnu
-    return cleaned;
+    // Tout autre format est invalide
+    throw FormatException('Format de numéro invalide: doit être 10 chiffres commençant par 0, ou format international +225...');
   }
 }
 

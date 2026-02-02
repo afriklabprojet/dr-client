@@ -226,8 +226,10 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
     final errorMessage = otpState.errorMessage;
     final state = otpState.state;
 
-    return Scaffold(
-      body: Container(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -336,8 +338,9 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
             ],
           ),
         ),
-      ),
-    );
+      ), // Closing Container
+      ), // Closing Scaffold
+    ); // Closing PopScope
   }
 
   Widget _buildStatusWidget(FirebaseOtpState state) {

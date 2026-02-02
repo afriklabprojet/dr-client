@@ -72,7 +72,16 @@ class FirebaseOtpService {
       onStateChanged?.call(FirebaseOtpState.initial);
       
       // Normaliser le numéro au format international E.164
-      final normalizedPhone = phoneNumber.toInternationalPhone;
+      // Cette opération peut lancer une FormatException si le format est invalide
+      final String normalizedPhone;
+      try {
+        normalizedPhone = phoneNumber.toInternationalPhone;
+      } on FormatException catch (e) {
+        debugPrint('[FirebaseOTP] Erreur de format: ${e.message}');
+        onStateChanged?.call(FirebaseOtpState.error, error: 'Numéro de téléphone invalide. ${e.message}');
+        return;
+      }
+      
       debugPrint('[FirebaseOTP] Numéro normalisé: $normalizedPhone (original: $phoneNumber)');
       
       if (kIsWeb) {

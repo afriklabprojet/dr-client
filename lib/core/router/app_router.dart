@@ -9,6 +9,8 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/otp_verification_page.dart';
 import '../../features/auth/presentation/pages/change_password_page.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/auth/presentation/providers/auth_state.dart';
 import '../../home_page.dart';
 import '../../features/pharmacies/presentation/pages/pharmacies_list_page_v2.dart';
 import '../../features/pharmacies/presentation/pages/pharmacy_details_page.dart';
@@ -136,10 +138,51 @@ abstract class AppRoutes {
 
 /// Provider pour le router GoRouter
 final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authProvider);
+  
   return GoRouter(
     navigatorKey: navigatorKey,
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
+    
+    // Protection des routes
+    redirect: (context, state) {
+      final isAuthenticated = authState.status == AuthStatus.authenticated && authState.user != null;
+      final currentPath = state.matchedLocation;
+      
+      // Routes publiques (accessibles sans authentification)
+      const publicRoutes = [
+        AppRoutes.splash,
+        AppRoutes.onboarding,
+      ];
+      
+      // Routes d'authentification (login, register, etc.)
+      const authRoutes = [
+        AppRoutes.login,
+        AppRoutes.register,
+        AppRoutes.forgotPassword,
+        AppRoutes.otpVerification,
+      ];
+      
+      // Si l'utilisateur est authentifié et essaie d'accéder aux routes d'auth
+      if (isAuthenticated && authRoutes.contains(currentPath)) {
+        return AppRoutes.home;
+      }
+      
+      // Si l'utilisateur n'est pas authentifié et essaie d'accéder aux routes protégées
+      if (!isAuthenticated && 
+          !publicRoutes.contains(currentPath) && 
+          !authRoutes.contains(currentPath)) {
+        // Permettre l'accès initial pendant le chargement
+        if (authState.status == AuthStatus.initial || authState.status == AuthStatus.loading) {
+          return null;
+        }
+        return AppRoutes.login;
+      }
+      
+      return null; // Pas de redirection
+    },
+    
     routes: [
       // ===== Auth Routes =====
       GoRoute(
