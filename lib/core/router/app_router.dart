@@ -34,6 +34,10 @@ import '../../features/addresses/domain/entities/address_entity.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/profile/presentation/pages/notification_settings_page.dart';
+import '../../features/profile/presentation/pages/help_support_page.dart';
+import '../../features/profile/presentation/pages/terms_page.dart';
+import '../../features/profile/presentation/pages/privacy_policy_page.dart';
+import '../../features/profile/presentation/pages/legal_notices_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../services/navigation_service.dart';
 
@@ -134,6 +138,12 @@ abstract class AppRoutes {
 
   // Notifications
   static const notifications = '/notifications';
+
+  // Legal & Support
+  static const help = '/help';
+  static const terms = '/terms';
+  static const privacy = '/privacy';
+  static const legal = '/legal';
 }
 
 /// Notifier pour rafraîchir le router quand l'état d'authentification change
@@ -427,12 +437,50 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'notificationSettings',
         builder: (context, state) => const NotificationSettingsPage(),
       ),
+      GoRoute(
+        path: AppRoutes.help,
+        builder: (context, state) => const HelpSupportPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.terms,
+        builder: (context, state) => const TermsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.privacy,
+        builder: (context, state) => const PrivacyPolicyPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.legal,
+        builder: (context, state) => const LegalNoticesPage(),
+      ),
 
       // ===== Notification Routes =====
       GoRoute(
         path: AppRoutes.notifications,
         name: 'notifications',
         builder: (context, state) => const NotificationsPage(),
+      ),
+
+      // ===== Legal & Support Routes =====
+      GoRoute(
+        path: AppRoutes.help,
+        name: 'help',
+        builder: (context, state) => const HelpPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.terms,
+        name: 'terms',
+        builder: (context, state) => const TermsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.privacy,
+        name: 'privacy',
+        builder: (context, state) => const PrivacyPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.legal,
+        name: 'legal',
+        builder: (context, state) => const LegalPage(),
       ),
     ],
 

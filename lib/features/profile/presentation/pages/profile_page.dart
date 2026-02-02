@@ -245,6 +245,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const SizedBox(height: 12),
 
+                _ActionTile(
+                  icon: Icons.help_outline,
+                  title: 'Aide et Support',
+                  subtitle: 'FAQ et contact support',
+                  onTap: () => context.push(AppRoutes.help),
+                ),
+                const SizedBox(height: 12),
+
+                _ActionTile(
+                  icon: Icons.description_outlined,
+                  title: 'Mentions légales',
+                  subtitle: 'Conditions d\'utilisation et confidentialité',
+                  onTap: () => _showLegalMenu(context),
+                ),
+                const SizedBox(height: 12),
+
                 // Dark Mode Toggle
                 _DarkModeToggle(),
 
@@ -287,6 +303,62 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showLegalMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Mentions légales',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.gavel_outlined),
+              title: const Text('Conditions d\'utilisation'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.terms);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: const Text('Politique de confidentialité'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.privacy);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('Mentions légales'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.legal);
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
