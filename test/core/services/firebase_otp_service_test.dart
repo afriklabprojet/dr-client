@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:dr_pharma/core/services/firebase_otp_service.dart';
+import 'package:drpharma_client/core/services/firebase_otp_service.dart';
 
 // Note: FirebaseOtpService requires Firebase initialization
 // These tests verify the interface and structure

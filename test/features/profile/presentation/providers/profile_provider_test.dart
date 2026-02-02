@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:dr_pharma/features/profile/presentation/providers/profile_provider.dart';
-import 'package:dr_pharma/features/profile/presentation/providers/profile_state.dart';
+import 'package:drpharma_client/features/profile/presentation/providers/profile_provider.dart';
+import 'package:drpharma_client/features/profile/presentation/providers/profile_state.dart';
 
 void main() {
   group('ProfileProvider Tests', () {

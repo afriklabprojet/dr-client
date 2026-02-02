@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:dr_pharma/features/notifications/presentation/providers/notifications_provider.dart';
+import 'package:drpharma_client/features/notifications/presentation/providers/notifications_provider.dart';
 
 void main() {
   group('NotificationsProvider Tests', () {

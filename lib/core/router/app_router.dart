@@ -136,17 +136,36 @@ abstract class AppRoutes {
   static const notifications = '/notifications';
 }
 
+/// Notifier pour rafraîchir le router quand l'état d'authentification change
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen<AuthState>(
+      authProvider,
+      (_, __) => notifyListeners(),
+    );
+  }
+}
+
+/// Provider pour le notifier
+final routerNotifierProvider = ChangeNotifierProvider<RouterNotifier>((ref) {
+  return RouterNotifier(ref);
+});
+
 /// Provider pour le router GoRouter
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final notifier = ref.watch(routerNotifierProvider);
   
   return GoRouter(
     navigatorKey: navigatorKey,
+    refreshListenable: notifier,
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
     
     // Protection des routes
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       final isAuthenticated = authState.status == AuthStatus.authenticated && authState.user != null;
       final currentPath = state.matchedLocation;
       

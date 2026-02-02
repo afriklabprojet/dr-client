@@ -3,13 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:dr_pharma/home_page.dart';
-import 'package:dr_pharma/config/providers.dart';
-import 'package:dr_pharma/features/auth/presentation/providers/auth_provider.dart';
-import 'package:dr_pharma/features/auth/presentation/providers/auth_state.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/cart_provider.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/cart_state.dart';
-import 'package:dr_pharma/features/pharmacies/domain/entities/pharmacy_entity.dart';
+import 'package:drpharma_client/home_page.dart';
+import 'package:drpharma_client/config/providers.dart';
+import 'package:drpharma_client/features/auth/presentation/providers/auth_provider.dart';
+import 'package:drpharma_client/features/auth/presentation/providers/auth_state.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/cart_provider.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/cart_state.dart';
+import 'package:drpharma_client/features/pharmacies/domain/entities/pharmacy_entity.dart';
 
 // Mocks
 class MockAuthNotifier extends StateNotifier<AuthState> with Mock {

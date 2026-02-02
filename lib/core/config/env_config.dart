@@ -20,9 +20,19 @@ class EnvConfig {
     }
   }
 
+  /// Helper safe environment access
+  static String _getEnv(String key, [String defaultValue = '']) {
+    if (!_initialized) return defaultValue;
+    try {
+      return dotenv.env[key] ?? defaultValue;
+    } catch (_) {
+      return defaultValue;
+    }
+  }
+
   /// URL de base de l'API
   static String get apiBaseUrl {
-    final url = dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000';
+    final url = _getEnv('API_BASE_URL', 'http://localhost:8000');
     return _ensureHttps(url);
   }
 
@@ -31,12 +41,12 @@ class EnvConfig {
 
   /// URL de stockage des fichiers
   static String get storageBaseUrl {
-    final url = dotenv.env['STORAGE_BASE_URL'] ?? '$apiBaseUrl/storage';
+    final url = _getEnv('STORAGE_BASE_URL', '$apiBaseUrl/storage');
     return _ensureHttps(url);
   }
 
   /// Environnement actuel
-  static String get environment => dotenv.env['APP_ENV'] ?? 'development';
+  static String get environment => _getEnv('APP_ENV', 'development');
 
   /// Est-ce l'environnement de développement ?
   static bool get isDevelopment => environment == 'development';
@@ -49,7 +59,7 @@ class EnvConfig {
 
   /// Mode debug activé ?
   static bool get debugMode {
-    final value = dotenv.env['DEBUG_MODE']?.toLowerCase();
+    final value = _getEnv('DEBUG_MODE', 'false').toLowerCase();
     return value == 'true' || value == '1';
   }
 
@@ -58,19 +68,19 @@ class EnvConfig {
     // Toujours forcer HTTPS en production
     if (isProduction) return true;
     
-    final value = dotenv.env['FORCE_HTTPS']?.toLowerCase();
+    final value = _getEnv('FORCE_HTTPS', 'false').toLowerCase();
     return value == 'true' || value == '1';
   }
 
   /// Timeout de connexion
   static Duration get connectionTimeout {
-    final ms = int.tryParse(dotenv.env['CONNECTION_TIMEOUT'] ?? '30000') ?? 30000;
+    final ms = int.tryParse(_getEnv('CONNECTION_TIMEOUT', '30000')) ?? 30000;
     return Duration(milliseconds: ms);
   }
 
   /// Timeout de réception
   static Duration get receiveTimeout {
-    final ms = int.tryParse(dotenv.env['RECEIVE_TIMEOUT'] ?? '30000') ?? 30000;
+    final ms = int.tryParse(_getEnv('RECEIVE_TIMEOUT', '30000')) ?? 30000;
     return Duration(milliseconds: ms);
   }
 

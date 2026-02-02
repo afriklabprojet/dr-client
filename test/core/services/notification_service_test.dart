@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:dr_pharma/core/network/api_client.dart';
-import 'package:dr_pharma/core/services/notification_service.dart';
+import 'package:drpharma_client/core/network/api_client.dart';
+import 'package:drpharma_client/core/services/notification_service.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 

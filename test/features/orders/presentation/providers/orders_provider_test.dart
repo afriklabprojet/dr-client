@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:dr_pharma/features/orders/presentation/providers/orders_provider.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/orders_state.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/orders_provider.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/orders_state.dart';
 
 void main() {
   group('OrdersProvider Tests', () {

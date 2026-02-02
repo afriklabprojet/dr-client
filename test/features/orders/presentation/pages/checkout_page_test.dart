@@ -3,20 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:dr_pharma/features/orders/presentation/pages/checkout_page.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/cart_provider.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/cart_state.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/cart_notifier.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/orders_provider.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/orders_state.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/pricing_provider.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/delivery_fee_provider.dart';
-import 'package:dr_pharma/features/addresses/presentation/providers/addresses_provider.dart';
-import 'package:dr_pharma/features/addresses/presentation/providers/addresses_state.dart';
-import 'package:dr_pharma/features/auth/presentation/providers/auth_provider.dart';
-import 'package:dr_pharma/features/auth/presentation/providers/auth_state.dart';
-import 'package:dr_pharma/features/orders/domain/entities/cart_item_entity.dart';
-import 'package:dr_pharma/features/products/domain/entities/product_entity.dart';
+import 'package:drpharma_client/features/orders/presentation/pages/checkout_page.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/cart_provider.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/cart_state.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/cart_notifier.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/orders_provider.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/orders_state.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/pricing_provider.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/delivery_fee_provider.dart';
+import 'package:drpharma_client/features/addresses/presentation/providers/addresses_provider.dart';
+import 'package:drpharma_client/features/addresses/presentation/providers/addresses_state.dart';
+import 'package:drpharma_client/features/auth/presentation/providers/auth_provider.dart';
+import 'package:drpharma_client/features/auth/presentation/providers/auth_state.dart';
+import 'package:drpharma_client/features/orders/domain/entities/cart_item_entity.dart';
+import 'package:drpharma_client/features/products/domain/entities/product_entity.dart';
 
 // Mocks
 class MockCartNotifier extends StateNotifier<CartState> with Mock implements CartNotifier {

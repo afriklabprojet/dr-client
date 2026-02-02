@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:dr_pharma/core/services/firebase_service.dart';
+import 'package:drpharma_client/core/services/firebase_service.dart';
 
 // Note: FirebaseService requires Firebase initialization
 // These tests verify the interface and structure

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:dr_pharma/core/services/url_launcher_service.dart';
+import 'package:drpharma_client/core/services/url_launcher_service.dart';
 
 // Note: UrlLauncherService uses url_launcher which requires platform channels
 // These tests verify the interface and structure

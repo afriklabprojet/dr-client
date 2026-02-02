@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:dr_pharma/features/pharmacies/domain/usecases/get_featured_pharmacies_usecase.dart';
-import 'package:dr_pharma/features/pharmacies/domain/repositories/pharmacies_repository.dart';
+import 'package:drpharma_client/features/pharmacies/domain/usecases/get_featured_pharmacies_usecase.dart';
+import 'package:drpharma_client/features/pharmacies/domain/repositories/pharmacies_repository.dart';
 
 class MockPharmaciesRepository extends Mock implements PharmaciesRepository {}
 

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:dr_pharma/core/services/secure_storage_service.dart';
+import 'package:drpharma_client/core/services/secure_storage_service.dart';
 
 // Note: SecureStorageService uses static methods with FlutterSecureStorage
 // In real tests, we would mock FlutterSecureStorage

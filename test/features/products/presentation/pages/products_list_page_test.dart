@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:dr_pharma/features/products/presentation/pages/products_list_page.dart';
+import 'package:drpharma_client/features/products/presentation/pages/products_list_page.dart';
 
 void main() {
   Widget createTestWidget({int? pharmacyId, String? category}) {

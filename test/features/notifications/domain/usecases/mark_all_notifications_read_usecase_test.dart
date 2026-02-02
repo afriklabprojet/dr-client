@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:dr_pharma/features/notifications/domain/usecases/mark_all_notifications_read_usecase.dart';
-import 'package:dr_pharma/features/notifications/domain/repositories/notifications_repository.dart';
+import 'package:drpharma_client/features/notifications/domain/usecases/mark_all_notifications_read_usecase.dart';
+import 'package:drpharma_client/features/notifications/domain/repositories/notifications_repository.dart';
 
 class MockNotificationsRepository extends Mock implements NotificationsRepository {}
 

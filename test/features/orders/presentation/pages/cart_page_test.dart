@@ -3,12 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:dr_pharma/features/orders/presentation/pages/cart_page.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/cart_provider.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/cart_state.dart';
-import 'package:dr_pharma/features/orders/presentation/providers/cart_notifier.dart';
-import 'package:dr_pharma/features/orders/domain/entities/cart_item_entity.dart';
-import 'package:dr_pharma/features/products/domain/entities/product_entity.dart';
+import 'package:drpharma_client/features/orders/presentation/pages/cart_page.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/cart_provider.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/cart_state.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/cart_notifier.dart';
+import 'package:drpharma_client/features/orders/domain/entities/cart_item_entity.dart';
+import 'package:drpharma_client/features/products/domain/entities/product_entity.dart';
 
 // Mocks
 class MockCartNotifier extends StateNotifier<CartState> with Mock implements CartNotifier {

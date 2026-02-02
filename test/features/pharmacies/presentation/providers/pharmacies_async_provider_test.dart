@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:dr_pharma/features/pharmacies/presentation/providers/pharmacies_async_provider.dart';
+import 'package:drpharma_client/features/pharmacies/presentation/providers/pharmacies_async_provider.dart';
 
 void main() {
   group('PharmaciesAsyncProvider Tests', () {

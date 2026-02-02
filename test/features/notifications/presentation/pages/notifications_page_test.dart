@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:dr_pharma/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:drpharma_client/features/notifications/presentation/pages/notifications_page.dart';
 
 void main() {
   Widget createTestWidget() {

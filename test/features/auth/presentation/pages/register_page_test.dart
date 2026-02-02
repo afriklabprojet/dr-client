@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:dr_pharma/features/auth/presentation/pages/register_page.dart';
-import 'package:dr_pharma/features/auth/presentation/providers/auth_provider.dart';
-import 'package:dr_pharma/features/auth/presentation/providers/auth_state.dart';
-import 'package:dr_pharma/features/auth/presentation/providers/auth_notifier.dart';
+import 'package:drpharma_client/features/auth/presentation/pages/register_page.dart';
+import 'package:drpharma_client/features/auth/presentation/providers/auth_provider.dart';
+import 'package:drpharma_client/features/auth/presentation/providers/auth_state.dart';
+import 'package:drpharma_client/features/auth/presentation/providers/auth_notifier.dart';
 
 // Mocks
 class MockAuthNotifier extends StateNotifier<AuthState> with Mock implements AuthNotifier {

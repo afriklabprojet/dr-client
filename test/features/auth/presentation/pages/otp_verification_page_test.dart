@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:dr_pharma/features/auth/presentation/pages/otp_verification_page.dart';
+import 'package:drpharma_client/features/auth/presentation/pages/otp_verification_page.dart';
 
 void main() {
   Widget createTestWidget({String phoneNumber = '+2250701020304'}) {

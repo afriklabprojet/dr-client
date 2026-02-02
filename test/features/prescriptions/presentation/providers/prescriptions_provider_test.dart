@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:dr_pharma/features/prescriptions/presentation/providers/prescriptions_provider.dart';
+import 'package:drpharma_client/features/prescriptions/presentation/providers/prescriptions_provider.dart';
 
 void main() {
   group('PrescriptionsProvider Tests', () {

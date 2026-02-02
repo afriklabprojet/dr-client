@@ -2,9 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:dartz/dartz.dart';
 
-import 'package:dr_pharma/core/errors/failures.dart';
-import 'package:dr_pharma/features/products/domain/usecases/get_product_details_usecase.dart';
-import 'package:dr_pharma/features/products/domain/repositories/products_repository.dart';
+import 'package:drpharma_client/core/errors/failures.dart';
+import 'package:drpharma_client/features/products/domain/usecases/get_product_details_usecase.dart';
+import 'package:drpharma_client/features/products/domain/repositories/products_repository.dart';
 
 class MockProductsRepository extends Mock implements ProductsRepository {}
 
