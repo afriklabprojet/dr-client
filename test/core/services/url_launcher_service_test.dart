@@ -24,8 +24,12 @@ void main() {
       expect(UrlLauncherService.openWebUrl, isA<Function>());
     });
 
-    test('should have openMaps method', () {
-      expect(UrlLauncherService.openMaps, isA<Function>());
+    test('should have openMap method', () {
+      expect(UrlLauncherService.openMap, isA<Function>());
+    });
+
+    test('should have openMapWithAddress method', () {
+      expect(UrlLauncherService.openMapWithAddress, isA<Function>());
     });
 
     test('should have openWhatsApp method', () {
@@ -38,7 +42,7 @@ void main() {
       const phoneWithSpaces = '+225 07 00 00 00';
       final cleanRegex = RegExp(r'[^\d+]');
       final cleaned = phoneWithSpaces.replaceAll(cleanRegex, '');
-      expect(cleaned, '+2250700000');
+      expect(cleaned, '+22507000000');
     });
 
     test('phone number cleaning should preserve plus sign', () {

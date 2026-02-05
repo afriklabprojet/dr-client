@@ -465,7 +465,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.help,
         name: 'help',
-        builder: (context, state) => const HelpPage(),
+        builder: (context, state) => const HelpSupportPage(),
       ),
       GoRoute(
         path: AppRoutes.terms,
@@ -475,12 +475,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.privacy,
         name: 'privacy',
-        builder: (context, state) => const PrivacyPage(),
+        builder: (context, state) => const PrivacyPolicyPage(),
       ),
       GoRoute(
         path: AppRoutes.legal,
         name: 'legal',
-        builder: (context, state) => const LegalPage(),
+        builder: (context, state) => const LegalNoticesPage(),
       ),
     ],
 

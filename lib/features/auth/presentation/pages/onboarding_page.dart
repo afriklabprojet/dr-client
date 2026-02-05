@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
-import 'login_page.dart';
+import '../../../../core/router/app_router.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -70,9 +71,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
     if (!mounted) return;
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-    );
+    context.go(AppRoutes.login);
   }
 
   void _nextPage() {
@@ -247,7 +246,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
               // Animated Icon
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 600),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.elasticOut,
                 builder: (context, value, child) {
                   return Transform.scale(
                     scale: value,
@@ -285,6 +285,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.0, end: 1.0),
                 duration: const Duration(milliseconds: 600),
+                curve: Curves.easeOut,
                 builder: (context, value, child) {
                   return Opacity(
                     opacity: value,
@@ -311,6 +312,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.0, end: 1.0),
                 duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOut,
                 builder: (context, value, child) {
                   return Opacity(
                     opacity: value,

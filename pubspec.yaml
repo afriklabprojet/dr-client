@@ -84,6 +84,9 @@ dependencies:
   google_maps_flutter: ^2.5.0
   flutter_secure_storage: ^10.0.0
   flutter_dotenv: ^6.0.0
+  
+  # WebView for payment pages
+  webview_flutter: ^4.10.0
 
 dev_dependencies:
   flutter_test:
@@ -97,6 +100,7 @@ dev_dependencies:
 
   # Testing
   mockito: ^5.4.4
+  mocktail: ^1.0.3
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

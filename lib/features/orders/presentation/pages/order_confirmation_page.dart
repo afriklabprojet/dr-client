@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -64,6 +66,9 @@ class _OrderConfirmationPageState extends ConsumerState<OrderConfirmationPage>
   Widget build(BuildContext context) {
     final ordersState = ref.watch(ordersProvider);
     final order = ordersState.selectedOrder;
+    
+    // Utiliser le vrai statut de paiement de la commande, pas le paramètre isPaid
+    final bool isActuallyPaid = order?.paymentStatus == 'paid';
 
     final currencyFormat = NumberFormat.currency(
       locale: AppConstants.currencyLocale,
@@ -101,13 +106,15 @@ class _OrderConfirmationPageState extends ConsumerState<OrderConfirmationPage>
                                 width: 120,
                                 height: 120,
                                 decoration: BoxDecoration(
-                                  color: AppColors.success.withValues(alpha: 0.1),
+                                  color: isActuallyPaid 
+                                      ? AppColors.success.withValues(alpha: 0.1)
+                                      : AppColors.warning.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(
-                                  Icons.check_circle,
+                                child: Icon(
+                                  isActuallyPaid ? Icons.check_circle : Icons.pending,
                                   size: 80,
-                                  color: AppColors.success,
+                                  color: isActuallyPaid ? AppColors.success : AppColors.warning,
                                 ),
                               ),
                             ),
@@ -121,9 +128,9 @@ class _OrderConfirmationPageState extends ConsumerState<OrderConfirmationPage>
                       FadeTransition(
                         opacity: _fadeAnimation,
                         child: Text(
-                          widget.isPaid
+                          isActuallyPaid
                               ? 'Paiement réussi !'
-                              : 'Commande confirmée !',
+                              : 'Commande en attente',
                           style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -138,9 +145,9 @@ class _OrderConfirmationPageState extends ConsumerState<OrderConfirmationPage>
                       FadeTransition(
                         opacity: _fadeAnimation,
                         child: Text(
-                          widget.isPaid
+                          isActuallyPaid
                               ? 'Votre paiement a été effectué avec succès'
-                              : 'Votre commande a bien été enregistrée',
+                              : 'En attente de confirmation du paiement...',
                           style: TextStyle(
                             fontSize: 16,
                             color: AppColors.textSecondary,
@@ -168,6 +175,59 @@ class _OrderConfirmationPageState extends ConsumerState<OrderConfirmationPage>
                         ),
 
                       const SizedBox(height: 40),
+
+                      // Refresh Payment Status Button (only if not paid)
+                      if (!isActuallyPaid)
+                        FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                            ),
+                            child: Column(
+                              children: [
+                                const Icon(
+                                  Icons.info_outline,
+                                  color: AppColors.warning,
+                                  size: 24,
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Finalisez votre paiement sur la page Jeko, puis appuyez sur le bouton ci-dessous pour vérifier.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      ref.read(ordersProvider.notifier).loadOrderDetails(widget.orderId);
+                                    },
+                                    icon: const Icon(Icons.refresh),
+                                    label: const Text('Vérifier le paiement'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.warning,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
 
                       // Action Buttons
                       FadeTransition(
@@ -215,13 +275,23 @@ class _OrderConfirmationPageState extends ConsumerState<OrderConfirmationPage>
                             const SizedBox(height: 16),
 
                             // Retour à l'accueil
-                            TextButton(
-                              onPressed: () => _goToHome(),
-                              child: const Text(
-                                'Retour à l\'accueil',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 16,
+                            SizedBox(
+                              width: double.infinity,
+                              child: TextButton(
+                                onPressed: () {
+                                  debugPrint('Retour à l\'accueil pressed');
+                                  _goToHome();
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                ),
+                                child: const Text(
+                                  'Retour à l\'accueil',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ),
@@ -420,10 +490,24 @@ class _OrderConfirmationPageState extends ConsumerState<OrderConfirmationPage>
   }
 
   void _goToOrders() {
-    context.goToOrders();
+    if (!mounted) return;
+    debugPrint('Navigating to orders');
+    // Use pushReplacement on web for better navigation
+    if (kIsWeb) {
+      context.pushReplacement(AppRoutes.orders);
+    } else {
+      context.go(AppRoutes.orders);
+    }
   }
 
   void _goToHome() {
-    context.goToHome();
+    if (!mounted) return;
+    debugPrint('Navigating to home');
+    // Use pushReplacement on web for better navigation
+    if (kIsWeb) {
+      context.pushReplacement(AppRoutes.home);
+    } else {
+      context.go(AppRoutes.home);
+    }
   }
 }

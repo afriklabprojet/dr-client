@@ -65,7 +65,14 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
     _mainAnimController.forward();
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startResendCountdown();
+      // Ne démarrer le countdown que s'il n'est pas déjà actif (évite réinitialisation)
+      final currentCountdown = ref.read(countdownProvider(_otpCountdownId));
+      if (currentCountdown <= 0) {
+        _startResendCountdown();
+      } else {
+        // Continuer le countdown existant
+        _continueExistingCountdown();
+      }
       if (widget.sendOtpOnInit) _sendFirebaseOtp();
     });
   }
@@ -88,6 +95,19 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   void _startResendCountdown() {
     _timer?.cancel();
     ref.read(countdownProvider(_otpCountdownId).notifier).setValue(60);
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final current = ref.read(countdownProvider(_otpCountdownId));
+      if (current > 0) {
+        ref.read(countdownProvider(_otpCountdownId).notifier).decrement();
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  /// Continue un countdown existant (quand on revient sur la page)
+  void _continueExistingCountdown() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final current = ref.read(countdownProvider(_otpCountdownId));
       if (current > 0) {
@@ -247,7 +267,14 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () => context.go(AppRoutes.register),
+                      onPressed: () {
+                        // Revenir à la page précédente (pas forcément register)
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go(AppRoutes.login);
+                        }
+                      },
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -461,22 +488,58 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   }
 
   Widget _buildErrorWidget(String message) {
+    // Déterminer si c'est une erreur de rate limit Firebase
+    final isRateLimitError = message.toLowerCase().contains('trop de tentatives') ||
+                             message.toLowerCase().contains('too many requests');
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
+        color: isRateLimitError ? Colors.orange.shade50 : Colors.red.shade50,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.red.shade100),
+        border: Border.all(color: isRateLimitError ? Colors.orange.shade200 : Colors.red.shade100),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Colors.red.shade100, shape: BoxShape.circle),
-            child: Icon(Icons.error_outline, color: Colors.red.shade600, size: 18),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isRateLimitError ? Colors.orange.shade100 : Colors.red.shade100, 
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isRateLimitError ? Icons.timer_outlined : Icons.error_outline, 
+                  color: isRateLimitError ? Colors.orange.shade700 : Colors.red.shade600, 
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message, 
+                  style: TextStyle(
+                    color: isRateLimitError ? Colors.orange.shade800 : Colors.red.shade700, 
+                    fontSize: 14, 
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(child: Text(message, style: TextStyle(color: Colors.red.shade700, fontSize: 14, fontWeight: FontWeight.w500))),
+          if (isRateLimitError) ...[
+            const SizedBox(height: 10),
+            Text(
+              '💡 C\'est une protection Firebase contre les abus. Patientez quelques minutes avant de réessayer.',
+              style: TextStyle(
+                color: Colors.orange.shade600, 
+                fontSize: 12, 
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
         ],
       ),
     );

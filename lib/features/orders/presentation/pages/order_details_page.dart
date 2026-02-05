@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../providers/orders_provider.dart';
 import '../providers/orders_state.dart';
 import '../../domain/entities/order_entity.dart';
+import 'payment_webview_page.dart';
 
 class OrderDetailsPage extends ConsumerStatefulWidget {
   final int orderId;
@@ -600,17 +600,35 @@ class _OrderDetailsPageState extends ConsumerState<OrderDetailsPage> {
     if (mounted) Navigator.pop(context);
 
     if (result != null && result.containsKey('payment_url')) {
-      final url = Uri.parse(result['payment_url']);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
+      final paymentUrl = result['payment_url'] as String;
+      
+      // Open WebView for better mobile experience
+      final paymentResult = await PaymentWebViewPage.show(
+        context,
+        paymentUrl: paymentUrl,
+        orderId: orderId.toString(),
+      );
+      
+      // Refresh order details to show updated payment status
+      if (mounted) {
+        ref.read(ordersProvider.notifier).loadOrderDetails(orderId);
+        
+        if (paymentResult == true) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Impossible d\'ouvrir le lien de paiement'),
+              content: Text('Paiement effectué avec succès !'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        } else if (paymentResult == false) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Le paiement a échoué. Veuillez réessayer.'),
+              backgroundColor: AppColors.error,
             ),
           );
         }
+        // If paymentResult is null, user just closed the page - no message needed
       }
     } else {
       if (mounted) {

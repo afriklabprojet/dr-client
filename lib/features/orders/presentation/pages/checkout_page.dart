@@ -18,6 +18,7 @@ import '../providers/delivery_fee_provider.dart';
 import '../providers/pricing_provider.dart';
 import '../../domain/entities/order_item_entity.dart';
 import '../../domain/entities/delivery_address_entity.dart';
+import 'payment_webview_page.dart';
 import '../providers/orders_state.dart';
 import '../providers/orders_provider.dart';
 import '../widgets/widgets.dart';
@@ -514,19 +515,19 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
           _navigateToConfirmation(orderId, isPaid: confirmed);
         }
       } else {
-        // Production: Open external browser for real payment
-        AppLogger.debug('[Payment] Production mode, opening external browser');
-        final url = Uri.parse(paymentUrl);
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
-          // After returning from payment, show confirmation
-          // Note: We assume payment succeeded, the actual status will be fetched from API
-          if (mounted) _navigateToConfirmation(orderId, isPaid: true);
-        } else {
-          if (mounted) {
-            _showSnackBar('Impossible d\'ouvrir le lien de paiement', AppColors.error);
-            _navigateToConfirmation(orderId, isPaid: false);
-          }
+        // Production: Open WebView for better mobile experience
+        AppLogger.debug('[Payment] Production mode, opening WebView');
+        final paymentResult = await PaymentWebViewPage.show(
+          context,
+          paymentUrl: paymentUrl,
+          orderId: orderId.toString(),
+        );
+        
+        // paymentResult: true = success, false = error, null = user closed
+        AppLogger.debug('[Payment] WebView result: $paymentResult');
+        if (mounted) {
+          // Navigate to confirmation - actual status will be fetched from API
+          _navigateToConfirmation(orderId, isPaid: paymentResult == true);
         }
       }
     } else {

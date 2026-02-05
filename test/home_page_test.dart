@@ -7,23 +7,31 @@ import 'package:drpharma_client/home_page.dart';
 import 'package:drpharma_client/config/providers.dart';
 import 'package:drpharma_client/features/auth/presentation/providers/auth_provider.dart';
 import 'package:drpharma_client/features/auth/presentation/providers/auth_state.dart';
+import 'package:drpharma_client/features/auth/presentation/providers/auth_notifier.dart'; // Add this
 import 'package:drpharma_client/features/orders/presentation/providers/cart_provider.dart';
 import 'package:drpharma_client/features/orders/presentation/providers/cart_state.dart';
+import 'package:drpharma_client/features/orders/presentation/providers/cart_notifier.dart'; // Add this
 import 'package:drpharma_client/features/pharmacies/domain/entities/pharmacy_entity.dart';
+import 'package:drpharma_client/features/pharmacies/presentation/providers/pharmacies_notifier.dart'; // Add this
+import 'package:drpharma_client/features/pharmacies/presentation/providers/pharmacies_state.dart'; // Add this
 
 // Mocks
-class MockAuthNotifier extends StateNotifier<AuthState> with Mock {
-  MockAuthNotifier() : super(const AuthState());
+class MockAuthNotifier extends StateNotifier<AuthState> with Mock implements AuthNotifier {
+  MockAuthNotifier() : super(const AuthState.initial());
 }
 
-class MockCartNotifier extends StateNotifier<CartState> with Mock {
+class MockCartNotifier extends StateNotifier<CartState> with Mock implements CartNotifier {
   MockCartNotifier() : super(CartState.initial());
 }
 
-class MockPharmaciesNotifier extends StateNotifier<AsyncValue<List<PharmacyEntity>>> with Mock {
-  MockPharmaciesNotifier() : super(const AsyncValue.data([]));
+class MockPharmaciesNotifier extends StateNotifier<PharmaciesState> with Mock implements PharmaciesNotifier {
+  MockPharmaciesNotifier() : super(const PharmaciesState());
   
+  @override
   Future<void> fetchFeaturedPharmacies() async {}
+  
+  @override
+  Future<void> fetchAllPharmacies() async {}
 }
 
 class FakeAuthState extends Fake implements AuthState {}
@@ -191,7 +199,7 @@ void main() {
     });
 
     testWidgets('should show loading while fetching pharmacies', (tester) async {
-      mockPharmaciesNotifier.state = const AsyncValue.loading();
+      mockPharmaciesNotifier.state = const PharmaciesState(status: PharmaciesStatus.loading);
       
       await tester.pumpWidget(createTestWidget());
       await tester.pump();
@@ -205,7 +213,7 @@ void main() {
       await tester.pumpWidget(createTestWidget(
         cartState: CartState.initial().copyWith(
           items: [],
-          pharmacyId: 1,
+          selectedPharmacyId: 1,
         ),
       ));
       await tester.pump();
