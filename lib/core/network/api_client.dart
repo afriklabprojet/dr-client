@@ -40,13 +40,8 @@ class ApiClient {
           return handler.next(options);
         },
         onError: (error, handler) {
-          // Handle errors globally
-          if (error.response?.statusCode == 401) {
-            // Token expired or invalid
-            throw UnauthorizedException(
-              message: error.response?.data['message'] ?? 'Unauthorized',
-            );
-          }
+          // Let _handleError process all errors including 401
+          // Don't throw here, just pass the error along
           return handler.next(error);
         },
       ),
@@ -185,8 +180,18 @@ class ApiClient {
       final data = error.response!.data;
 
       if (statusCode == 401) {
-        return UnauthorizedException(
-          message: data['message'] ?? 'Session expirée. Veuillez vous reconnecter.',
+        // Extraire le message d'erreur du serveur
+        String errorMessage = 'Session expirée. Veuillez vous reconnecter.';
+        if (data is Map) {
+          errorMessage = data['message'] ?? errorMessage;
+          // Si c'est une erreur d'identifiants, utiliser un message clair
+          if (data['error_code'] == 'INVALID_CREDENTIALS') {
+            errorMessage = 'Email ou mot de passe incorrect';
+          }
+        }
+        return ServerException(
+          message: errorMessage,
+          statusCode: 401,
         );
       }
       
@@ -234,7 +239,44 @@ class ApiClient {
       );
     }
 
-    return ServerException(message: error.message ?? 'Erreur inconnue');
+    // Pas de réponse du serveur - probablement un problème de connexion
+    // Vérifier les différents types d'erreurs Dio
+    if (error.type == DioExceptionType.unknown) {
+      // Erreur inconnue - généralement un problème réseau
+      return NetworkException(
+        message: 'Impossible de se connecter au serveur. Vérifiez que le serveur est démarré.',
+      );
+    }
+    
+    if (error.type == DioExceptionType.cancel) {
+      return NetworkException(
+        message: 'Requête annulée.',
+      );
+    }
+    
+    if (error.type == DioExceptionType.badResponse) {
+      return ServerException(
+        message: 'Réponse invalide du serveur.',
+      );
+    }
+
+    // Message d'erreur par défaut plus explicite
+    final errorMsg = error.message;
+    if (errorMsg != null && errorMsg.isNotEmpty) {
+      // Si le message contient des indices sur le type d'erreur
+      if (errorMsg.toLowerCase().contains('connection') ||
+          errorMsg.toLowerCase().contains('socket') ||
+          errorMsg.toLowerCase().contains('network')) {
+        return NetworkException(
+          message: 'Problème de connexion. Vérifiez votre internet et que le serveur est accessible.',
+        );
+      }
+      return ServerException(message: errorMsg);
+    }
+    
+    return NetworkException(
+      message: 'Impossible de contacter le serveur. Vérifiez votre connexion internet.',
+    );
   }
   
   void _logApiError(DioException error) {

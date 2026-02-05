@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../config/providers.dart'; // Import pour notificationService
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/errors/error_handler.dart';
 import '../../../../core/providers/ui_state_providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_logger.dart';
@@ -43,6 +42,11 @@ class _LoginPageState extends ConsumerState<LoginPage>
   
   // Local state for redirecting - not using toggleProvider to avoid default true issue
   bool _isRedirecting = false;
+  
+  // Erreurs de champs (pour afficher les erreurs serveur sous les champs)
+  String? _emailError;
+  String? _passwordError;
+  String? _generalError;
 
   @override
   void initState() {
@@ -102,102 +106,159 @@ class _LoginPageState extends ConsumerState<LoginPage>
       return;
     }
     
+    // Réinitialiser les erreurs
+    setState(() {
+      _emailError = null;
+      _passwordError = null;
+      _generalError = null;
+    });
+    
+    // Validation locale d'abord
+    final useEmail = ref.read(toggleProvider(_useEmailId));
+    final identifier = _phoneController.text.trim();
+    final password = _passwordController.text;
+    
+    // Validation du champ email/téléphone
+    if (identifier.isEmpty) {
+      setState(() {
+        _emailError = useEmail 
+            ? 'Veuillez entrer votre adresse email'
+            : 'Veuillez entrer votre numéro de téléphone';
+      });
+      _phoneFocusNode.requestFocus();
+      return;
+    }
+    
+    // Validation du format email/téléphone
+    if (useEmail) {
+      final emailError = FormValidators.validateEmail(identifier);
+      if (emailError != null) {
+        setState(() => _emailError = emailError);
+        _phoneFocusNode.requestFocus();
+        return;
+      }
+    } else {
+      final phoneError = FormValidators.validatePhone(identifier);
+      if (phoneError != null) {
+        setState(() => _emailError = phoneError);
+        _phoneFocusNode.requestFocus();
+        return;
+      }
+    }
+    
+    // Validation du mot de passe
+    if (password.isEmpty) {
+      setState(() => _passwordError = 'Veuillez entrer votre mot de passe');
+      _passwordFocusNode.requestFocus();
+      return;
+    }
+    
+    if (password.length < 6) {
+      setState(() => _passwordError = 'Le mot de passe doit contenir au moins 6 caractères');
+      _passwordFocusNode.requestFocus();
+      return;
+    }
+    
+    // Si validation locale OK, envoyer au serveur
     if (_formKey.currentState!.validate()) {
       ref
           .read(authProvider.notifier)
           .login(
-            email: _phoneController.text.trim(),
-            password: _passwordController.text,
+            email: identifier,
+            password: password,
           );
     }
   }
 
-  /// Convertit les messages d'erreur techniques en messages utilisateur explicites
-  String _getReadableErrorMessage(String? error) {
+  /// Analyse l'erreur serveur et détermine quel champ est concerné
+  void _handleServerError(String? error) {
+    debugPrint('🔐 [LoginPage] _handleServerError called with: $error');
+    
     if (error == null || error.isEmpty) {
-      return 'Une erreur est survenue. Veuillez réessayer.';
+      setState(() => _generalError = 'Une erreur est survenue. Veuillez réessayer.');
+      return;
     }
     
     final errorLower = error.toLowerCase();
     
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Erreurs d'identifiants (401)
-    // ═══════════════════════════════════════════════════════════════════════════
+    // Erreurs d'identifiants (email/téléphone incorrect)
     if (errorLower.contains('invalid') || 
         errorLower.contains('credentials') ||
         errorLower.contains('incorrect') ||
         errorLower.contains('identifiants') ||
         errorLower.contains('unauthorized') ||
         errorLower.contains('401')) {
-      return 'Email ou mot de passe invalide.\nVeuillez vérifier vos identifiants.';
+      setState(() {
+        _generalError = 'Email ou mot de passe incorrect';
+      });
+      return;
     }
     
-    // ═══════════════════════════════════════════════════════════════════════════
     // Compte non trouvé
-    // ═══════════════════════════════════════════════════════════════════════════
     if (errorLower.contains('not found') || 
         errorLower.contains('introuvable') ||
         errorLower.contains('n\'existe pas') ||
         errorLower.contains('no user')) {
-      return 'Aucun compte n\'existe avec cet email.\nVeuillez créer un compte ou vérifier votre saisie.';
+      final useEmail = ref.read(toggleProvider(_useEmailId));
+      setState(() {
+        _emailError = useEmail 
+            ? 'Aucun compte associé à cet email'
+            : 'Aucun compte associé à ce numéro';
+      });
+      _phoneFocusNode.requestFocus();
+      return;
     }
     
-    // ═══════════════════════════════════════════════════════════════════════════
+    // Erreur de mot de passe spécifique
+    if (errorLower.contains('password') || 
+        errorLower.contains('mot de passe')) {
+      setState(() => _passwordError = 'Mot de passe incorrect');
+      _passwordFocusNode.requestFocus();
+      return;
+    }
+    
     // Compte désactivé/suspendu
-    // ═══════════════════════════════════════════════════════════════════════════
     if (errorLower.contains('disabled') || 
         errorLower.contains('suspended') ||
         errorLower.contains('blocked') ||
         errorLower.contains('désactivé') ||
         errorLower.contains('suspendu') ||
         errorLower.contains('bloqué')) {
-      return 'Votre compte a été désactivé.\nVeuillez contacter le support pour plus d\'informations.';
+      setState(() => _generalError = 'Votre compte a été désactivé. Contactez le support.');
+      return;
     }
     
-    // ═══════════════════════════════════════════════════════════════════════════
     // Erreurs réseau
-    // ═══════════════════════════════════════════════════════════════════════════
     if (errorLower.contains('network') || 
         errorLower.contains('connexion') ||
         errorLower.contains('internet') ||
         errorLower.contains('timeout') ||
         errorLower.contains('socket') ||
         errorLower.contains('connection')) {
-      return 'Problème de connexion internet.\nVérifiez votre connexion et réessayez.';
+      setState(() => _generalError = 'Problème de connexion internet. Vérifiez votre connexion.');
+      return;
     }
     
-    // ═══════════════════════════════════════════════════════════════════════════
     // Erreurs serveur
-    // ═══════════════════════════════════════════════════════════════════════════
     if (errorLower.contains('server') || 
         errorLower.contains('500') ||
         errorLower.contains('503') ||
         errorLower.contains('serveur')) {
-      return 'Le service est temporairement indisponible.\nVeuillez réessayer dans quelques instants.';
+      setState(() => _generalError = 'Service temporairement indisponible. Réessayez plus tard.');
+      return;
     }
     
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Erreurs de validation
-    // ═══════════════════════════════════════════════════════════════════════════
-    if (errorLower.contains('validation') || 
-        errorLower.contains('required') ||
-        errorLower.contains('format')) {
-      return 'Les informations saisies sont incorrectes.\nVeuillez vérifier le format de votre email et mot de passe.';
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════
     // Trop de tentatives
-    // ═══════════════════════════════════════════════════════════════════════════
     if (errorLower.contains('too many') || 
         errorLower.contains('rate limit') ||
         errorLower.contains('throttle') ||
         errorLower.contains('tentatives')) {
-      return 'Trop de tentatives de connexion.\nVeuillez patienter quelques minutes avant de réessayer.';
+      setState(() => _generalError = 'Trop de tentatives. Patientez quelques minutes.');
+      return;
     }
     
-    // Message par défaut si aucun pattern ne correspond
-    // Mais on évite d'afficher l'erreur technique brute
-    return 'Les identifiants fournis sont incorrects.\nVeuillez vérifier votre email et mot de passe.';
+    // Erreur par défaut
+    setState(() => _generalError = 'Identifiants incorrects. Vérifiez votre email et mot de passe.');
   }
 
   @override
@@ -213,6 +274,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
 
     // Listen to auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) async {
+      debugPrint('🔐 [LoginPage] Auth state changed: ${next.status}');
+      debugPrint('🔐 [LoginPage] Error message: ${next.errorMessage}');
+      
       if (next.status == AuthStatus.authenticated && !_isRedirecting) {
         // Prevent multiple redirections and keep loader visible
         if (mounted) {
@@ -249,9 +313,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
           setState(() => _isRedirecting = false);
         }
         if (mounted) {
-          // Convertir le message technique en message utilisateur explicite
-          final userFriendlyMessage = _getReadableErrorMessage(next.errorMessage);
-          ErrorHandler.showErrorSnackBar(context, userFriendlyMessage);
+          // Afficher l'erreur sous les champs au lieu d'un snackbar
+          _handleServerError(next.errorMessage);
         }
       }
     });
@@ -398,6 +461,26 @@ class _LoginPageState extends ConsumerState<LoginPage>
 
                                   // Password Field
                                   _buildPasswordField(isDark, obscurePassword),
+                                  
+                                  // Erreur générale (identifiants incorrects)
+                                  // Afficher l'erreur locale OU l'erreur du serveur
+                                  Builder(
+                                    builder: (context) {
+                                      final errorToShow = _generalError ?? 
+                                        (authState.status == AuthStatus.error 
+                                          ? _parseErrorMessage(authState.errorMessage) 
+                                          : null);
+                                      if (errorToShow != null) {
+                                        return Column(
+                                          children: [
+                                            const SizedBox(height: 16),
+                                            _buildGeneralErrorBannerWithMessage(isDark, errorToShow),
+                                          ],
+                                        );
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  ),
 
                                   // Forgot Password
                                   Align(
@@ -568,97 +651,273 @@ class _LoginPageState extends ConsumerState<LoginPage>
     FocusNode? focusNode,
     TextInputAction? textInputAction,
     void Function(String)? onFieldSubmitted,
+    void Function(String)? onChanged,
+    String? errorText,
   }) {
-    return TextFormField(
-      controller: controller,
-      focusNode: focusNode,
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      inputFormatters: inputFormatters,
-      textInputAction: textInputAction,
-      onFieldSubmitted: onFieldSubmitted,
-      style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(
-          color: isDark ? Colors.grey[400] : Colors.grey[600],
+    final hasError = errorText != null && errorText.isNotEmpty;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          controller: controller,
+          focusNode: focusNode,
+          keyboardType: keyboardType,
+          obscureText: obscureText,
+          inputFormatters: inputFormatters,
+          textInputAction: textInputAction,
+          onFieldSubmitted: onFieldSubmitted,
+          onChanged: onChanged,
+          style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: TextStyle(
+              color: hasError 
+                  ? Colors.red.shade400
+                  : (isDark ? Colors.grey[400] : Colors.grey[600]),
+            ),
+            prefixIcon: Icon(
+              icon,
+              color: hasError 
+                  ? Colors.red.shade400
+                  : (isDark ? Colors.grey[400] : AppColors.primary),
+            ),
+            suffixIcon: suffixIcon,
+            filled: true,
+            fillColor: hasError
+                ? Colors.red.shade50.withValues(alpha: isDark ? 0.1 : 1.0)
+                : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100]),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: hasError 
+                  ? BorderSide(color: Colors.red.shade400, width: 1.5)
+                  : BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: hasError ? Colors.red.shade400 : AppColors.primary, 
+                width: 1.5,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red.shade400, width: 1.5),
+            ),
+          ),
+          validator: validator,
         ),
-        prefixIcon: Icon(
-          icon,
-          color: isDark ? Colors.grey[400] : AppColors.primary,
-        ),
-        suffixIcon: suffixIcon,
-        filled: true,
-        fillColor: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.red.shade400, width: 1.5),
-        ),
-      ),
-      validator: validator,
+        // Message d'erreur sous le champ
+        if (hasError)
+          Padding(
+            padding: const EdgeInsets.only(top: 6, left: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 14,
+                  color: Colors.red.shade400,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    errorText,
+                    style: TextStyle(
+                      color: Colors.red.shade400,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
   Widget _buildPhoneField(bool isDark, bool useEmail) {
-    return _buildTextField(
-      controller: _phoneController,
-      focusNode: _phoneFocusNode,
-      label: useEmail ? 'Adresse email' : 'Numéro de téléphone',
-      icon: useEmail ? Icons.email_outlined : Icons.phone_android_rounded,
-      isDark: isDark,
-      keyboardType: useEmail
-          ? TextInputType.emailAddress
-          : TextInputType.phone,
-      inputFormatters: useEmail
-          ? null
-          : [FilteringTextInputFormatter.allow(RegExp(r'[0-9+]'))],
-      textInputAction: TextInputAction.next,
-      onFieldSubmitted: (_) => _passwordFocusNode.requestFocus(),
-      validator: (value) {
-        if (useEmail) {
-          return FormValidators.validateEmail(value);
-        }
-        return FormValidators.validatePhone(value);
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTextField(
+          controller: _phoneController,
+          focusNode: _phoneFocusNode,
+          label: useEmail ? 'Adresse email' : 'Numéro de téléphone',
+          icon: useEmail ? Icons.email_outlined : Icons.phone_android_rounded,
+          isDark: isDark,
+          keyboardType: useEmail
+              ? TextInputType.emailAddress
+              : TextInputType.phone,
+          inputFormatters: useEmail
+              ? null
+              : [FilteringTextInputFormatter.allow(RegExp(r'[0-9+]'))],
+          textInputAction: TextInputAction.next,
+          onFieldSubmitted: (_) => _passwordFocusNode.requestFocus(),
+          onChanged: (_) {
+            // Effacer l'erreur quand l'utilisateur tape
+            if (_emailError != null) {
+              setState(() => _emailError = null);
+            }
+            if (_generalError != null) {
+              setState(() => _generalError = null);
+            }
+          },
+          errorText: _emailError,
+        ),
+      ],
     );
   }
 
   Widget _buildPasswordField(bool isDark, bool obscurePassword) {
-    return _buildTextField(
-      controller: _passwordController,
-      focusNode: _passwordFocusNode,
-      label: 'Mot de passe',
-      icon: Icons.lock_outline_rounded,
-      isDark: isDark,
-      obscureText: obscurePassword,
-      textInputAction: TextInputAction.done,
-      onFieldSubmitted: (_) => _handleLogin(),
-      suffixIcon: IconButton(
-        onPressed: () => ref.read(toggleProvider(_obscurePasswordId).notifier).toggle(),
-        icon: Icon(
-          obscurePassword
-              ? Icons.visibility_outlined
-              : Icons.visibility_off_outlined,
-          color: isDark ? Colors.white54 : Colors.grey[600],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTextField(
+          controller: _passwordController,
+          focusNode: _passwordFocusNode,
+          label: 'Mot de passe',
+          icon: Icons.lock_outline_rounded,
+          isDark: isDark,
+          obscureText: obscurePassword,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _handleLogin(),
+          onChanged: (_) {
+            // Effacer l'erreur quand l'utilisateur tape
+            if (_passwordError != null) {
+              setState(() => _passwordError = null);
+            }
+            if (_generalError != null) {
+              setState(() => _generalError = null);
+            }
+          },
+          suffixIcon: IconButton(
+            onPressed: () => ref.read(toggleProvider(_obscurePasswordId).notifier).toggle(),
+            icon: Icon(
+              obscurePassword
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              color: isDark ? Colors.white54 : Colors.grey[600],
+            ),
+          ),
+          errorText: _passwordError,
+        ),
+      ],
+    );
+  }
+  
+  /// Parse le message d'erreur serveur pour l'afficher de manière claire
+  String _parseErrorMessage(String? error) {
+    if (error == null || error.isEmpty) {
+      return 'Une erreur est survenue. Veuillez réessayer.';
+    }
+    
+    final errorLower = error.toLowerCase();
+    
+    // Erreurs d'identifiants
+    if (errorLower.contains('invalid') || 
+        errorLower.contains('credentials') ||
+        errorLower.contains('incorrect') ||
+        errorLower.contains('identifiants') ||
+        errorLower.contains('unauthorized') ||
+        errorLower.contains('401')) {
+      return 'Email ou mot de passe incorrect';
+    }
+    
+    // Compte non trouvé
+    if (errorLower.contains('not found') || 
+        errorLower.contains('introuvable') ||
+        errorLower.contains('n\'existe pas') ||
+        errorLower.contains('no user')) {
+      return 'Aucun compte associé à ces identifiants';
+    }
+    
+    // Compte désactivé
+    if (errorLower.contains('disabled') || 
+        errorLower.contains('suspended') ||
+        errorLower.contains('blocked') ||
+        errorLower.contains('désactivé')) {
+      return 'Votre compte a été désactivé. Contactez le support.';
+    }
+    
+    // Erreurs réseau
+    if (errorLower.contains('network') || 
+        errorLower.contains('connexion') ||
+        errorLower.contains('internet') ||
+        errorLower.contains('timeout') ||
+        errorLower.contains('connection')) {
+      return 'Problème de connexion. Vérifiez votre internet.';
+    }
+    
+    // Erreurs serveur
+    if (errorLower.contains('server') || 
+        errorLower.contains('500') ||
+        errorLower.contains('503')) {
+      return 'Service temporairement indisponible. Réessayez plus tard.';
+    }
+    
+    // Retourner le message original s'il est déjà en français et lisible
+    if (error.length < 100 && !error.contains('Exception')) {
+      return error;
+    }
+    
+    return 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
+  }
+  
+  /// Widget pour afficher une erreur générale avec un message personnalisé
+  Widget _buildGeneralErrorBannerWithMessage(bool isDark, String message) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.red.shade200,
+          width: 1,
         ),
       ),
-      validator: (value) => FormValidators.validatePassword(
-        value,
-        strength: PasswordStrength.medium,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.red.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.error_outline,
+              size: 18,
+              color: Colors.red.shade700,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: Colors.red.shade700,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              setState(() => _generalError = null);
+              // Clear error state in auth notifier
+              ref.read(authProvider.notifier).clearError();
+            },
+            child: Icon(
+              Icons.close,
+              size: 18,
+              color: Colors.red.shade400,
+            ),
+          ),
+        ],
       ),
     );
   }
